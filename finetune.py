@@ -744,18 +744,39 @@ def main():
     global_num_steps = args.num_train_epochs * global_num_steps_per_epoch
 
     # Prepare optimizer and learning rate scheduler
-    param_groups = [
-        {  # Temporal Transformer
-            "params": get_parameters(moshi_lm, "tempformer"),
+    #
+    # NOTE: DeepSpeed Zero stage 1/2 (stage_1_and_2.py:310-356) filters each
+    # param_group by `requires_grad` and calls `flatten_dense_tensors_aligned()`
+    # on the survivors. If a group becomes empty (e.g. tempformer group when
+    # --parameters_to_finetune=depformer), the resulting `torch.cat([])` raises
+    # `RuntimeError: torch.cat(): expected a non-empty list of Tensors`.
+    # Build groups dynamically and drop empty ones.
+    candidate_param_groups = [
+        {
+            "name": "tempformer",
+            "params": [
+                p for p in get_parameters(moshi_lm, "tempformer") if p.requires_grad
+            ],
             "lr": args.tempformer_learning_rate,
             "weight_decay": args.weight_decay,
         },
-        {  # Depth Transformer
-            "params": get_parameters(moshi_lm, "depformer"),
+        {
+            "name": "depformer",
+            "params": [
+                p for p in get_parameters(moshi_lm, "depformer") if p.requires_grad
+            ],
             "lr": args.depformer_learning_rate,
             "weight_decay": args.weight_decay,
         },
     ]
+    param_groups = [g for g in candidate_param_groups if len(g["params"]) > 0]
+    if not param_groups:
+        raise ValueError(
+            f"No trainable parameters found for --parameters_to_finetune="
+            f"{args.parameters_to_finetune}. Check get_parameters()."
+        )
+    # Map group name -> index for later logging
+    group_idx = {g["name"]: i for i, g in enumerate(param_groups)}
 
     optimizer = DummyOptim(
         param_groups,
@@ -765,7 +786,7 @@ def main():
     # `defaults["lr"]` is used by accelerator to set max_lr of deepspeed's scheduler
     # Ref: Accelerator._prepare_deepspeed()
     optimizer.defaults = {
-        "lr": [args.tempformer_learning_rate, args.depformer_learning_rate],
+        "lr": [g["lr"] for g in param_groups],
     }
 
     lr_scheduler_type = None
@@ -887,8 +908,8 @@ def main():
                 # Log metrics
                 if current_steps % args.logging_steps == 0:
                     lrs = {
-                        "tempformer": f"{optimizer.param_groups[0]['lr']:.3e}",
-                        "depformer": f"{optimizer.param_groups[1]['lr']:.3e}",
+                        name: f"{optimizer.param_groups[i]['lr']:.3e}"
+                        for name, i in group_idx.items()
                     }
                     logger.info(
                         f"Epoch: {epoch}, "
@@ -905,14 +926,17 @@ def main():
                                 for key, values in logging_buffer.items()
                             }
                         )
+                        lr_log = {
+                            f"learning_rate/{name}": optimizer.param_groups[i]["lr"]
+                            for name, i in group_idx.items()
+                        }
                         accelerator.log(
                             {
                                 **{
                                     key: values.nanmean()
                                     for key, values in gathered_metrics.items()
                                 },
-                                "learning_rate/tempformer": optimizer.param_groups[0]["lr"],
-                                "learning_rate/depformer": optimizer.param_groups[1]["lr"],
+                                **lr_log,
                             },
                             step=current_steps,
                         )
