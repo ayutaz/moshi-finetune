@@ -6,20 +6,23 @@
 
 作業ブランチ: `experiment-j-moshi-character-voice-overfit`
 
-この文書を、つくよみちゃん・お嬢様口調実験の唯一の実行基準とする。調査前に作成した汎用の voice overfit 案は、過去実験の記録と矛盾する部分があったため本書へ統合し、個別文書としては残さない。
+この文書を技術方針とrun条件の実行基準とする。進捗、成果物、マイルストーンごとの目的・ゴール・完了条件は[マイルストーン文書](./j-moshi-tsukuyomi-ojousama-milestones.md)を正とする。調査前に作成した汎用のvoice overfit案は、過去実験の記録と矛盾する部分があったため本書へ統合し、個別文書としては残さない。
 
-## 現在の進捗
+## マイルストーン管理
 
-| Phase | 状態 | 次の完了条件 |
+本実験はM0〜M6で管理する。各マイルストーンには、目的、ゴール、入力、作業、成果物、完了条件、次へ進む条件、完了記録を定義している。
+
+| ID | 概要 | 現在の状態 |
 | --- | --- | --- |
-| 過去実験の調査 | 完了 | ブログの条件・結果を本書へ反映済み |
-| Git・ローカル成果物の探索 | 完了 | branch、tag、stash、PR refs、ローカル主要保存先を確認済み |
-| 外部成果物の回収 | 未着手 | 過去サーバ・W&B・クラウドから script / manifest / config を回収、または欠損確定 |
-| 利用条件・データ台帳 | 未着手 | 原音、派生音声、checkpoint の利用条件と provenance を記録 |
-| Tsukuyomi TTS | 未着手 | 未学習文で品質 gate を通過 |
-| Voice fine-tuning | 未着手 | V0/V1 control と固定評価を完了 |
-| Voice overfit | 未着手 | control 合格後に V2/V3 を比較 |
-| お嬢様口調 fine-tuning | 未着手 | S0/S1 と held-out 評価を完了 |
+| M0 | 過去実験・Vast.ai基盤 | 進行中 |
+| M1 | 権利・データ確定 | 未着手 |
+| M2 | Tsukuyomi TTS | 未着手 |
+| M3 | Voice control | 未着手 |
+| M4 | Voice overfit | 未着手 |
+| M5 | お嬢様口調 | 未着手 |
+| M6 | 最終検証 | 未着手 |
+
+状態と完了証拠は[マイルストーン文書](./j-moshi-tsukuyomi-ojousama-milestones.md)だけで更新し、この概要表は構成変更時に同期する。
 
 ## 確定した判断
 
@@ -304,6 +307,8 @@ tempformer-only は text-only dataset を意味しない。音声 loss からも
 train/audio loss が低くても、live 対話のいずれかで collapse した checkpoint は不採用とする。
 
 ## 実行ロードマップ
+
+以下は技術的な実行順序の要約である。プロジェクト上の完了判定には[マイルストーン文書](./j-moshi-tsukuyomi-ojousama-milestones.md)のチェックリストを使う。
 
 1. **外部artifact回収**: 過去サーバ・クラウド・W&B artifact から config、script、manifest、`persona_perplexity.py`を探す。ローカルGit探索は繰り返さない。
 2. **過去baseline固定**: 公開 Stage 2 / Stage 3 checkpoint の生成音声と perplexity を同一promptで保存する。
