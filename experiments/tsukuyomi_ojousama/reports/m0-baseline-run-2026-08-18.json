@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "run_date": "2026-08-18",
+  "status": "blocked",
+  "repository_commit": "d8f4c08",
+  "instance_id": 48004205,
+  "gpu": "NVIDIA A100-SXM4-80GB x2",
+  "script": "experiments/tsukuyomi_ojousama/m0/run_baseline.sh",
+  "checkpoint_verification": {
+    "status": "pass",
+    "stage2_sha256": "69a4a0112663695371a61d56372f605f549e0613e1e4f767294e2ab3811bc381",
+    "stage3_sha256": "f34b52b7c2865cc6809e2a1c0ec527de025bdf66d3163e2c9b43ccd1d7c2c072",
+    "matches_artifact_recovery": true
+  },
+  "prompt_pipeline": {
+    "status": "pass",
+    "prompt_count": 10,
+    "uploaded_sha256_match_manifest": 10,
+    "sample_rate_hz": 24000,
+    "min_frames_observed": 48,
+    "min_frames_required": 40,
+    "note": "All 10 fixed held-out prompts survived the verify-dataset gate."
+  },
+  "published_checkpoint_layout": {
+    "n_q": 16,
+    "dep_q": 8,
+    "card": 2048,
+    "text_card": 32000,
+    "depformer_context": 8,
+    "delays_length": 17,
+    "max_delay": 1,
+    "note": "Published through tools/clean_moshi.py with --remove_modules_for_user_stream, so the user stream is modelled as input but not generated."
+  },
+  "blockers": [
+    {
+      "id": "generation-dep-q-mismatch",
+      "component": "generate.py / models/moshi_for_generation.py",
+      "error": "AssertionError: torch.Size([1, 9]) at `assert sampled_tokens.shape == (B, self.moshi_lm.num_codebooks)`",
+      "cause": "MoshiForConditionalGeneration.step samples 1 text + dep_q(8) audio codebooks but asserts num_codebooks = 1 + n_q = 17. This repository's generation path assumes dep_q == n_q, which holds for finetuning checkpoints that model the user stream, not for the published inference-format checkpoints.",
+      "impact": "No baseline continuation audio was produced for either stage.",
+      "resolution_requires_decision": true
+    },
+    {
+      "id": "persona-perplexity-invalid",
+      "component": "tools/persona_perplexity.py",
+      "observed_stage2": {
+        "preferred_mean_nll": 12.87781982421875,
+        "preferred_perplexity": 391530.9413915834,
+        "dispreferred_mean_nll": 12.55634422302246,
+        "preferred_win_rate": 0.1,
+        "logprob_total_difference": -64.40070533752441
+      },
+      "uniform_chance_nll": 10.373491435367955,
+      "cause": "Scores are worse than a uniform distribution over text_card=32000, so the reconstruction does not measure persona preference. The reconstruction conditions every audio codebook on zero_token_id for the whole sequence, which is a state the model never sees as input during training; zero_token_id is used as a loss ignore_index and as post-sequence padding, not as audio conditioning. The text tokenizer is not the problem: README lines 99-105 confirm J-Moshi uses rinna/japanese-gpt2-medium spiece.model, which is what the run used.",
+      "impact": "The 10-pair persona baseline cannot be compared against the past Stage 2 +11.86 / Stage 3 +12.26 figures, nor used as a forward baseline.",
+      "resolution_requires_decision": true
+    }
+  ],
+  "fixes_landed_this_run": [
+    "prompt_length lowered from 50 to 40 frames and a verify-dataset gate added (commit efe2c52)",
+    "original-format checkpoint loading in MoshiForFinetuning.from_pretrained (commit d8f4c08)"
+  ],
+  "exported_artifacts": "data/experiments/tsukuyomi_ojousama/m0-run-2026-08-18/ (gitignored: prompt reports, run log, stage2 persona-perplexity.json)"
+}

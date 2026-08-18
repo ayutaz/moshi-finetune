@@ -22,18 +22,18 @@
       "source": "vastai show invoices (daily bucket 1787011200)",
       "instance_id": 48004205,
       "component": "gpu",
-      "quantity_hours": 0.581,
+      "quantity_hours": 0.793,
       "rate": 2.64,
-      "amount": 1.535
+      "amount": 2.094
     },
     {
       "recorded_at": "2026-08-18",
       "source": "vastai show invoices (daily bucket 1787011200)",
       "instance_id": 48004205,
       "component": "storage",
-      "quantity_hours": 5.893,
+      "quantity_hours": 7.757,
       "rate": 0.1389,
-      "amount": 0.819
+      "amount": 1.077
     },
     {
       "recorded_at": "2026-08-18",
@@ -55,15 +55,16 @@
     }
   ],
   "status": "tracking",
-  "invoiced_to_date": 2.444,
+  "invoiced_to_date": 3.261,
   "billing_lag_note": "Invoiced GPU hours (0.581) lag behind the instance runtime reported by the API (duration 21201 s = 5.889 h). Budget decisions use accrued_estimate, not invoiced_to_date.",
   "accrued_estimate": {
     "captured_at": "2026-08-18",
-    "method": "instance duration 5.889 h * dph_base 2.64 + invoiced storage 0.819 + invoiced network 0.090",
-    "gpu": 15.547,
-    "storage": 0.819,
+    "method": "estimated GPU running hours 6.56 * dph_base 2.64 + invoiced storage 1.077 + invoiced network 0.090",
+    "gpu_hours_estimate": 6.56,
+    "gpu": 17.318,
+    "storage": 1.077,
     "network": 0.09,
-    "total": 16.456
+    "total": 18.485
   },
   "stopped_state_cost_per_hour": 0.1389,
   "stopped_state_note": "A stopped instance still bills the 300 GiB disk at US$0.1389/h (about US$3.33/day). Destroying the instance deletes /workspace, so artifacts must be exported first.",
@@ -85,5 +86,24 @@
       "decision": "allow",
       "reason": "within budget"
     }
-  ]
+  ],
+  "runs": [
+    {
+      "run": "m0-bootstrap",
+      "date": "2026-08-18",
+      "outcome": "instance provisioned, Stage 2/3 checkpoints recovered"
+    },
+    {
+      "run": "m0-baseline-generation",
+      "date": "2026-08-18",
+      "outcome": "blocked",
+      "detail": "prompt pipeline and checkpoint checksums passed; generation blocked by dep_q=8 vs n_q=16, persona perplexity invalid (worse than uniform chance)",
+      "report": "experiments/tsukuyomi_ojousama/reports/m0-baseline-run-2026-08-18.json"
+    }
+  ],
+  "instance_state": {
+    "captured_at": "2026-08-18",
+    "actual_status": "exited",
+    "note": "GPU billing stopped; the 300 GiB disk still bills at US$0.1389/h."
+  }
 }

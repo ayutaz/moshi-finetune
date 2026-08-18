@@ -113,10 +113,13 @@ M1のデータ監査はM0と並行可能とする。M2へ進むにはM0とM1の�
 - API key: 現key継続をユーザーが明示承認、repository外、mode `600`
 - Stage 3: 固定revisionのweight/config回収とchecksum確認済み
 - Stage 2: 固定revisionのweight/config回収済み。公開HF SHA-256を固定
-- Stage 2 / Stage 3の固定音声・口調再評価: 進行中。実行前検証は完了し、Vast.aiでの`run_baseline.sh`実行だけが残る
+- Stage 2 / Stage 3の固定音声・口調再評価: **Blocked**。2026-08-18にVast.aiで`run_baseline.sh`を実行し、prompt準備10件とcheckpoint checksumは通過したが、生成と口調perplexityの両方が失敗した。実行記録は`experiments/tsukuyomi_ojousama/reports/m0-baseline-run-2026-08-18.json`、原因と選択肢は`m0/baseline-protocol.md`
+- Blocker 1（生成）: 公開Stage 2/3は`n_q=16, dep_q=8`の推論用形式で、`models/moshi_for_generation.py`は`dep_q == n_q`前提のため`AssertionError: torch.Size([1, 9])`で停止。baselineの定義を変える判断が必要
+- Blocker 2（口調perplexity）: Stage 2で`preferred_mean_nll = 12.88`、perplexity `391,531`、preferred勝数`1/10`。`text_card=32000`の一様分布NLL `10.373`より悪く、指標として成立していない。tokenizerは正しく（READMEがJ-Moshiの`rinna/japanese-gpt2-medium`使用を明記）、全音声codebookを`zero_token_id`固定にする入力構成が原因と見られる
 - baseline実行前検証（2026-08-18）: `run_baseline.sh`の全entrypointを実CLIと照合済み。`tools.persona_perplexity`のforwardが`finetune.py:tempformer_forward`と一致することを確認
-- baseline protocol修正: prompt長を`50 frames`から`40 frames`へ変更。`VOICEACTRESS100_026.wav`が3.802秒（47 Mimi frames）で、`utils.data.filter_out_short_streams`に無言で捨てられ10件が9件になる欠陥を実行前に検出。理由は`m0/baseline-protocol.md`に記録
+- baseline protocol修正: prompt長を`50 frames`から`40 frames`へ変更。held-out最短の`VOICEACTRESS100_026.wav`は3.802秒・Mimi `48 frames`で、delay分を含めると`50 frames`となり`min_length=50`をちょうど満たす。脱落はしないが余裕が1 frameも無く、`utils.data.filter_out_short_streams`は無言でexampleを捨てるため、1 frame短くなるだけで10件が9件になる。`40 frames`へ下げて`8 frames`の余裕を確保。理由は`m0/baseline-protocol.md`に記録
 - 無言脱落Gate: `tools.prepare_baseline_prompts verify-dataset`を追加し、件数・frame長・A/B整合・`example_id → dialogue_id`対応を検証。生成後もstageごとに10 token・10 WAVを検証
+- checkpoint読み込みの互換性修正: 公開Stage 2/3は`tools/clean_moshi.py`がoriginal Moshi名で保存しており、`MoshiForFinetuning.__init__`のZero-3向け改名と一致せず`from_pretrained`が171 keyのmissing/unexpectedで失敗した。`tools/moshi_state_dict.py`に名前対応を追加して解消（`tools.persona_perplexity`と`generate.py`の両方をブロックしていた）
 - prompt入力: held-out 10件をmanifestのSHA-256と照合して`data/experiments/tsukuyomi_ojousama/baseline-input/tsukuyomi-heldout`へ配置（24.8 MiB、gitignore対象で非コミット）
 - テスト: 43件成功（無言脱落Gateの6件を追加）
 - 費用台帳: `experiments/tsukuyomi_ojousama/m0/spend-ledger.json`
