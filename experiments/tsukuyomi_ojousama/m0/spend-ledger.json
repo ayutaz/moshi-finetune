@@ -10,14 +10,80 @@
   "dedicated_instance_id": 48004205,
   "dedicated_instance_label": "moshi-tsukuyomi-ojousama-m0",
   "hourly_rate": 2.778888888888889,
-  "other_instance_ids_excluded": [48000459, 47955178],
+  "other_instance_ids_excluded": [
+    48000459,
+    47955178
+  ],
   "account_balance_delta_is_not_experiment_spend": true,
   "accounting_method": "Use invoice/runtime charges for dedicated instance 48004205; do not use raw account balance delta because an unrelated running instance is billed in parallel.",
-  "preflight": {
-    "planned_hours": 4.0,
-    "predicted_increment": 11.115555555555556,
-    "decision": "allow"
+  "charges": [
+    {
+      "recorded_at": "2026-08-18",
+      "source": "vastai show invoices (daily bucket 1787011200)",
+      "instance_id": 48004205,
+      "component": "gpu",
+      "quantity_hours": 0.581,
+      "rate": 2.64,
+      "amount": 1.535
+    },
+    {
+      "recorded_at": "2026-08-18",
+      "source": "vastai show invoices (daily bucket 1787011200)",
+      "instance_id": 48004205,
+      "component": "storage",
+      "quantity_hours": 5.893,
+      "rate": 0.1389,
+      "amount": 0.819
+    },
+    {
+      "recorded_at": "2026-08-18",
+      "source": "vastai show invoices (daily bucket 1787011200)",
+      "instance_id": 48004205,
+      "component": "network-download",
+      "quantity_gb": 34.2,
+      "rate": 0.003,
+      "amount": 0.089
+    },
+    {
+      "recorded_at": "2026-08-18",
+      "source": "vastai show invoices (daily bucket 1787011200)",
+      "instance_id": 48004205,
+      "component": "network-upload",
+      "quantity_gb": 0.168,
+      "rate": 0.004,
+      "amount": 0.001
+    }
+  ],
+  "status": "tracking",
+  "invoiced_to_date": 2.444,
+  "billing_lag_note": "Invoiced GPU hours (0.581) lag behind the instance runtime reported by the API (duration 21201 s = 5.889 h). Budget decisions use accrued_estimate, not invoiced_to_date.",
+  "accrued_estimate": {
+    "captured_at": "2026-08-18",
+    "method": "instance duration 5.889 h * dph_base 2.64 + invoiced storage 0.819 + invoiced network 0.090",
+    "gpu": 15.547,
+    "storage": 0.819,
+    "network": 0.09,
+    "total": 16.456
   },
-  "charges": [],
-  "status": "tracking"
+  "stopped_state_cost_per_hour": 0.1389,
+  "stopped_state_note": "A stopped instance still bills the 300 GiB disk at US$0.1389/h (about US$3.33/day). Destroying the instance deletes /workspace, so artifacts must be exported first.",
+  "preflights": [
+    {
+      "planned_hours": 4.0,
+      "predicted_increment": 11.115555555555556,
+      "decision": "allow",
+      "run": "m0-bootstrap",
+      "spent_at_decision": 0.0
+    },
+    {
+      "run": "m0-baseline-generation",
+      "decided_at": "2026-08-18",
+      "spent_at_decision": 16.456,
+      "hourly_rate": 2.778888888888889,
+      "planned_hours": 2.0,
+      "predicted_spend": 22.013778,
+      "decision": "allow",
+      "reason": "within budget"
+    }
+  ]
 }

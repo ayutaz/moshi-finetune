@@ -113,9 +113,17 @@ M1のデータ監査はM0と並行可能とする。M2へ進むにはM0とM1の�
 - API key: 現key継続をユーザーが明示承認、repository外、mode `600`
 - Stage 3: 固定revisionのweight/config回収とchecksum確認済み
 - Stage 2: 固定revisionのweight/config回収済み。公開HF SHA-256を固定
-- Stage 2 / Stage 3の固定音声・口調再評価: 進行中
+- Stage 2 / Stage 3の固定音声・口調再評価: 進行中。実行前検証は完了し、Vast.aiでの`run_baseline.sh`実行だけが残る
+- baseline実行前検証（2026-08-18）: `run_baseline.sh`の全entrypointを実CLIと照合済み。`tools.persona_perplexity`のforwardが`finetune.py:tempformer_forward`と一致することを確認
+- baseline protocol修正: prompt長を`50 frames`から`40 frames`へ変更。`VOICEACTRESS100_026.wav`が3.802秒（47 Mimi frames）で、`utils.data.filter_out_short_streams`に無言で捨てられ10件が9件になる欠陥を実行前に検出。理由は`m0/baseline-protocol.md`に記録
+- 無言脱落Gate: `tools.prepare_baseline_prompts verify-dataset`を追加し、件数・frame長・A/B整合・`example_id → dialogue_id`対応を検証。生成後もstageごとに10 token・10 WAVを検証
+- prompt入力: held-out 10件をmanifestのSHA-256と照合して`data/experiments/tsukuyomi_ojousama/baseline-input/tsukuyomi-heldout`へ配置（24.8 MiB、gitignore対象で非コミット）
+- テスト: 43件成功（無言脱落Gateの6件を追加）
 - 費用台帳: `experiments/tsukuyomi_ojousama/m0/spend-ledger.json`
+- 費用実測（2026-08-18）: 請求済み`US$2.444`、発生見込み`US$16.456`。停止中も300 GiBディスクが`US$0.1389/h`（約`US$3.33/日`）課金される
+- baseline run preflight: `spent 16.456`、`planned_hours 2.0`、予測`US$22.014`、判定`allow`
 - Vast.ai費用上限: `US$100`（2026-08-18にユーザー承認済み）
+- Vast.aiインスタンス`48004205`: 2026-08-18時点で`stopped`。baseline実行には起動が必要（`US$2.7789/h`）
 
 ## M1: 権利・データ確定
 

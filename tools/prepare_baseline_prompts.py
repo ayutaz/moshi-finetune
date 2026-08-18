@@ -5,6 +5,12 @@ import json
 from pathlib import Path
 from typing import Any, Iterable
 
+STREAMS_PER_SPEAKER = 9  # 1 text + 8 audio codebooks
+
+
+class PromptDatasetError(ValueError):
+    """Raised when the fixed baseline prompt dataset would not be evaluated as recorded."""
+
 
 def build_stereo_prompt(mono_waveform: Any) -> tuple[Any, Any]:
     """Return speaker A's mono channel and a same-length silent B channel."""
@@ -69,6 +75,79 @@ def create_padding_text_tokens(audio_token_dir: Path, output_dir: Path) -> dict[
     return {"status": "pass", "prompt_count": len(stems)}
 
 
+def verify_prompt_dataset(
+    rows: list[dict[str, Any]],
+    *,
+    expected_count: int,
+    min_frames: int,
+) -> dict[str, Any]:
+    """Fail before generation when the prompt dataset would not be evaluated as recorded.
+
+    `utils.data.filter_out_short_streams` silently discards examples shorter than
+    `generate.py --prompt_length`, so a too-short prompt would shrink the baseline without
+    any log line. `example_id` is also assigned by row order after `dialogue_id` has been
+    dropped, so the mapping back to each prompt is recorded here.
+    """
+    if len(rows) != expected_count:
+        raise PromptDatasetError(f"expected {expected_count} prompt rows, got {len(rows)}")
+
+    examples = []
+    too_short = []
+    for example_id, row in enumerate(rows):
+        dialogue_id = row["dialogue_id"]
+        speaker_frames = {}
+        for speaker in ("A", "B"):
+            streams = row[speaker]
+            if len(streams) != STREAMS_PER_SPEAKER:
+                raise PromptDatasetError(
+                    f"{dialogue_id}: speaker {speaker} must have "
+                    f"{STREAMS_PER_SPEAKER} streams, got {len(streams)}"
+                )
+            frame_counts = {len(stream) for stream in streams}
+            if len(frame_counts) != 1:
+                raise PromptDatasetError(
+                    f"{dialogue_id}: speaker {speaker} has ragged streams {sorted(frame_counts)}"
+                )
+            speaker_frames[speaker] = frame_counts.pop()
+        if speaker_frames["A"] != speaker_frames["B"]:
+            raise PromptDatasetError(
+                f"{dialogue_id}: A and B frame counts differ "
+                f"({speaker_frames['A']} != {speaker_frames['B']})"
+            )
+        frames = speaker_frames["A"]
+        if frames < min_frames:
+            too_short.append((dialogue_id, frames))
+        examples.append(
+            {"example_id": example_id, "dialogue_id": dialogue_id, "frames": frames}
+        )
+
+    if too_short:
+        detail = ", ".join(f"{dialogue_id}={frames}" for dialogue_id, frames in too_short)
+        raise PromptDatasetError(
+            f"prompts below min_frames={min_frames} would be dropped silently: {detail}"
+        )
+
+    return {
+        "status": "pass",
+        "prompt_count": len(rows),
+        "min_frames_required": min_frames,
+        "min_frames_observed": min(example["frames"] for example in examples),
+        "examples": examples,
+    }
+
+
+def _read_prompt_dataset(parquet_glob: str) -> list[dict[str, Any]]:
+    from glob import glob
+
+    import pandas as pd
+
+    paths = sorted(glob(parquet_glob))
+    if not paths:
+        raise PromptDatasetError(f"no parquet files matched {parquet_glob}")
+    frame = pd.concat([pd.read_parquet(path) for path in paths], ignore_index=True)
+    return frame.to_dict(orient="records")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Prepare fixed voice-only baseline prompts")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -83,12 +162,24 @@ def main() -> int:
     text_parser.add_argument("--audio-token-dir", type=Path, required=True)
     text_parser.add_argument("--output-dir", type=Path, required=True)
     text_parser.add_argument("--report", type=Path, required=True)
+
+    verify_parser = subparsers.add_parser("verify-dataset")
+    verify_parser.add_argument("--parquet-glob", required=True)
+    verify_parser.add_argument("--expected-count", type=int, required=True)
+    verify_parser.add_argument("--min-frames", type=int, required=True)
+    verify_parser.add_argument("--report", type=Path, required=True)
     args = parser.parse_args()
 
     if args.command == "audio":
         report = prepare_stereo_audio(args.input_dir, args.output_dir, target_rate=args.target_rate)
-    else:
+    elif args.command == "padding-text":
         report = create_padding_text_tokens(args.audio_token_dir, args.output_dir)
+    else:
+        report = verify_prompt_dataset(
+            _read_prompt_dataset(args.parquet_glob),
+            expected_count=args.expected_count,
+            min_frames=args.min_frames,
+        )
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(
         json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
