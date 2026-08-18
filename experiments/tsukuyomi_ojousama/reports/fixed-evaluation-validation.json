@@ -1,0 +1,25 @@
+{
+  "status": "pass",
+  "tts_count": 30,
+  "style_pair_count": 50,
+  "general_dialogue_count": 30,
+  "training_leakage_count": 0,
+  "style_markers": [
+    "ですわ",
+    "ますわ",
+    "ですの",
+    "ますの",
+    "ましたわ",
+    "ましたの",
+    "でしたわ",
+    "でしたの",
+    "かしら",
+    "わたくし",
+    "よろしくて",
+    "ございま",
+    "ませんこと",
+    "くださいませ",
+    "くださいな"
+  ],
+  "near_duplicate_threshold": 0.9
+}

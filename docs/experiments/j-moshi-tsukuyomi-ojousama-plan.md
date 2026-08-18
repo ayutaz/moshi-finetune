@@ -2,7 +2,7 @@
 
 更新日: 2026-08-18
 
-ステータス: 過去実験の記事と公開成果物を反映した最新版。データ生成・学習は未着手。
+ステータス: M1データ監査・固定評価は完了。M0のStage 2 / Stage 3 baseline再評価を実行中。
 
 作業ブランチ: `experiment-j-moshi-character-voice-overfit`
 
@@ -15,7 +15,7 @@
 | ID | 概要 | 現在の状態 |
 | --- | --- | --- |
 | M0 | 過去実験・Vast.ai基盤 | 進行中 |
-| M1 | 権利・データ確定 | 未着手 |
+| M1 | 権利・データ確定 | 完了 |
 | M2 | Tsukuyomi TTS | 未着手 |
 | M3 | Voice control | 未着手 |
 | M4 | Voice overfit | 未着手 |

@@ -1,0 +1,26 @@
+{
+  "dataset_id": "tsukuyomi-corpus-v1",
+  "source_url": "https://tyc.rei-yumesaki.net/files/voice/tyc-corpus1.zip",
+  "source_page": "https://tyc.rei-yumesaki.net/material/corpus/",
+  "source_version": "Vol.1; upstream page updated 2026-08-07; archive sha256 801a8edc99f49893e2d270b28ecea7107a20f270bb23542bafe592d32b8442f1",
+  "retrieved_at": "2026-08-18T15:46:21+09:00",
+  "license_id": "tsukuyomi-corpus-custom-terms",
+  "license_url": "https://tyc.rei-yumesaki.net/material/corpus/",
+  "credit": "つくよみちゃんコーパス（CV.夢前黎） https://tyc.rei-yumesaki.net/material/corpus/",
+  "redistribution": "prohibited-with-narrow-upstream-unavailability-exception",
+  "generation_method": "recorded-human",
+  "derivation": [],
+  "archive": {
+    "filename": "tyc-corpus1.zip",
+    "byte_size": 516635952,
+    "sha256": "801a8edc99f49893e2d270b28ecea7107a20f270bb23542bafe592d32b8442f1"
+  },
+  "local_data_root": "data/experiments/tsukuyomi_ojousama",
+  "selected_audio_dir": "raw/tsukuyomi_corpus_v1_original",
+  "tracked_extraction_report": "experiments/tsukuyomi_ojousama/manifests/tsukuyomi-corpus-v1-extraction.json",
+  "notes": [
+    "Raw audio and the source archive are intentionally excluded from Git.",
+    "The first of three archive variants is the unamplified, original 96 kHz IEEE Float mono set.",
+    "COEIROINK output is not an input to this dataset."
+  ]
+}

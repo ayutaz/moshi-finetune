@@ -1,0 +1,15 @@
+{
+  "status": "pass-with-deduplication",
+  "raw_row_count": 202,
+  "accepted_row_count": 201,
+  "rejected_row_count": 1,
+  "duplicate_prompt_count": 1,
+  "duplicate_prompts": [
+    "もうダメかも ->"
+  ],
+  "rejected_source_rows": [
+    20
+  ],
+  "source_commit": "589f3b52324cc12ad3fb0b2ebe1520bbffce4087",
+  "usage": "reference-only"
+}

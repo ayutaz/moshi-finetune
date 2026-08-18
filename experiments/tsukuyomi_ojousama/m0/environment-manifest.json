@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-08-18T16:30:00+09:00",
+  "provider": "Vast.ai",
+  "instance": {
+    "id": 48004205,
+    "label": "moshi-tsukuyomi-ojousama-m0",
+    "hourly_rate_usd": 2.778888888888889,
+    "reliability": 0.9944,
+    "image": "pytorch/pytorch:2.4.1-cuda12.1-cudnn9-devel",
+    "ssh_connection": "verified",
+    "api_key_value_recorded": false,
+    "temporary_instance_tokens_recorded": false
+  },
+  "compute": {
+    "gpu_model": "NVIDIA A100-SXM4-80GB",
+    "gpu_count": 2,
+    "vram_mib_per_gpu": 81920,
+    "driver_version": "570.211.01",
+    "cuda_nvcc": "12.1 V12.1.105"
+  },
+  "storage": {
+    "allocated_gib": 300,
+    "initial_free_gib": 300,
+    "artifact_root": "/workspace/experiment-artifacts",
+    "persistence": "instance disk persists across stop/start but is deleted when the instance is destroyed",
+    "durable_export_required_before_destroy": true
+  },
+  "repository": {
+    "path": "/workspace/moshi-finetune",
+    "remote": "origin",
+    "commit_at_bootstrap": "b0f9bccc693ec064edb60dd236f1685844c4514f"
+  },
+  "python_execution": {
+    "runner": "uv",
+    "uv_version": "0.11.19",
+    "python_version": "3.12.13",
+    "sync_command": "uv sync --python 3.12",
+    "policy": "all Python commands run through uv run"
+  },
+  "verified_packages": {
+    "torch": "2.4.1+cu121",
+    "torchaudio": "2.4.1+cu121",
+    "accelerate": "1.1.1",
+    "datasets": "3.1.0",
+    "deepspeed": "0.15.4",
+    "moshi": "0.1.0",
+    "transformers": "4.48.3"
+  }
+}

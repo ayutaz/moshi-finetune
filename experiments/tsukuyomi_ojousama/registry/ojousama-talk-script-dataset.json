@@ -1,0 +1,35 @@
+{
+  "dataset_id": "ojousama-talk-script-dataset",
+  "source_url": "https://github.com/matsuvr/OjousamaTalkScriptDataset",
+  "source_version": "589f3b52324cc12ad3fb0b2ebe1520bbffce4087",
+  "retrieved_at": "2026-08-18T16:02:00+09:00",
+  "license_id": "MIT",
+  "license_url": "https://github.com/matsuvr/OjousamaTalkScriptDataset/blob/589f3b52324cc12ad3fb0b2ebe1520bbffce4087/LICENSE",
+  "credit": "Copyright (c) 2023 matsu_vr",
+  "redistribution": "permitted-with-license-and-copyright-notice",
+  "generation_method": "upstream-text-dataset",
+  "usage": "reference-only",
+  "raw_files": [
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/raw/ojousama-talk-script-dataset/ojousamatalkscript200.jsonl",
+      "byte_size": 30586,
+      "sha256": "bd5b1fbe84e1df9270e232f6ce8d074fea9ad5c25435bcc42d61957ec1b41bc2"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/raw/ojousama-talk-script-dataset/LICENSE",
+      "byte_size": 1065,
+      "sha256": "fcd8fbf3ea9a8a08b3c5ffd6ede9d6d129b006eacf190c54202673f2906e207f"
+    }
+  ],
+  "derived_reference": {
+    "path": "experiments/tsukuyomi_ojousama/reference/ojousama-talk-script-201.jsonl",
+    "byte_size": 66716,
+    "sha256": "6a4dead5a492b6c57ffd30f84c0abf8221b9f404f7066c9c65689cd05947d0ec",
+    "accepted_rows": 201,
+    "rejected_duplicate_source_rows": [20]
+  },
+  "notes": [
+    "The upstream file named ojousamatalkscript200.jsonl currently contains 202 JSON rows.",
+    "One duplicate prompt is removed deterministically; the 201-row tracked copy is reference-only and must not be included in style training."
+  ]
+}

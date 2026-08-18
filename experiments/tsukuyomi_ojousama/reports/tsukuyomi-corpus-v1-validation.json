@@ -1,0 +1,14 @@
+{
+  "status": "pass",
+  "artifact_count": 100,
+  "coeiroink_artifact_count": 0,
+  "corrupt_audio_count": 0,
+  "cross_split_duplicate_count": 0,
+  "duplicate_artifact_count": 0,
+  "split_counts": {
+    "train": 80,
+    "dev": 10,
+    "test": 10
+  },
+  "errors": []
+}

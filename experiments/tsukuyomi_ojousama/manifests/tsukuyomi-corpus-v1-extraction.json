@@ -1,0 +1,684 @@
+{
+  "schema_version": 1,
+  "archive_path": "tyc-corpus1.zip",
+  "archive_sha256": "801a8edc99f49893e2d270b28ecea7107a20f270bb23542bafe592d32b8442f1",
+  "selection_rule": "first archive member for each canonical utterance name",
+  "selected_variant_position": 0,
+  "variant_count": 3,
+  "selected_file_count": 100,
+  "files": [
+    {
+      "path": "VOICEACTRESS100_001.wav",
+      "byte_size": 2653918,
+      "sha256": "e59f9dc480bdc4afc175eac023e27cd6b50f3d047f6e66008a364434bcb69271",
+      "zip_crc32": "0b045dc4"
+    },
+    {
+      "path": "VOICEACTRESS100_002.wav",
+      "byte_size": 2880730,
+      "sha256": "a5818078c2776eb49cefc4c6780a76bf46f2608f25818a3bebe2e9805c91f2d2",
+      "zip_crc32": "33904009"
+    },
+    {
+      "path": "VOICEACTRESS100_003.wav",
+      "byte_size": 1847410,
+      "sha256": "77c48859ed493e20aabe618a98ed1f4fe174c75e891c01d7d1582ef9c255c82a",
+      "zip_crc32": "b7688b22"
+    },
+    {
+      "path": "VOICEACTRESS100_004.wav",
+      "byte_size": 2092834,
+      "sha256": "08c49848b8bac03a84b745aa32626638295c60ec32311c2b8c34ed90f2c3c9e0",
+      "zip_crc32": "6b22fec6"
+    },
+    {
+      "path": "VOICEACTRESS100_005.wav",
+      "byte_size": 4053146,
+      "sha256": "5b9ce2e10e14ada0d9d95997d275909045d5d0a1ec36e0dc571b77bad038939c",
+      "zip_crc32": "5e42d48f"
+    },
+    {
+      "path": "VOICEACTRESS100_006.wav",
+      "byte_size": 1430282,
+      "sha256": "b47f254e951bb7d96c162baac9131678c1c5e11130e111d9adf7e02507085e12",
+      "zip_crc32": "8cc52cb0"
+    },
+    {
+      "path": "VOICEACTRESS100_007.wav",
+      "byte_size": 2947198,
+      "sha256": "7e5bbab510941c55435757a2c31e4b454f800f67f9c36b45113542c7a571a1d0",
+      "zip_crc32": "2a5a8d5a"
+    },
+    {
+      "path": "VOICEACTRESS100_008.wav",
+      "byte_size": 2793610,
+      "sha256": "609877d9fc4f0b1fe4b7be061f8077236c4bc713bbde9217318f42aa70e4267b",
+      "zip_crc32": "d0b5d51b"
+    },
+    {
+      "path": "VOICEACTRESS100_009.wav",
+      "byte_size": 2202490,
+      "sha256": "3043adc80116633309126dee0ee6bbb35b02194f4b5bb7f57a5eb8981877a82d",
+      "zip_crc32": "ed29518d"
+    },
+    {
+      "path": "VOICEACTRESS100_010.wav",
+      "byte_size": 1632858,
+      "sha256": "c8c0b8a655b29bc93729a7c860864cfef4002a50cc10da2c0e1c0c9958af8660",
+      "zip_crc32": "b1f36188"
+    },
+    {
+      "path": "VOICEACTRESS100_011.wav",
+      "byte_size": 2354962,
+      "sha256": "9784cfb7e0e5da3f15894233963eea4908a183889a7595bc80c844eb6207d983",
+      "zip_crc32": "04313582"
+    },
+    {
+      "path": "VOICEACTRESS100_012.wav",
+      "byte_size": 1988658,
+      "sha256": "81baad3850e7152466fb42b5eb25847a7a0a08274d4308ab1f4e64cda78e8675",
+      "zip_crc32": "1681203c"
+    },
+    {
+      "path": "VOICEACTRESS100_013.wav",
+      "byte_size": 1878190,
+      "sha256": "f05c7058e0445c1f95fb264e1498bf8b9d13fb1c88122ad9892b44f7f635a970",
+      "zip_crc32": "3d928119"
+    },
+    {
+      "path": "VOICEACTRESS100_014.wav",
+      "byte_size": 861974,
+      "sha256": "a0eb96e0c107ab01bd515a18fd7dfc2d12ea08dfbdc650da7d351403fcb5c782",
+      "zip_crc32": "9893dc28"
+    },
+    {
+      "path": "VOICEACTRESS100_015.wav",
+      "byte_size": 1622762,
+      "sha256": "cd3150a1db4068413e459a9a9f217c98e928d480a0bb5ae9be57f51c179c7bca",
+      "zip_crc32": "e957a94d"
+    },
+    {
+      "path": "VOICEACTRESS100_016.wav",
+      "byte_size": 1886030,
+      "sha256": "e0ad0b0c8d06b37f22057af2517d5bf35ca1f60e2029a1241d2dc9bce2b31c78",
+      "zip_crc32": "2184f24e"
+    },
+    {
+      "path": "VOICEACTRESS100_017.wav",
+      "byte_size": 1920578,
+      "sha256": "8bfe0a217c47265eb041d24e1437e7f3f77c45130ae91493dfffa371b979a8fb",
+      "zip_crc32": "a268ffc8"
+    },
+    {
+      "path": "VOICEACTRESS100_018.wav",
+      "byte_size": 2357674,
+      "sha256": "d124fc4688639309bfb365badd9e552052769322fe6c28c31183144a01dc08e6",
+      "zip_crc32": "cbc1e2a4"
+    },
+    {
+      "path": "VOICEACTRESS100_019.wav",
+      "byte_size": 2831202,
+      "sha256": "78d43f219cd70254760b6e14ad17d38627bcd0f87364f6ca54ffe56f6f113fa1",
+      "zip_crc32": "9917951b"
+    },
+    {
+      "path": "VOICEACTRESS100_020.wav",
+      "byte_size": 2394430,
+      "sha256": "18d09d5a631b6ded96aca2b559d59ee6c7af8a0ea55e8213dfb0465e66f90d8f",
+      "zip_crc32": "e1f588ae"
+    },
+    {
+      "path": "VOICEACTRESS100_021.wav",
+      "byte_size": 2328454,
+      "sha256": "3f82638a62bcbe8208045dacab95b481d8039ed6351588beed1e16f21f29db8a",
+      "zip_crc32": "7f81ff70"
+    },
+    {
+      "path": "VOICEACTRESS100_022.wav",
+      "byte_size": 4786710,
+      "sha256": "584b3f15bfdeeb276450ab1b169f537ed65632189f75690b16b8561334db97c8",
+      "zip_crc32": "70db3c33"
+    },
+    {
+      "path": "VOICEACTRESS100_023.wav",
+      "byte_size": 2560630,
+      "sha256": "01d0121869dc7d0b6affb9f5d9f0a5c9f298907785eb13f9f38d2411dd1c5202",
+      "zip_crc32": "79e6b2ab"
+    },
+    {
+      "path": "VOICEACTRESS100_024.wav",
+      "byte_size": 3008778,
+      "sha256": "aa67a8e07ddf34f7713b13c287b849308938358fb2d1f58c8be663b837e0a7e6",
+      "zip_crc32": "ae405bb7"
+    },
+    {
+      "path": "VOICEACTRESS100_025.wav",
+      "byte_size": 1467746,
+      "sha256": "42bc3e22ec5e691edcc1aa89e4031d00576c4d382557ec894a2ec6e08f007718",
+      "zip_crc32": "3b51231f"
+    },
+    {
+      "path": "VOICEACTRESS100_026.wav",
+      "byte_size": 1460338,
+      "sha256": "c39266ae5ebcf43b5842fb0e3ccdb22aced7a015a005027831301d0f9d6b9467",
+      "zip_crc32": "5961c2d2"
+    },
+    {
+      "path": "VOICEACTRESS100_027.wav",
+      "byte_size": 2486854,
+      "sha256": "0dbb642c8c0b9e50302e36ab73bb13352a5a9360d2b8a00368cd08aa73fdffdd",
+      "zip_crc32": "d0f00ac2"
+    },
+    {
+      "path": "VOICEACTRESS100_028.wav",
+      "byte_size": 3393018,
+      "sha256": "8eab8876a5ebed6547723ba42f623dbc1b54a2748e2ba4acb6b1cac35fd31b00",
+      "zip_crc32": "e5ea4f2e"
+    },
+    {
+      "path": "VOICEACTRESS100_029.wav",
+      "byte_size": 3029610,
+      "sha256": "849cc5bf6e0eee96a310a55ecfb1e7edc26742420109f4f9362e7cfd080d8387",
+      "zip_crc32": "7c73940d"
+    },
+    {
+      "path": "VOICEACTRESS100_030.wav",
+      "byte_size": 1915986,
+      "sha256": "18dcb61a99d9b42c0953d8b6ee59bcc702a95b134a89a966d63e5d3b24cacd04",
+      "zip_crc32": "040bcb3c"
+    },
+    {
+      "path": "VOICEACTRESS100_031.wav",
+      "byte_size": 1569410,
+      "sha256": "8d29f9ab248969106a4a1bfb65152dabddacaa02eccd6c949d8ad70ad919df37",
+      "zip_crc32": "a8d18f9a"
+    },
+    {
+      "path": "VOICEACTRESS100_032.wav",
+      "byte_size": 3425426,
+      "sha256": "88679614169899d1e22824cfaffa288c1439eee5c466071fe068f8287a5c885c",
+      "zip_crc32": "7a960a94"
+    },
+    {
+      "path": "VOICEACTRESS100_033.wav",
+      "byte_size": 1128638,
+      "sha256": "0a49d8f803864417816f15f94998ad06941e41c632879eeabb8f9f070658fbd0",
+      "zip_crc32": "cb1546d1"
+    },
+    {
+      "path": "VOICEACTRESS100_034.wav",
+      "byte_size": 1327966,
+      "sha256": "c3f159b8cfba64123fdd2409d8fb9e444a1c298f7dc973e8c41c549056aacf4e",
+      "zip_crc32": "4f37b31b"
+    },
+    {
+      "path": "VOICEACTRESS100_035.wav",
+      "byte_size": 2831326,
+      "sha256": "60f8d4e2a3a4440187a5df6f7cead2387472b996c765939113ea8dafb4de0a2d",
+      "zip_crc32": "05a6743c"
+    },
+    {
+      "path": "VOICEACTRESS100_036.wav",
+      "byte_size": 2673114,
+      "sha256": "8fd051abcdfe31001941b58f3d02cc82d7b94f9a7d42ce4398b7bd57dcadfed0",
+      "zip_crc32": "2e3664e1"
+    },
+    {
+      "path": "VOICEACTRESS100_037.wav",
+      "byte_size": 2149730,
+      "sha256": "791440ae8c607d57824b77e2852bc1da9543fa95feb94a64a0fc4a0e30483587",
+      "zip_crc32": "3f0d8870"
+    },
+    {
+      "path": "VOICEACTRESS100_038.wav",
+      "byte_size": 2459210,
+      "sha256": "c65bb36e49e21f438aae1f6682b6fec40e37fe1faa32085463c0b9a9f3c57968",
+      "zip_crc32": "bf177b95"
+    },
+    {
+      "path": "VOICEACTRESS100_039.wav",
+      "byte_size": 2362622,
+      "sha256": "55fb32223e6106b4827870e9eb8c0940aee457ddb977b5ec7e87677fdc2461e1",
+      "zip_crc32": "1fbbc6f4"
+    },
+    {
+      "path": "VOICEACTRESS100_040.wav",
+      "byte_size": 1618258,
+      "sha256": "f599045fa1248b3699dbcd2bdfaa848e659da8d5ada855e21f613496b6f36e5a",
+      "zip_crc32": "842a6974"
+    },
+    {
+      "path": "VOICEACTRESS100_041.wav",
+      "byte_size": 2183998,
+      "sha256": "8d797a16771d1d3f12d4a872b5fca487909ebedc20e95fdf09c8470465901c71",
+      "zip_crc32": "194c4e62"
+    },
+    {
+      "path": "VOICEACTRESS100_042.wav",
+      "byte_size": 1623246,
+      "sha256": "50c62220125e969464409be1fd780dd10ae49eaff96a44461dbfc02103b7cde4",
+      "zip_crc32": "49869d26"
+    },
+    {
+      "path": "VOICEACTRESS100_043.wav",
+      "byte_size": 2667802,
+      "sha256": "8dda29eab82037cb4f1e23debddde0a8b5b074873769cd40b0cab4157e27812e",
+      "zip_crc32": "663ab1a6"
+    },
+    {
+      "path": "VOICEACTRESS100_044.wav",
+      "byte_size": 3543578,
+      "sha256": "55e479001d415b9f0e4887a1b5370a686a161f822043f31825a8cb106895c4e5",
+      "zip_crc32": "4532af2a"
+    },
+    {
+      "path": "VOICEACTRESS100_045.wav",
+      "byte_size": 3250850,
+      "sha256": "fc64efeb6bdd14402eddfe17635a9ed940df26a8db70bf4c50fddcdd8172d039",
+      "zip_crc32": "c3a53c84"
+    },
+    {
+      "path": "VOICEACTRESS100_046.wav",
+      "byte_size": 2196054,
+      "sha256": "23542602b538cca1e48545060ce8edf6c52e220a16dbc7bcb036ab6ce24509c9",
+      "zip_crc32": "5696c6d3"
+    },
+    {
+      "path": "VOICEACTRESS100_047.wav",
+      "byte_size": 2926206,
+      "sha256": "f9f4da6b88f2dd9d495fdc6dbb47fa1f6d32ec62f88736a8eb918762fe6ebff1",
+      "zip_crc32": "51cc70fb"
+    },
+    {
+      "path": "VOICEACTRESS100_048.wav",
+      "byte_size": 2978882,
+      "sha256": "dafe64258b9862c683e6aa4bde82136a5dad8a252069fa68e213dee5940f75aa",
+      "zip_crc32": "2b92fbc7"
+    },
+    {
+      "path": "VOICEACTRESS100_049.wav",
+      "byte_size": 2146282,
+      "sha256": "387ea74a97cda375d3530627b2992be508858fee06786ffb80b14a852008b316",
+      "zip_crc32": "a5eaf3ea"
+    },
+    {
+      "path": "VOICEACTRESS100_050.wav",
+      "byte_size": 2815186,
+      "sha256": "8fd5488428e3cb7360e7da0ce74a4851fd84e75ea0f8c2692de9a4c1acec26b0",
+      "zip_crc32": "03c8910a"
+    },
+    {
+      "path": "VOICEACTRESS100_051.wav",
+      "byte_size": 1795646,
+      "sha256": "c3ce58cdffde828a77ac33e2fe8e51aba933fc6c4cde620c79d7ec1c1bf57af8",
+      "zip_crc32": "e6232bd6"
+    },
+    {
+      "path": "VOICEACTRESS100_052.wav",
+      "byte_size": 2853942,
+      "sha256": "8b9f2aa8f6baa6db6bd60ff1c09e46d11ebb7d0753c70654d448fd519685ec22",
+      "zip_crc32": "7a5899ea"
+    },
+    {
+      "path": "VOICEACTRESS100_053.wav",
+      "byte_size": 1954942,
+      "sha256": "8929886206a201149f61d568446f082110f415aaf95e366646664a4c19b64e3b",
+      "zip_crc32": "759332d7"
+    },
+    {
+      "path": "VOICEACTRESS100_054.wav",
+      "byte_size": 4220650,
+      "sha256": "7f074cf4cf568d2f83cf697ef878dc76da4b527f2624a72d2ed80d30bee1acc9",
+      "zip_crc32": "da333cc1"
+    },
+    {
+      "path": "VOICEACTRESS100_055.wav",
+      "byte_size": 1082378,
+      "sha256": "66c3c86e16c429b01f1e7fc3b1f5ffbe24d9e4c0450408c36faa263fae7d4cfd",
+      "zip_crc32": "1c4a2019"
+    },
+    {
+      "path": "VOICEACTRESS100_056.wav",
+      "byte_size": 2947818,
+      "sha256": "12b8a4e17583bfd710dfeaf1a9483801b605877fb2d3db6f744b9b0d721be444",
+      "zip_crc32": "e9ab9be9"
+    },
+    {
+      "path": "VOICEACTRESS100_057.wav",
+      "byte_size": 1676422,
+      "sha256": "82d05811e6ac25122baa7da75f86fe431d0bcbdd8325ec1294e0720240ce5784",
+      "zip_crc32": "4a4fb6ce"
+    },
+    {
+      "path": "VOICEACTRESS100_058.wav",
+      "byte_size": 2184338,
+      "sha256": "425d8eb186c4f867cc40eb6b3bcaa6d5d45a1f6eb5a17346749f4fe92c954cbc",
+      "zip_crc32": "8791637e"
+    },
+    {
+      "path": "VOICEACTRESS100_059.wav",
+      "byte_size": 2318230,
+      "sha256": "56e7e046353e3612e353712cb46b895ec6fbf9d3d1f1a7f68992fc3e3c4f4acd",
+      "zip_crc32": "2cd0a916"
+    },
+    {
+      "path": "VOICEACTRESS100_060.wav",
+      "byte_size": 2344658,
+      "sha256": "908afe1d0fc4b027b35bfba42201bfc0d63c4f2f3b79c7eebcf62c8da7f72ecd",
+      "zip_crc32": "07487c0e"
+    },
+    {
+      "path": "VOICEACTRESS100_061.wav",
+      "byte_size": 2500990,
+      "sha256": "cadb48b9745976302e14ff4cabd605b7bae556f92b4fa14642536d6aab0ef1ae",
+      "zip_crc32": "386cc99e"
+    },
+    {
+      "path": "VOICEACTRESS100_062.wav",
+      "byte_size": 2702654,
+      "sha256": "c52d8544db23705da2a0b8ca76dfafeb0b3c203fd63681a9687721891605cfbe",
+      "zip_crc32": "b1aba4b2"
+    },
+    {
+      "path": "VOICEACTRESS100_063.wav",
+      "byte_size": 1501150,
+      "sha256": "0481f1006ed558410485900ef898d5168e62d3e8a55f7342b3a97e0501fb1d47",
+      "zip_crc32": "e85822dd"
+    },
+    {
+      "path": "VOICEACTRESS100_064.wav",
+      "byte_size": 1764694,
+      "sha256": "c89e5b14ea06a06cea305422a63d0b1e02024e1ea43e89aaf8ca1f7946d3d140",
+      "zip_crc32": "f958fd8b"
+    },
+    {
+      "path": "VOICEACTRESS100_065.wav",
+      "byte_size": 3064146,
+      "sha256": "efc0f2d0b9d221dbd9f884b0c8e3a187cb7fa5f894ceb32772d9847f302ce042",
+      "zip_crc32": "384da586"
+    },
+    {
+      "path": "VOICEACTRESS100_066.wav",
+      "byte_size": 2841870,
+      "sha256": "a58449008281cfa0e12e41eeaf8c0ee4e6378ed0ef0bfaffb77b8e0eaf4650c1",
+      "zip_crc32": "cc9ec5f9"
+    },
+    {
+      "path": "VOICEACTRESS100_067.wav",
+      "byte_size": 2674522,
+      "sha256": "42c4bae401ba99ff5f1feb8fc5b7c4153152e196601147b186884f5f886276a3",
+      "zip_crc32": "067438ae"
+    },
+    {
+      "path": "VOICEACTRESS100_068.wav",
+      "byte_size": 2208098,
+      "sha256": "91e75164eaa0e5389321daebe13d63509b193da8d888d0bb3cd763ae8d18db8d",
+      "zip_crc32": "06c4cec8"
+    },
+    {
+      "path": "VOICEACTRESS100_069.wav",
+      "byte_size": 3122246,
+      "sha256": "6307c3f1ac3ec5206505e08baf808aebfb58e4e4c7e525858768511dfb53eda7",
+      "zip_crc32": "3c11a49b"
+    },
+    {
+      "path": "VOICEACTRESS100_070.wav",
+      "byte_size": 2834226,
+      "sha256": "57a6adde75720eb31dd35b36a80fce70e1a329eb990bb83a67d0ceec0c3d2b1b",
+      "zip_crc32": "26e87e2e"
+    },
+    {
+      "path": "VOICEACTRESS100_071.wav",
+      "byte_size": 2200142,
+      "sha256": "3559ca13bfd39eae8bc694099f0c8886623898f2742b578d011266e5d81253d3",
+      "zip_crc32": "3e4dcb16"
+    },
+    {
+      "path": "VOICEACTRESS100_072.wav",
+      "byte_size": 2488366,
+      "sha256": "4b53ad1ca9e776301ee07ad80771ee0ea3863e756a9c851ccdb41a3ff5d68614",
+      "zip_crc32": "b7ef6e30"
+    },
+    {
+      "path": "VOICEACTRESS100_073.wav",
+      "byte_size": 2590762,
+      "sha256": "d666b09df66d9b434bf6ea66e20a0483ea4d26b8b6f394ccae087bd2963ec919",
+      "zip_crc32": "9e678763"
+    },
+    {
+      "path": "VOICEACTRESS100_074.wav",
+      "byte_size": 1889718,
+      "sha256": "65dc767b3d0ce4f8bc978da49c71f2b4279212011645b92e8ddeddce2e5d4a68",
+      "zip_crc32": "fa782a8a"
+    },
+    {
+      "path": "VOICEACTRESS100_075.wav",
+      "byte_size": 2280990,
+      "sha256": "50986cd525a6a7513f1a7bc6e5c00953ff2923b691338b306f3f059455ed2b68",
+      "zip_crc32": "650ddff0"
+    },
+    {
+      "path": "VOICEACTRESS100_076.wav",
+      "byte_size": 4145654,
+      "sha256": "ffb00ca4ff0dd24b62e0c2d8b20872ee93b8f09dcbc89169a009f66f55368a51",
+      "zip_crc32": "b48efa01"
+    },
+    {
+      "path": "VOICEACTRESS100_077.wav",
+      "byte_size": 3496574,
+      "sha256": "e47f25fa7bfe9ceb6531b7c9c010925df27c33d35e9afcfdb22c12faa1d0da3c",
+      "zip_crc32": "0297e31c"
+    },
+    {
+      "path": "VOICEACTRESS100_078.wav",
+      "byte_size": 3622790,
+      "sha256": "05c6799a514754da88e2e32bba8000b5fafc00a4bacb0daa60ee4f6bc72d3f30",
+      "zip_crc32": "d0f97b71"
+    },
+    {
+      "path": "VOICEACTRESS100_079.wav",
+      "byte_size": 3132138,
+      "sha256": "26efb458c0e296393a7d62fe6e3ff183d2946df6ef4394883dd3a1a3de627d22",
+      "zip_crc32": "9df69668"
+    },
+    {
+      "path": "VOICEACTRESS100_080.wav",
+      "byte_size": 2211654,
+      "sha256": "cf5d133d8b31f92908ed472cc3a52812f3a50e7ed991df4ace9929a997ae2f64",
+      "zip_crc32": "ffe47650"
+    },
+    {
+      "path": "VOICEACTRESS100_081.wav",
+      "byte_size": 3005458,
+      "sha256": "da0a32240b02f9c70399d3ce2c3cbe1ac730da7090c8f5735ebc2ea560e58e22",
+      "zip_crc32": "4a57ff8c"
+    },
+    {
+      "path": "VOICEACTRESS100_082.wav",
+      "byte_size": 2314222,
+      "sha256": "893baccf93e91018e9f3e2618a42af14a8191544a9f789bf3eab611e1416e947",
+      "zip_crc32": "fc26ebfc"
+    },
+    {
+      "path": "VOICEACTRESS100_083.wav",
+      "byte_size": 2159330,
+      "sha256": "d592ebaaee4aa8420826a23afb2eeda3736a10513b30748fcc608558d0ad448c",
+      "zip_crc32": "1918e4b1"
+    },
+    {
+      "path": "VOICEACTRESS100_084.wav",
+      "byte_size": 3078558,
+      "sha256": "8c2aae66fe920a9bba14d99ca7f4ca5b965127f50bc5f34fddcbbaf987703099",
+      "zip_crc32": "69f07509"
+    },
+    {
+      "path": "VOICEACTRESS100_085.wav",
+      "byte_size": 3729702,
+      "sha256": "ab5e1cd809322127079188a3d178203f93a6c2e64986c538c65ad471a2f2815d",
+      "zip_crc32": "d8d7e4ec"
+    },
+    {
+      "path": "VOICEACTRESS100_086.wav",
+      "byte_size": 2617778,
+      "sha256": "759a389a39618887c5122937a1e63212a5947d67463805aceed6bcf72fd0910f",
+      "zip_crc32": "b1a8f6c1"
+    },
+    {
+      "path": "VOICEACTRESS100_087.wav",
+      "byte_size": 3251490,
+      "sha256": "daa43625af038802e35e6af2d2bd8d6d8a2e4795e633287268be5c035561f316",
+      "zip_crc32": "217f60ff"
+    },
+    {
+      "path": "VOICEACTRESS100_088.wav",
+      "byte_size": 2295022,
+      "sha256": "cb005ae1ac36dd51dab54ae2a9e761cd351fd8f0afebe17c6644fea2a44d76fe",
+      "zip_crc32": "b84103a7"
+    },
+    {
+      "path": "VOICEACTRESS100_089.wav",
+      "byte_size": 2462658,
+      "sha256": "21988948d435becf4ab10310b2a60b73d776bca71a417e79d9a21e3ac6deb4cf",
+      "zip_crc32": "fe0356eb"
+    },
+    {
+      "path": "VOICEACTRESS100_090.wav",
+      "byte_size": 2328194,
+      "sha256": "336385d94e55bf60d67f448b3db8e0c1f86a6278bdf4ac54dd54380f976201ac",
+      "zip_crc32": "110922e8"
+    },
+    {
+      "path": "VOICEACTRESS100_091.wav",
+      "byte_size": 1406238,
+      "sha256": "fe1f5e05364b5c1ba8ffef4688a476abe6d76a17c63a8e3b45bc4254989b57fc",
+      "zip_crc32": "f9bcc9f6"
+    },
+    {
+      "path": "VOICEACTRESS100_092.wav",
+      "byte_size": 2907366,
+      "sha256": "60d68112d009dda1dea0ad242ccef6e5230b58235dddc1235c7500744e7ec437",
+      "zip_crc32": "c1525921"
+    },
+    {
+      "path": "VOICEACTRESS100_093.wav",
+      "byte_size": 3773786,
+      "sha256": "d63462d1fa1901ac7fd7d4aadeccc4832045ed0687eed99d3d74d44471844b8e",
+      "zip_crc32": "b921b021"
+    },
+    {
+      "path": "VOICEACTRESS100_094.wav",
+      "byte_size": 5165146,
+      "sha256": "15cdf36998da98a29c6f55104cfd6df8616885bdc1e285b7a7dc2c0be3aa1ce9",
+      "zip_crc32": "449595ce"
+    },
+    {
+      "path": "VOICEACTRESS100_095.wav",
+      "byte_size": 2672582,
+      "sha256": "ebc246c8b5792b367757b101cb1e7c176b71023e41d4734be79440171028f497",
+      "zip_crc32": "12f67045"
+    },
+    {
+      "path": "VOICEACTRESS100_096.wav",
+      "byte_size": 3266518,
+      "sha256": "a23a9d5ec0fd1f86be6dc419f628e1a07eee55d1b330dff81b496019fb01f632",
+      "zip_crc32": "dc436da3"
+    },
+    {
+      "path": "VOICEACTRESS100_097.wav",
+      "byte_size": 3311450,
+      "sha256": "8d72ac9c5b5f08f20366f764db8ed1cd11ef322780aecf3506889d58601c18c5",
+      "zip_crc32": "cc2f11b5"
+    },
+    {
+      "path": "VOICEACTRESS100_098.wav",
+      "byte_size": 2177194,
+      "sha256": "381fa899b5371769fb1ab9e6bf5585fe49d469303340c110e3fda6cfcc55bdf3",
+      "zip_crc32": "ee44eec5"
+    },
+    {
+      "path": "VOICEACTRESS100_099.wav",
+      "byte_size": 1781974,
+      "sha256": "41619f067f60fcc2d3142dc8d02689a8a3066aaca72748cc5d6eb16111dd752f",
+      "zip_crc32": "573dd173"
+    },
+    {
+      "path": "VOICEACTRESS100_100.wav",
+      "byte_size": 3428610,
+      "sha256": "c9a1c28b5b4d553f66e971b20fa67e64c369fc8bf0ad75d012a76dfdb90a8e5e",
+      "zip_crc32": "0f371e6c"
+    }
+  ],
+  "documentation_file_count": 10,
+  "documentation": [
+    {
+      "path": "recording-editing-notes.txt",
+      "byte_size": 3767,
+      "sha256": "fab3abdb51b87f64923c9616b2cebf8150ac21a5420d3def2a0f6a6be2f36209",
+      "zip_crc32": "00158960",
+      "source_basename": "01 収録・編集方法の説明.txt"
+    },
+    {
+      "path": "script-license.txt",
+      "byte_size": 14750,
+      "sha256": "73a4dcd9b2af623a48304ba9f10a8808555b2eb384fbb6ac4d2a1aaeb93879ed",
+      "zip_crc32": "a43040aa",
+      "source_basename": "01 台本について.txt"
+    },
+    {
+      "path": "transcript-notes.txt",
+      "byte_size": 2451,
+      "sha256": "87568b5425fcc7d5e4118c1419a735bf967476bc2222e714aa3016b08af41637",
+      "zip_crc32": "04a3e8be",
+      "source_basename": "01 同梱している台本について.txt"
+    },
+    {
+      "path": "corpus-transcript.txt",
+      "byte_size": 14005,
+      "sha256": "26019d87876fc73786d98c459f08f24c1e04eae41105f88afc57f2a910befd90",
+      "zip_crc32": "0461d889",
+      "source_basename": "01 補足なし台本（JSUTコーパス・JVSコーパス版）.txt"
+    },
+    {
+      "path": "license.txt",
+      "byte_size": 8430,
+      "sha256": "ba3bc181c676b696e25cfc816bb707efe4b9d1bf7e25f55717d2dcacc4d7b882",
+      "zip_crc32": "080b7c41",
+      "source_basename": "02 ライセンスについて.txt"
+    },
+    {
+      "path": "corpus-transcript-annotated.txt",
+      "byte_size": 13947,
+      "sha256": "e71515507151dd2f20ac2a3f69ea63f76d1aefbb6b91cb175fbbfa8c484df345",
+      "zip_crc32": "0d046222",
+      "source_basename": "02 補足つき台本（つくよみちゃんコーパス版）.txt"
+    },
+    {
+      "path": "pronunciation-accent-notes.txt",
+      "byte_size": 7003,
+      "sha256": "07e2e7c34efadf4ee3ed2503b2fe1de7afe2a27c948d01304e7688fd6395fad5",
+      "zip_crc32": "734e7a88",
+      "source_basename": "02 読み仮名・アクセントについて.txt"
+    },
+    {
+      "path": "tsukuyomi-terms.txt",
+      "byte_size": 1402,
+      "sha256": "fd892aa318ff8a570218806247ca4ff1f077e1f2f7d99c04370c4060b48ffe09",
+      "zip_crc32": "53445015",
+      "source_basename": "03 つくよみちゃんコーパスの利用規約.txt"
+    },
+    {
+      "path": "accent-research-notes.txt",
+      "byte_size": 11222,
+      "sha256": "2491930afe5778a885f8f3131e8e4f30e8b60f9bc7c7e3ece54acdb62901257c",
+      "zip_crc32": "c4cf92a0",
+      "source_basename": "03 アクセントについての調査結果.txt"
+    },
+    {
+      "path": "readme.txt",
+      "byte_size": 2251,
+      "sha256": "1989d7b151f73b1a3a7e1115e7d6e01c14f20b151bb64f7cfa2bcda90279f894",
+      "zip_crc32": "8140e7fa",
+      "source_basename": "ReadMe.txt"
+    }
+  ]
+}

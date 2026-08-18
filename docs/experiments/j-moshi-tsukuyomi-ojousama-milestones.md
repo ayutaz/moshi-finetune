@@ -35,8 +35,8 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と、自然�
 | ID | マイルストーン | 目的 | ゴール | 状態 | 依存先 |
 | --- | --- | --- | --- | --- | --- |
 | M0 | 過去実験・Vast.ai基盤 | 比較基準と安全な実行環境を確立 | 過去baselineを固定し、Vast.aiへSSH接続して学習準備完了 | 進行中 | なし |
-| M1 | 権利・データ確定 | 学習可能で再現可能な入力を確定 | データ台帳、分割、固定評価セットを完成 | 未着手 | M0 |
-| M2 | Tsukuyomi TTS | 対話音声を生成できる対象話者TTSを作る | 未学習30文のTTS Gateを通過 | 未着手 | M1 |
+| M1 | 権利・データ確定 | 学習可能で再現可能な入力を確定 | データ台帳、分割、固定評価セットを完成 | 完了 | なし（M0と並行可） |
+| M2 | Tsukuyomi TTS | 対話音声を生成できる対象話者TTSを作る | 未学習30文のTTS Gateを通過 | 未着手 | M0, M1 |
 | M3 | Voice control | 過去成功条件をつくよみちゃんで再現 | V0/V1の少なくとも一方で声質改善と対話維持を両立 | 未着手 | M2 |
 | M4 | Voice overfit | 声質をcontrolより強く適応 | V2/V3から品質を壊さない最良checkpointを選定 | 未着手 | M3 |
 | M5 | お嬢様口調 | 声を保持しながら話し方を転移 | S0/S1で口調改善、声質・対話品質を維持 | 未着手 | M4 |
@@ -65,7 +65,7 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と、自然�
 2. 見つからない成果物は、探索先と欠損を記録する。
 3. 公開Stage 2 / Stage 3 checkpointを取得し、固定promptで生成する。
 4. 過去の10 pair perplexity評価を再現する。
-5. 露出したVast.ai API keyを失効・再発行し、リポジトリ外へ保存する。
+5. Vast.ai API keyの露出リスクを確認し、原則ローテーションする。ユーザーがリスクを理解した上で現keyの継続を明示承認した場合は、例外理由と日付を記録する。
 6. keyファイルを所有者だけが読める権限にし、API認証を確認する。
 7. Vast.aiインスタンスを用意し、SSH、GPU、CUDA、ディスク、永続保存先を確認する。
 8. 学習開始前のクレジットと想定上限を記録する。API keyや個人情報は記録しない。
@@ -89,27 +89,32 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と、自然�
 
 ### 完了条件
 
-- [ ] 過去artifactの回収結果がファイル単位で記録されている。
+- [x] 過去artifactの回収結果がファイル単位で記録されている。
 - [ ] Stage 2 / Stage 3の固定生成音声と評価値が保存されている。
-- [ ] 露出したAPI keyが失効され、新しいkeyで認証できる。
-- [ ] API keyがリポジトリ内に存在せず、保存ファイルの権限が`600`相当である。
-- [ ] Vast.aiに稼働中インスタンスがあり、SSH接続できる。
-- [ ] GPU、CUDA、VRAM、空きディスク、永続保存先を確認済みである。
+- [x] API keyの扱いを決定済みである（2026-08-18、ユーザーが現key継続を明示承認）。
+- [x] API keyがリポジトリ内に存在せず、保存ファイルの権限が`600`相当である。
+- [x] Vast.aiに専用の稼働中インスタンスがあり、SSH接続できる。
+- [x] GPU、CUDA、VRAM、空きディスク、保存先とinstance破棄時の消去条件を確認済みである。
 - [x] 学習コストの記録方法と停止上限が決まっている（承認上限`US$100`、実測`US$95`で安全停止）。
 
 ### 次へ進む条件
 
-全項目を満たした場合のみM1へ進む。API keyのローテーションまたはSSH接続が未完了なら、データをアップロードしない。
+M1のデータ監査はM0と並行可能とする。M2へ進むにはM0とM1の両方が完了していることを要求する。API keyのローテーションまたは明示例外の記録と、SSH接続が未完了ならデータをアップロードしない。
 
 ### 完了記録
 
 - 状態: 進行中
 - 過去ブログの解析: 完了
-- Git branch / tag / stash / PR refs / 主要ローカル保存先の探索: 完了
+- Git branch / tag / stash / unreachable objects / 主要ローカル保存先の探索: 完了
 - Vast.ai CLIとAPI認証: 確認済み
-- Vast.aiインスタンス: 1台存在するが`exited`
-- API keyローテーション: 未確認
-- Stage 2 / Stage 3の再評価: 未着手
+- Vast.ai専用インスタンス: `48004205`、A100-SXM4-80GB ×2、SSH/GPU/CUDA確認済み
+- 環境manifest: `experiments/tsukuyomi_ojousama/m0/environment-manifest.json`
+- artifact回収記録: `experiments/tsukuyomi_ojousama/m0/artifact-recovery.md`
+- API key: 現key継続をユーザーが明示承認、repository外、mode `600`
+- Stage 3: 固定revisionのweight/config回収とchecksum確認済み
+- Stage 2: 固定revisionのweight/config回収済み。公開HF SHA-256を固定
+- Stage 2 / Stage 3の固定音声・口調再評価: 進行中
+- 費用台帳: `experiments/tsukuyomi_ojousama/m0/spend-ledger.json`
 - Vast.ai費用上限: `US$100`（2026-08-18にユーザー承認済み）
 
 ## M1: 権利・データ確定
@@ -150,12 +155,12 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と、自然�
 
 ### 完了条件
 
-- [ ] すべてのデータに取得元、版、checksum、利用条件がある。
-- [ ] COEIROINK生成音声が0件である。
-- [ ] 破損・重複検査に合格している。
-- [ ] train/dev/test間に同一対話・近重複がない。
-- [ ] 固定評価セットが学習データから隔離されている。
-- [ ] 公開時に必要なクレジット文面と非公開対象が決まっている。
+- [x] すべてのデータに取得元、版、checksum、利用条件がある。
+- [x] COEIROINK生成音声が0件である。
+- [x] 破損・重複検査に合格している。
+- [x] train/dev/test間に同一対話・近重複がない。
+- [x] 固定評価セットが学習データから隔離されている。
+- [x] 公開時に必要なクレジット文面と非公開対象が決まっている。
 
 ### 次へ進む条件
 
@@ -163,8 +168,19 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と、自然�
 
 ### 完了記録
 
-- 状態: 未着手
-- 証拠: 未作成
+- 状態: 完了
+- つくよみちゃん公式Vol.1: archive SHA-256固定、100件を安全に抽出、96 kHz IEEE Float monoを検証
+- split: train 80 / dev 10 / test 10、破損0、重複0、split間同一・近似重複0
+- provenance: `experiments/tsukuyomi_ojousama/registry/tsukuyomi-corpus-v1.json`
+- raw manifest: `experiments/tsukuyomi_ojousama/manifests/tsukuyomi-corpus-v1.jsonl`
+- validation: `experiments/tsukuyomi_ojousama/reports/tsukuyomi-corpus-v1-validation.json`
+- お嬢様参考データ: upstream 202行、重複prompt 1件を棄却し201件を`reference-only`として固定
+- 固定評価: TTS 30、Style 50 pair、一般対話30、Voice seen/held-out各10
+- 評価漏洩: trainとの完全・近似重複0
+- 評価rubric: `experiments/tsukuyomi_ojousama/eval/RUBRIC.md`
+- 100対話再生成仕様: `experiments/tsukuyomi_ojousama/style/DATASET_SPEC.md`
+- クレジット・非公開対象: `experiments/tsukuyomi_ojousama/DATA_CREDITS.md`
+- 追加約1,500台詞: 未取得。公式100文pilotには必須としない
 
 ## M2: Tsukuyomi TTS
 

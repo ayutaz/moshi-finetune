@@ -1,0 +1,57 @@
+{
+  "dataset_id": "tsukuyomi-ojousama-fixed-evaluation-v1",
+  "source_url": "local://experiments/tsukuyomi_ojousama/eval",
+  "source_version": "v1; 2026-08-18",
+  "retrieved_at": "2026-08-18T00:00:00+09:00",
+  "license_id": "Apache-2.0",
+  "license_url": "https://www.apache.org/licenses/LICENSE-2.0",
+  "credit": "Original evaluation text generated for this moshi-finetune experiment with Codex",
+  "redistribution": "permitted-under-project-license",
+  "generation_method": "codex-authored-and-tdd-validated",
+  "usage": "evaluation-only",
+  "training_exclusion": "required",
+  "files": [
+    {
+      "path": "experiments/tsukuyomi_ojousama/eval/tts-unseen-30.jsonl",
+      "byte_size": 4346,
+      "sha256": "33fe2c1d1a0e91ba0f79e5258ff470d057c773b9d242e426bc92a7f84a202440",
+      "rows": 30
+    },
+    {
+      "path": "experiments/tsukuyomi_ojousama/eval/style-heldout-50.jsonl",
+      "byte_size": 13382,
+      "sha256": "2a75d060586d4f8c4adfad21a369502267ca88601194b19684ce200690c5b7bd",
+      "rows": 50
+    },
+    {
+      "path": "experiments/tsukuyomi_ojousama/eval/general-dialogue-30.jsonl",
+      "byte_size": 6898,
+      "sha256": "ba6aaeea99ab5e9dddd8561429818543198ae0ce1f597c7923e80aebd21468f7",
+      "rows": 30
+    },
+    {
+      "path": "experiments/tsukuyomi_ojousama/eval/voice-seen-heldout-20.jsonl",
+      "byte_size": 7127,
+      "sha256": "5193487d37d0ea6456be09437672b945fefabf87b968acb6e177ca21df3a51e8",
+      "rows": 20
+    },
+    {
+      "path": "experiments/tsukuyomi_ojousama/eval/persona-baseline-10.jsonl",
+      "byte_size": 1145,
+      "sha256": "8f2528f234e3c3c7a47118f7abc7cb57df373e2de544318a74c76d19e93344e4",
+      "rows": 10,
+      "version": "reconstructed-v1"
+    }
+  ],
+  "validation": {
+    "report": "experiments/tsukuyomi_ojousama/reports/fixed-evaluation-validation.json",
+    "training_leakage_count": 0,
+    "near_duplicate_threshold": 0.9
+  },
+  "notes": [
+    "The 30 TTS sentences, 50 style pairs, and 30 general-dialogue prompts are newly authored and were not copied from the Tsukuyomi corpus or OjousamaTalkScriptDataset.",
+    "The voice reference index contains source transcript metadata only; the corresponding Tsukuyomi raw WAV files remain non-public.",
+    "The persona 10-pair set reconstructs the published evaluation method but is not the unrecovered historical 10-pair content and must not be compared directly with historical aggregate values.",
+    "Changing any evaluation row creates a new version and requires new checksums and leakage validation."
+  ]
+}
