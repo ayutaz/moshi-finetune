@@ -1,7 +1,5 @@
 import json
 import os
-import re
-from collections import OrderedDict
 
 import torch
 import torch.nn as nn
@@ -16,7 +14,15 @@ from moshi.modules.transformer import (
     create_sin_embedding,
     multi_linear,
 )
-from safetensors.torch import load_model, save_file
+from safetensors import safe_open
+from safetensors.torch import load_file, load_model, save_file
+
+from tools.moshi_state_dict import (
+    count_original_format_keys,
+    expose_linear_weights_in_original_state_dict,
+    is_original_format_state_dict,
+    restore_linear_weights_from_exposed_state_dict,
+)
 
 
 def expose_linear_weights_for_zero3(
@@ -143,53 +149,6 @@ def transformer_forward(self, x: torch.Tensor, *args, **kwargs):
     return x
 
 
-def restore_linear_weights_from_exposed_state_dict(
-    moshi_lm_for_ft_state_dict: OrderedDict,
-) -> OrderedDict:
-    """
-    Restore linear layer weights from the exposed state dict for DeepSpeed Zero-3 compatibility.
-
-    Target parameters:
-    - `transformer.layers[*].gating.linear_in_weight`
-    - `transformer.layers[*].gating.linear_out_weight`
-    - `depformer.layers[*].gating[*].linear_in_weight`
-    - `depformer.layers[*].gating[*].linear_out_weight`
-    - `depformer.layers[*].self_attn.out_proj_weight`
-    """
-
-    gating_linear_in_pattern = re.compile(r"transformer\.layers\.\d+\.gating\.linear_in_weight")
-    gating_linear_out_pattern = re.compile(r"transformer\.layers\.\d+\.gating\.linear_out_weight")
-    depformer_gating_linear_in_pattern = re.compile(
-        r"depformer\.layers\.\d+\.gating\.\d+\.linear_in_weight"
-    )
-    depformer_gating_linear_out_pattern = re.compile(
-        r"depformer\.layers\.\d+\.gating\.\d+\.linear_out_weight"
-    )
-    depformer_self_attn_out_proj_pattern = re.compile(
-        r"depformer\.layers\.\d+\.self_attn\.out_proj_weight"
-    )
-
-    new_state_dict = OrderedDict()
-    for key in moshi_lm_for_ft_state_dict.keys():
-        if gating_linear_in_pattern.match(key):
-            new_key = key.replace("linear_in_weight", "linear_in.weight")
-        elif gating_linear_out_pattern.match(key):
-            new_key = key.replace("linear_out_weight", "linear_out.weight")
-        elif depformer_gating_linear_in_pattern.match(key):
-            new_key = key.replace("linear_in_weight", "linear_in.weight")
-        elif depformer_gating_linear_out_pattern.match(key):
-            new_key = key.replace("linear_out_weight", "linear_out.weight")
-        elif depformer_self_attn_out_proj_pattern.match(key):
-            new_key = key.replace("out_proj_weight", "out_proj.weight")
-        else:
-            new_key = key
-        if new_key != key:
-            print(f"{key} -> {new_key}")
-        new_state_dict[new_key] = moshi_lm_for_ft_state_dict[key]
-
-    return new_state_dict
-
-
 class MoshiForFinetuning(LMModel):
     """
     Moshi language model for finetuning.
@@ -299,7 +258,22 @@ class MoshiForFinetuning(LMModel):
         # Initialize the model
         moshi_lm = cls(device=device, dtype=dtype, **moshi_lm_kwargs).to(device=device, dtype=dtype)
         # Load the model
-        load_model(moshi_lm, os.path.join(save_dir, "model.safetensors"))
+        weights_path = os.path.join(save_dir, "model.safetensors")
+        with safe_open(weights_path, framework="pt") as weights:
+            checkpoint_keys = list(weights.keys())
+        if is_original_format_state_dict(checkpoint_keys):
+            # Checkpoints published through `tools/clean_moshi.py` keep the original Moshi
+            # names, which do not match the ones `expose_linear_weights_for_zero3` creates.
+            print(
+                f"Loading an original-format checkpoint; renaming "
+                f"{count_original_format_keys(checkpoint_keys)} exposed parameters"
+            )
+            state_dict = load_file(weights_path, device=str(device))
+            moshi_lm.load_state_dict(
+                expose_linear_weights_in_original_state_dict(state_dict), strict=True
+            )
+        else:
+            load_model(moshi_lm, weights_path)
 
         moshi_lm.moshi_lm_kwargs = moshi_lm_kwargs
 
