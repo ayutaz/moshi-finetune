@@ -13,6 +13,8 @@
 
 入力indexは`../eval/voice-seen-heldout-20.jsonl`の`held-out` 10件を使う。生成token、decoded WAV、実行config、stdout/stderr、checkpoint checksumを`/workspace/experiment-artifacts/baselines/{stage2,stage3}/evaluation`へ保存し、Vast.ai instance破棄前に外部へexportする。
 
+転送対象のcanonical filenameは`heldout-prompt-files.txt`へ固定し、Vast.ai上では`run_baseline.sh`を実行する。スクリプト内のPython entrypointはすべて`uv run --no-sync`経由とする。
+
 同じTsukuyomi promptを与えても過去あみたろ音声そのものの類似性評価にはならない。このbaselineの目的は、Stage 2/3間の生成安定性、明瞭度、loop、口調差を同一条件で固定することである。
 
 ## 口調perplexity
