@@ -196,7 +196,9 @@ M1のデータ監査はM0と並行可能とする。M2へ進むにはM0とM1の�
 - 評価rubric: `experiments/tsukuyomi_ojousama/eval/RUBRIC.md`
 - 100対話再生成仕様: `experiments/tsukuyomi_ojousama/style/DATASET_SPEC.md`
 - クレジット・非公開対象: `experiments/tsukuyomi_ojousama/DATA_CREDITS.md`
-- 追加約1,500台詞: 未取得。申請制のため取得はユーザー対応が必要。公式100文pilotには必須としない
+- 追加約1,500台詞（夢前黎の音声データの寄せ集め）: **未取得のまま台帳化して確定**。2026-08-20に上流の利用条件を確認し、`registry/tsukuyomi-yoseatsume-candidate.json`へ取得元・版・入手方法・利用条件・禁止事項・除外理由・再開条件を記録した。`used_in_experiment: false`で管理し、manifestには1件も含まれない
+- 同データの入手は上流メールフォームからの**申請制**で、申請はユーザー本人が行う必要がある。エージェントは代理申請しない
+- 取得時の注意: この寄せ集めはつくよみちゃんコーパスVol.1の100文を含む上位集合であり、`tsukuyomi-corpus-v1`と重複排除してから分割しないと固定held-outがtrainへ再流入する。JSUT basic5000部分は別条件のため別途台帳化が必要。再配布禁止のため取得物と派生物は非公開対象
 - 独立監査（2026-08-20）: 完了条件を文書のチェックに頼らず実データで再検査した。原音100件すべてがmanifestのSHA-256・byte sizeと一致、registryは`eval/`の5ファイルを漏れなく網羅、`voice-seen-heldout-20.jsonl`の20行はartifact_id・sha256・text・splitがmanifestと一致し、seen 10はtrain・held-out 10はtestから採られている
 - **MIT準拠の不備を修正**: `reference/ojousama-talk-script-201.jsonl`は公開リポジトリにコミットされた再配布物だが、`DATA_CREDITS.md`には著作権表示のみで許諾条項本文が無く、本文は`data/`配下（gitignore対象）にしか存在しなかった。上流LICENSEの逐語コピーを`reference/LICENSE.OjousamaTalkScriptDataset`として同梱し（SHA-256 `fcd8fbf3…`）、credits・registryに記載した
 - 監査のテスト化: 上記4点をすべて`tests/test_experiment_assets.py`の恒久テストにした。ライセンス削除・評価ファイルの登録漏れを実際に変異させて検出することを確認済み

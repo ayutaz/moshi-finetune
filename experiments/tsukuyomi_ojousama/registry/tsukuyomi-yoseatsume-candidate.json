@@ -1,0 +1,41 @@
+{
+  "dataset_id": "tsukuyomi-yoseatsume",
+  "status": "not-obtained",
+  "used_in_experiment": false,
+  "name": "夢前黎の音声データの寄せ集め",
+  "source_url": "https://tyc.rei-yumesaki.net/material/corpus/yoseatsume/",
+  "source_version": "published 2024-06-18; page updated 2024-06-20",
+  "checked_at": "2026-08-20",
+  "approximate_size": "about 1,500 utterances",
+  "composition": [
+    "つくよみちゃんコーパス Vol.1 の100文",
+    "みんなで作るJSUTコーパス basic5000 のうち夢前黎担当分600文",
+    "その他の朗読・ナレーション等"
+  ],
+  "acquisition": {
+    "method": "application-only",
+    "procedure": "上流サイトのメールフォームから申請し、返送されるダウンロードURLを受け取る",
+    "requires_user_action": true,
+    "reason_agent_cannot_perform": "個人としての申請メール送信が必要で、代理送信は行わない",
+    "application_template_quoted_from_source": "お世話になります。○○と申します。音声合成に関する研究・開発のために『夢前黎の音声データの寄せ集め』を使わせていただけませんでしょうか。"
+  },
+  "terms": {
+    "permitted_use": "音声技術（合成、声質変換、認識等）の研究開発のみ",
+    "machine_learning": "permitted within the stated speech-technology research and development scope",
+    "credit_when_voice_is_not_exposed": "クレジット不要",
+    "credit_when_voice_is_exposed": "「つくよみちゃんから提供された他の音声データ」等と記載することが推奨される",
+    "redistribution": "prohibited - 第三者への公開・譲渡禁止",
+    "additional": "つくよみちゃんUTAU音源を併用する場合は追加のクレジットが必要"
+  },
+  "integrity_notes": [
+    "This collection is a superset of tsukuyomi-corpus-v1: it contains the same Vol.1 100 sentences. If it is ever obtained, deduplicate against tsukuyomi-corpus-v1 before splitting, or the fixed held-out items could reappear in train.",
+    "The JSUT basic5000 portion carries its own upstream terms and must be registered separately before use.",
+    "Redistribution is prohibited, so any obtained audio and anything derived from it stays in the non-public set listed in DATA_CREDITS.md."
+  ],
+  "decision": {
+    "date": "2026-08-20",
+    "outcome": "excluded from the current experiment",
+    "rationale": "Acquisition needs a user-submitted application, and the milestone plan already states that the official 100-sentence pilot may proceed without it. No file from this collection is present in any manifest, so nothing in the experiment depends on terms that have not been accepted.",
+    "reopen_when": "the user completes the application and receives the download URL"
+  }
+}

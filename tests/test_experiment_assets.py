@@ -155,6 +155,8 @@ class RedistributionComplianceTests(unittest.TestCase):
 
         for path in sorted((EXPERIMENT_ROOT / "registry").glob("*.json")):
             registry = json.loads(path.read_text(encoding="utf-8"))
+            if registry.get("used_in_experiment") is False:
+                continue  # a source that was never obtained needs no credit line yet
             source_url = registry.get("source_url", "")
             if not source_url.startswith("http"):
                 continue  # artifacts produced in this repository need no upstream credit
@@ -185,4 +187,56 @@ class RawCorpusIntegrityTests(unittest.TestCase):
             self.assertEqual(path.stat().st_size, row["byte_size"], row["path"])
             self.assertEqual(
                 hashlib.sha256(path.read_bytes()).hexdigest(), row["sha256"], row["path"]
+            )
+
+
+class DataProvenanceCoverageTests(unittest.TestCase):
+    """Every dataset the experiment consumes must be registered before it is used.
+
+    An application-only source such as `tsukuyomi-yoseatsume` is registered with
+    `used_in_experiment: false`, so it carries documented terms without any manifest row
+    depending on terms that were never accepted.
+    """
+
+    def _registries(self) -> dict[str, dict]:
+        registries = {}
+        for path in sorted((EXPERIMENT_ROOT / "registry").glob("*.json")):
+            registry = json.loads(path.read_text(encoding="utf-8"))
+            registries[registry["dataset_id"]] = registry
+        return registries
+
+    def test_every_manifest_dataset_is_registered_and_marked_used(self) -> None:
+        registries = self._registries()
+        rows = [
+            json.loads(line)
+            for line in (EXPERIMENT_ROOT / "manifests" / "tsukuyomi-corpus-v1.jsonl")
+            .read_text(encoding="utf-8")
+            .splitlines()
+            if line.strip()
+        ]
+
+        for row in rows:
+            registry = registries.get(row["dataset_id"])
+            self.assertIsNotNone(registry, f"{row['dataset_id']} has no registry entry")
+            self.assertNotEqual(
+                registry.get("used_in_experiment"),
+                False,
+                f"{row['dataset_id']} is marked unused but appears in the manifest",
+            )
+
+    def test_every_registry_records_its_terms_and_provenance(self) -> None:
+        for dataset_id, registry in self._registries().items():
+            self.assertTrue(registry.get("source_url"), f"{dataset_id}: no source_url")
+            self.assertTrue(registry.get("source_version"), f"{dataset_id}: no source_version")
+            has_terms = registry.get("license_id") or registry.get("terms")
+            self.assertTrue(has_terms, f"{dataset_id}: no licence or terms recorded")
+
+    def test_an_unobtained_source_declares_why_it_is_excluded(self) -> None:
+        for dataset_id, registry in self._registries().items():
+            if registry.get("used_in_experiment") is not False:
+                continue
+            self.assertIn("decision", registry, f"{dataset_id}: no exclusion decision")
+            self.assertTrue(registry["decision"].get("rationale"), f"{dataset_id}: no rationale")
+            self.assertTrue(
+                registry["decision"].get("reopen_when"), f"{dataset_id}: no reopen condition"
             )
