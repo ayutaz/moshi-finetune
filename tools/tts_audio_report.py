@@ -17,9 +17,9 @@ import json
 import math
 import wave
 from array import array
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
-from collections.abc import Sequence
 
 DEFAULT_FULL_SCALE = 32767
 SILENCE_FLOOR = 200

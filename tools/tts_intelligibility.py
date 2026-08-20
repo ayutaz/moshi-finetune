@@ -19,9 +19,9 @@ import argparse
 import json
 import statistics
 import unicodedata
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
-from collections.abc import Iterable
 
 _KEEP_CATEGORIES = ("L", "N")
 
