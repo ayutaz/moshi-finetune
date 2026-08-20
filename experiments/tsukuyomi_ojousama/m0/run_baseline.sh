@@ -2,6 +2,12 @@
 
 set -euo pipefail
 
+# The uv installer puts the binary in ~/.local/bin, which a non-interactive shell
+# (nohup, ssh command form) does not have on PATH.
+if ! command -v uv >/dev/null 2>&1 && [[ -x "${HOME}/.local/bin/uv" ]]; then
+  export PATH="${HOME}/.local/bin:${PATH}"
+fi
+
 if [[ $# -ne 1 ]]; then
   echo "usage: $0 /workspace/experiment-artifacts/baseline-input/tsukuyomi-heldout" >&2
   exit 2

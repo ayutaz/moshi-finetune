@@ -24,8 +24,10 @@ mkdir -p /workspace/experiment-artifacts/logs
 exec > >(tee /workspace/experiment-artifacts/logs/bootstrap.log) 2>&1
 
 if ! command -v uv >/dev/null 2>&1; then
-  echo "installing uv"
-  curl -LsSf https://astral.sh/uv/install.sh | sh
+  if [[ ! -x "${HOME}/.local/bin/uv" ]]; then
+    echo "installing uv"
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+  fi
   export PATH="${HOME}/.local/bin:${PATH}"
 fi
 uv --version
