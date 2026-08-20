@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "milestone": "M2",
+  "captured_at": "2026-08-20",
+  "tts_repository": {
+    "path": "/Users/inamotoyuuta/Desktop/Irodori-TTS",
+    "commit": "eaf74d6a19138f743acb5b71a445fd25a57db987",
+    "local_patch": "train.py: 4 float64 logging accumulators changed to float32 for MPS"
+  },
+  "base_model": {
+    "repo": "Aratako/Irodori-TTS-500M-v3",
+    "weights_path": "/Users/inamotoyuuta/.cache/huggingface/hub/models--Aratako--Irodori-TTS-500M-v3/snapshots/236c1e56591279fc24e3c1bf6609fc06e48dde28/model.safetensors",
+    "sha256": "c4b8e7e982697664f829b7fb6bea307a25bd7ee013ad0d6114efc3e326acbd54",
+    "codec": "Aratako/Semantic-DACVAE-Japanese-32dim"
+  },
+  "training_data": {
+    "source": "tsukuyomi-corpus-v1 train split",
+    "utterances": 80,
+    "minutes": 8.67,
+    "manifest": "data/experiments/tsukuyomi_ojousama/m2/latents/train_manifest.jsonl",
+    "latent_encoding": {
+      "tool": "Irodori-TTS prepare_manifest.py",
+      "loading": "--dataset json --data-files (local; the corpus may not be redistributed)",
+      "device": "mps",
+      "skipped": 0
+    }
+  },
+  "evaluation": {
+    "sentences": "experiments/tsukuyomi_ojousama/eval/tts-unseen-30.jsonl",
+    "count": 30,
+    "held_out_from_training": true
+  },
+  "runs": {
+    "T0_zero_shot": {
+      "method": "zero-shot voice cloning, no training",
+      "reference_clip": "VOICEACTRESS100_094.wav (train split, 13.45 s)",
+      "seed": 20260820,
+      "device": "mps",
+      "sample_rate": 48000,
+      "audio": "data/experiments/tsukuyomi_ojousama/m2/zeroshot/",
+      "audio_report": "data/experiments/tsukuyomi_ojousama/m2/zeroshot-report.json"
+    },
+    "T1_speaker_inversion": {
+      "method": "speaker inversion, base frozen",
+      "config": "configs/train_500m_v3_speaker_inversion.yaml",
+      "trainable_parameters": 12288,
+      "frozen_parameters": 512049441,
+      "speaker_tokens": 16,
+      "learning_rate": 0.01,
+      "batch_size": 16,
+      "max_steps": 3000,
+      "precision": "fp32",
+      "device": "mps",
+      "save_every": 250,
+      "seconds_per_step_observed": 11.8,
+      "status": "running"
+    }
+  }
+}
