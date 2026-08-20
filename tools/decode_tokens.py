@@ -11,6 +11,8 @@ from moshi.models import loaders
 from sentencepiece import SentencePieceProcessor
 from tqdm import tqdm
 
+from tools.worker_device import resolve_worker_count, resolve_worker_device
+
 
 def decode_text(text_tokens: np.ndarray, tokenizer: SentencePieceProcessor) -> str:
     """
@@ -70,7 +72,7 @@ def decode_tokens(rank: int, list_of_tokens_path: list[str], args: argparse.Name
     # Load the audio tokenizer
     mimi = loaders.get_mimi(
         filename=hf_hub_download(args.audio_tokenizer_repo, args.audio_tokenizer_name),
-        device=torch.device("cuda", rank),
+        device=torch.device(resolve_worker_device(args.device, rank)),
     )
 
     for tokens_path in tqdm(list_of_tokens_path, desc=f"Rank {rank}"):
@@ -97,6 +99,9 @@ def main(args):
     print(f"Number of token files: {num_files}")
 
     # Split the list of token files
+    args.num_workers = resolve_worker_count(
+        args.num_workers, args.device, available_cuda=torch.cuda.device_count()
+    )
     file_indices_per_rank = np.array_split(np.arange(num_files), args.num_workers)
 
     # Make the output directory
@@ -152,6 +157,16 @@ if __name__ == "__main__":
 
     parser.add_argument(
         "--num_workers", type=int, default=1, help="Number of workers for multiprocessing."
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cuda",
+        help=(
+            "Device to decode on: cuda (one worker per GPU), cpu, mps, or an explicit "
+            "cuda:N. Decoding runs happily on a laptop, so the rented instance does not "
+            "have to stay alive for it."
+        ),
     )
 
     args = parser.parse_args()

@@ -9,6 +9,8 @@ from huggingface_hub import hf_hub_download
 from moshi.models import MimiModel, loaders
 from tqdm import tqdm
 
+from tools.worker_device import resolve_worker_count, resolve_worker_device
+
 
 def ceil(x, y):
     return int(-(-x // y))
@@ -47,7 +49,7 @@ def tokenize_audio(
 
 
 def worker(process_id: int, dialogue_names: list[str], args: argparse.Namespace):
-    device = torch.device("cuda", process_id)
+    device = torch.device(resolve_worker_device(args.device, process_id))
     mimi = loaders.get_mimi(
         filename=hf_hub_download(args.audio_tokenizer_repo, args.audio_tokenizer_name),
         device=device,
@@ -89,18 +91,14 @@ def main(args):
         print(f"Skipping {len(tokenized_dialogue_names)} already tokenized dialogues.")
         dialogue_names = list(set(dialogue_names) - set(tokenized_dialogue_names))
 
+    args.num_workers = resolve_worker_count(
+        args.num_workers, args.device, available_cuda=torch.cuda.device_count()
+    )
+
     if args.num_workers == 1:
         worker(0, dialogue_names, args)
 
     else:
-        num_devices = torch.cuda.device_count()
-        if args.num_workers > num_devices:
-            print(
-                f"Number of workers ({args.num_workers}) exceeds number of available GPUs ({num_devices})."
-            )
-            args.num_workers = num_devices
-            print(f"Using {args.num_workers} workers.")
-
         dialogue_names_per_worker = np.array_split(dialogue_names, args.num_workers)
         print(
             f"Each of {args.num_workers} workers processes {len(dialogue_names_per_worker[0])} dialogues."
@@ -156,6 +154,16 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--num_workers", type=int, default=1, help="Number of workers for multiprocessing."
+    )
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cuda",
+        help=(
+            "Device to tokenize on: cuda (one worker per GPU), cpu, mps, or an explicit "
+            "cuda:N. Mimi is small enough for a laptop, so cpu/mps keeps the audio off a "
+            "rented instance."
+        ),
     )
     parser.add_argument("--resume", action="store_true", help="Resume tokenization.")
     args = parser.parse_args()

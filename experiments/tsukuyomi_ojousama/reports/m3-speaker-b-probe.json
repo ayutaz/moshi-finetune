@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-21",
+  "question": "Does a caption-only VoiceDesign voice stay one speaker across separate invocations?",
+  "why_it_matters": "Speaker B fills one channel of every V-real and V-tts dialogue. If the voice differs between utterances, channel B is not a speaker but a crowd, and both voice control runs are invalid in a way no loss curve would reveal.",
+  "method": {
+    "tts": "Aratako/Irodori-TTS-600M-v3-VoiceDesign via Irodori-TTS infer.py",
+    "irodori_commit": "eaf74d6a1913",
+    "caption": "落ち着いた男性の声で、標準的な話し方で自然に読み上げてください。",
+    "texts": 4,
+    "device": "mps",
+    "embedding": "speechbrain/spkrec-ecapa-voxceleb, cpu",
+    "preparation": "tools.speaker_similarity: voiced frames at RMS>=500 over 480-sample windows, then RMS normalisation to 0.05",
+    "statistic": "within-group pairwise cosine similarity over all clip pairs",
+    "audio": "data/experiments/tsukuyomi_ojousama/m3/bspeaker-probe/ (gitignored)"
+  },
+  "calibration": {
+    "note": "A within-group number means nothing without knowing what one speaker scores under this exact pipeline. These bands come from the M2 audio, measured the same way.",
+    "tsukuyomi_natural_one_human": {"clips": 10, "pairs": 45, "mean": 0.6983, "min": 0.5646, "max": 0.8082},
+    "tsukuyomi_tts_T1_speaker_inversion": {"clips": 10, "pairs": 45, "mean": 0.8007, "min": 0.7028, "max": 0.8605},
+    "tsukuyomi_tts_T0_zero_shot_one_ref": {"clips": 10, "pairs": 45, "mean": 0.8379, "min": 0.7805, "max": 0.8832},
+    "different_speakers_B_vs_A": {"pairs": 40, "mean": 0.1567, "min": 0.0270, "max": 0.2934},
+    "same_speaker_across_renderings_A_natural_vs_A_tts": {"pairs": 100, "mean": 0.5974, "min": 0.4087, "max": 0.7050},
+    "interpretation": "One speaker scores 0.70 or above when the rendering is held constant, and 0.60 across renderings. Different speakers score below 0.30. A real human is the floor at 0.698 mean / 0.565 min, because a person varies delivery between sentences more than a TTS does."
+  },
+  "conditions": {
+    "caption_only_random_seed": {
+      "flags": "--no-ref --caption (seed omitted, so infer.py draws a random seed per request)",
+      "clips": 4, "pairs": 6, "mean": 0.4525, "min": 0.4202, "max": 0.5176,
+      "verdict": "not one speaker"
+    },
+    "caption_only_fixed_seed": {
+      "flags": "--no-ref --caption --seed 20260821",
+      "clips": 4, "pairs": 6, "mean": 0.5176, "min": 0.4597, "max": 0.5683,
+      "verdict": "not one speaker; pinning the seed does not fix the voice"
+    },
+    "frozen_reference": {
+      "flags": "one clip generated from the caption, then reused as --ref-wav for every other utterance",
+      "clips": 4, "pairs": 6, "mean": 0.7373, "min": 0.7040, "max": 0.7639,
+      "verdict": "one speaker; above the real-human band on both mean and minimum"
+    }
+  },
+  "conclusion": {
+    "decision": "Generate exactly one speaker-B clip from the caption, archive it, and pass it as --ref-wav for every speaker-B utterance in V-real and V-tts.",
+    "rejected": "Calling --no-ref --caption per utterance, with or without a fixed seed. At 0.45-0.52 it sits below the 0.565 minimum that one real human produces, which is the signature of a family of similar-but-distinct voices rather than a single speaker.",
+    "seed_finding": "--seed defaults to a fresh random seed per request (infer.py). Pinning it lifted the mean only from 0.4525 to 0.5176, still under the floor, so the drift is in the caption-only speaker sampling itself and not in the sampler seed.",
+    "separation_confirmed": "The frozen B scores 0.157 against tsukuyomi natural audio and 0.139 against the M2 TTS, so A and B are unambiguously different speakers.",
+    "gate_for_m3": "Before either dataset is tokenised, measure within-group pairwise similarity over a sample of the generated speaker-B utterances. Require mean >= 0.65 and minimum >= 0.55, the band one real human occupies. Also require mean similarity against speaker A below 0.30."
+  }
+}
