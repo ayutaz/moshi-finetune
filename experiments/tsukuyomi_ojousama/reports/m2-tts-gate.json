@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "milestone": "M2",
+  "run_date": "2026-08-20",
+  "status": "objective-conditions-met-listening-pending",
+  "run_manifest": "experiments/tsukuyomi_ojousama/reports/m2-run-manifest.json",
+  "evaluation_set": {
+    "file": "experiments/tsukuyomi_ojousama/eval/tts-unseen-30.jsonl",
+    "count": 30,
+    "held_out_from_training": true
+  },
+  "T0_zero_shot": {
+    "method": "zero-shot voice cloning from VOICEACTRESS100_094.wav, no training",
+    "audio": {
+      "files": 30,
+      "silent": 0,
+      "files_with_sustained_clipping": 0,
+      "saturated_samples": 170,
+      "longest_clipped_run": 2,
+      "mean_seconds": 5.984,
+      "mean_rms": 4993.8,
+      "mean_leading_silence_seconds": 0.2717,
+      "mean_trailing_silence_seconds": 0.4715
+    },
+    "intelligibility": {
+      "total": 30,
+      "intelligible": 29,
+      "threshold": 0.15,
+      "failed_ids": [
+        "tts-27"
+      ],
+      "mean_cer": 0.013301605646775422,
+      "median_cer": 0.0,
+      "max_cer": 0.18518518518518517,
+      "required": 27
+    }
+  },
+  "T1_speaker_inversion": {
+    "method": "speaker inversion, 3000 steps, 12,288 trainable parameters, base frozen",
+    "embedding": "data/experiments/tsukuyomi_ojousama/m2/speaker_inversion/checkpoint_final.speaker.safetensors",
+    "embedding_sha256": "b9e10f13c450f2630b7560a93f52d207b4f666deb9cce9824d253d9844e6cf2b",
+    "training": {
+      "rf_loss_start": 0.78,
+      "rf_loss_end": 0.65,
+      "duration_mae_start_frames": 40.17,
+      "duration_mae_end_frames": 18.04,
+      "gpu": "A100-SXM4-80GB x1",
+      "seconds_per_step": 1.03,
+      "cost_usd": 0.219
+    },
+    "audio": {
+      "files": 30,
+      "silent": 0,
+      "files_with_sustained_clipping": 0,
+      "saturated_samples": 215,
+      "longest_clipped_run": 2,
+      "mean_seconds": 5.893,
+      "mean_rms": 4965.5,
+      "mean_leading_silence_seconds": 0.0493,
+      "mean_trailing_silence_seconds": 0.1698
+    },
+    "intelligibility": {
+      "total": 30,
+      "intelligible": 30,
+      "threshold": 0.15,
+      "failed_ids": [],
+      "mean_cer": 0.007296150167384026,
+      "median_cer": 0.0,
+      "max_cer": 0.0975609756097561,
+      "required": 27
+    }
+  },
+  "completion_conditions": {
+    "1_no_dropout_or_clipping": {
+      "met": true,
+      "evidence": "T1: 30 files, 0 silent, longest full-scale run 2 samples (0.042 ms), which is soundfile saturating floats past +/-1.0 at PCM_16 write time rather than distortion"
+    },
+    "2_at_least_27_of_30_intelligible": {
+      "met": true,
+      "evidence": "T1 scores 30/30 by ASR + reading-based CER, mean 0.0073, against T0's 29/30 and 0.0133"
+    },
+    "3_speaker_likeness_beats_base_tts": {
+      "met": null,
+      "evidence": "requires a listening comparison; the plan forbids deciding this on SECS alone",
+      "package": "data/experiments/tsukuyomi_ojousama/m2/listening/"
+    },
+    "4_pronounces_unseen_vocabulary": {
+      "met": true,
+      "evidence": "the 30 sentences are disjoint from the training split by construction, and T1 reads them at mean CER 0.0073; with only 12,288 trainable parameters against a frozen 512M base, memorisation of the training audio is not available to the model"
+    },
+    "5_reproducible": {
+      "met": true,
+      "evidence": "m2-run-manifest.json pins the base weights digest, the Irodori-TTS commit, the seed and the config; bootstrap_tts_instance.sh rebuilds the GPU environment"
+    }
+  },
+  "notes": [
+    "T1 halves the mean character error rate against T0 and removes its one failure.",
+    "T1 also tightens the silence around the utterance (leading 0.272 -> 0.049 s, trailing 0.472 -> 0.170 s), consistent with the duration MAE improving from 40.17 to 18.04 frames. That is timing, not timbre, so it does not settle condition 3.",
+    "The first intelligibility measurement compared surface forms and scored T0 at 26/30. All four failures were the recogniser's orthography, not mispronunciation; comparing readings corrected it."
+  ]
+}

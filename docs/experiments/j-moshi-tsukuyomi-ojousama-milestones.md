@@ -254,11 +254,11 @@ Irodori-TTSで未学習のお嬢様語彙を含む30文を生成し、明瞭度�
 
 ### 完了条件
 
-- [ ] 30文すべてに欠落・クリップがない。
-- [ ] 30文中27文以上を明瞭に聞き取れる。
-- [ ] 話者らしさがbase TTSより主観評価で改善している。
-- [ ] train文の暗記だけでなく未学習のお嬢様語彙を発音できる。
-- [ ] checkpointと生成条件を再現できる。
+- [x] 30文すべてに欠落・クリップがない。
+- [x] 30文中27文以上を明瞭に聞き取れる。（T1は30/30）
+- [ ] 話者らしさがbase TTSより主観評価で改善している。（聴取待ち。`data/experiments/tsukuyomi_ojousama/m2/listening/`）
+- [x] train文の暗記だけでなく未学習のお嬢様語彙を発音できる。
+- [x] checkpointと生成条件を再現できる。
 
 ### 次へ進む条件
 
@@ -285,7 +285,7 @@ Irodori-TTSで未学習のお嬢様語彙を含む30文を生成し、明瞭度�
 - 飽和サンプルは27ファイルに計170個あるが、**連続長は最長2 sample（0.042 ms）**。`soundfile`がPCM_16書き出し時に`±1.0`超を飽和させたもので、可聴の歪みではない
 - 測定ツール: `tools/tts_audio_report.py`（テスト12件）。レポート: `data/experiments/tsukuyomi_ojousama/m2/zeroshot-report.json`（gitignore対象）
 
-#### T1: Speaker Inversion — 学習中
+#### T1: Speaker Inversion — 完了
 
 - 学習対象は**12,288パラメータのみ**（16 token × 768次元）、base `512,049,441`は完全凍結。8.67分のデータでも構造的に暗記が起こらない
 - 入力: train split 80件のDACVAE latent（`prepare_manifest.py --dataset json --data-files`でローカル読み込み。原音は再配布禁止のためHFへ上げない）。skip 0件
@@ -296,6 +296,33 @@ Irodori-TTSで未学習のお嬢様語彙を含む30文を生成し、明瞭度�
 ##### Irodori-TTSへのローカルパッチ
 
 `train.py`の`dtype=torch.float64`が4箇所あり、MPSはfloat64を扱えないため学習が起動しない。4箇所とも`DURATION_CONDITION_GROUP_TOTAL_SIZE`の統計集計用で、隣接する同種accumulatorは元からfloat32であり、勾配にも学習される埋め込みにも関与しない。`float32`へ変更した。上流のMPS非互換であり、`git -C ~/Desktop/Irodori-TTS checkout train.py`で復帰できる。
+
+##### 学習結果
+
+A100単一GPUで3000 stepを`1.03秒/step`・約8分・`US$0.219`で完走（ローカルMPSは`11.8秒/step`で約12時間だったため移行）。RF loss `0.78 → 0.650`、duration MAE `40.17 → 18.04` frames。埋め込み SHA-256 `b9e10f13c450f263…`
+
+##### T0とT1の客観比較
+
+| 指標 | T0 zero-shot | T1 speaker inversion |
+| --- | ---: | ---: |
+| 生成成功 | 30/30 | 30/30 |
+| 無音・欠落 | 0 | 0 |
+| 可聴クリップ | 0 | 0 |
+| 明瞭（必要27） | 29/30 | **30/30** |
+| 平均CER | 0.0133 | **0.0073** |
+| 最大CER | 0.185 | **0.098** |
+| 先頭無音 | 0.272秒 | 0.049秒 |
+| 末尾無音 | 0.472秒 | 0.170秒 |
+
+T1は平均CERを半減し、T0で唯一失敗した文も解消した。無音の短縮はduration MAEの改善と整合するが、これは発話タイミングであって声質ではないため条件3の判断材料にはならない。
+
+##### 明瞭度の測定方法を訂正した経緯
+
+最初の測定は表層文字列を比較しており、T0を26/30として不合格にした。失敗4件はすべて認識器の表記（`十二月二十四日`→`12月24日`、`瑞々しい`→`みずみずしい`、`百二十八個`→`128個`、`アルファ`→`α`）であり、発音は正しかった。`pyopenjtalk`のg2pで両者を読みへ変換してから比較するよう修正し、T0 29/30・T1 30/30となった。
+
+##### 残る条件3
+
+`data/experiments/tsukuyomi_ojousama/m2/listening/`にA/B比較用の一式を用意した。原音（`VOICEACTRESS100_094.wav`）を基準に、30文それぞれのA（base）とB（adapted）を比較する。計画書が「SECS単独評価は禁止」と定めているため自動判定はしない。
 
 
 ## M3: Voice control
