@@ -67,8 +67,12 @@ uv run --no-sync python -m tools.prepare_baseline_prompts verify-dataset \
   --min-frames "${required_frames}" \
   --report "${shared_root}/prompt-dataset-report.json"
 
+# The persona metric and the generation baseline are independent halves of M0, so a
+# failure in one must not stop the other. Failures are collected and reported at the end.
+failures=()
+
 for stage in stage2 stage3; do
-  CUDA_VISIBLE_DEVICES=0 uv run --no-sync python -m tools.persona_perplexity \
+  if ! CUDA_VISIBLE_DEVICES=0 uv run --no-sync python -m tools.persona_perplexity \
     --model-dir "${artifact_root}/${stage}" \
     --pairs "experiments/tsukuyomi_ojousama/eval/persona-baseline-10.jsonl" \
     --output "${artifact_root}/${stage}/evaluation/persona-perplexity.json" \
@@ -76,8 +80,12 @@ for stage in stage2 stage3; do
     --audio-context "${shared_root}/tokenized-audio/${audio_context_stem}.npz" \
     --device cuda:0 \
     --dtype bfloat16
+  then
+    echo "${stage}: persona perplexity failed" >&2
+    failures+=("${stage}:persona-perplexity")
+  fi
 
-  CUDA_VISIBLE_DEVICES=0 uv run --no-sync accelerate launch \
+  if ! CUDA_VISIBLE_DEVICES=0 uv run --no-sync accelerate launch \
     --num_machines 1 \
     --num_processes 1 \
     generate.py \
@@ -95,11 +103,21 @@ for stage in stage2 stage3; do
     --top_k 0 \
     --top_p 0.0 \
     --seed 20260818
+  then
+    echo "${stage}: generation failed" >&2
+    failures+=("${stage}:generation")
+    continue
+  fi
 
-  CUDA_VISIBLE_DEVICES=0 uv run --no-sync python -m tools.decode_tokens \
+  if ! CUDA_VISIBLE_DEVICES=0 uv run --no-sync python -m tools.decode_tokens \
     --tokens_dir "${artifact_root}/${stage}/evaluation/continuation/generated_tokens" \
     --output_dir "${artifact_root}/${stage}/evaluation/continuation/generated_wavs" \
     --num_workers 1
+  then
+    echo "${stage}: decoding failed" >&2
+    failures+=("${stage}:decode")
+    continue
+  fi
 
   for kind in "generated_tokens:npy" "generated_wavs:wav"; do
     subdir="${kind%%:*}"
@@ -108,12 +126,17 @@ for stage in stage2 stage3; do
       -type f -name "*.${extension}" | wc -l | tr -d ' ')
     if [[ "${produced}" -ne "${prompt_count}" ]]; then
       echo "${stage}: expected ${prompt_count} ${subdir}, got ${produced}" >&2
-      exit 1
+      failures+=("${stage}:${subdir}-count")
     fi
   done
 done
 
 find "${artifact_root}/stage2" "${artifact_root}/stage3" "${shared_root}" \
   -type f -print0 | sort -z | xargs -0 sha256sum > "${shared_root}/sha256sum.txt"
+
+if [[ ${#failures[@]} -gt 0 ]]; then
+  echo "M0 baseline incomplete: ${failures[*]}" >&2
+  exit 1
+fi
 
 echo "M0 baseline generation complete"
