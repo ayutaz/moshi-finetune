@@ -285,6 +285,19 @@ Irodori-TTSで未学習のお嬢様語彙を含む30文を生成し、明瞭度�
 - 飽和サンプルは27ファイルに計170個あるが、**連続長は最長2 sample（0.042 ms）**。`soundfile`がPCM_16書き出し時に`±1.0`超を飽和させたもので、可聴の歪みではない
 - 測定ツール: `tools/tts_audio_report.py`（テスト12件）。レポート: `data/experiments/tsukuyomi_ojousama/m2/zeroshot-report.json`（gitignore対象）
 
+#### T1: Speaker Inversion — 学習中
+
+- 学習対象は**12,288パラメータのみ**（16 token × 768次元）、base `512,049,441`は完全凍結。8.67分のデータでも構造的に暗記が起こらない
+- 入力: train split 80件のDACVAE latent（`prepare_manifest.py --dataset json --data-files`でローカル読み込み。原音は再配布禁止のためHFへ上げない）。skip 0件
+- config: `train_500m_v3_speaker_inversion.yaml`、lr `0.01`、batch 16、3000 steps、`--precision fp32`、`--device mps`
+- 速度: 約`11.8秒/step`。3000 stepで約10時間。250 stepごとにcheckpointを保存し途中評価する
+- 推論はローカルMPSで約17秒/文のため、生成にGPUは不要。学習のみGPUへ出す選択肢もあるが、2026-08-20時点でVast.aiの空きが確保できず、ローカルで実行している
+
+##### Irodori-TTSへのローカルパッチ
+
+`train.py`の`dtype=torch.float64`が4箇所あり、MPSはfloat64を扱えないため学習が起動しない。4箇所とも`DURATION_CONDITION_GROUP_TOTAL_SIZE`の統計集計用で、隣接する同種accumulatorは元からfloat32であり、勾配にも学習される埋め込みにも関与しない。`float32`へ変更した。上流のMPS非互換であり、`git -C ~/Desktop/Irodori-TTS checkout train.py`で復帰できる。
+
+
 ## M3: Voice control
 
 ### 目的
