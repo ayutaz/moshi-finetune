@@ -2,10 +2,19 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 from pathlib import Path
 from typing import Any, Iterable
 
 STREAMS_PER_SPEAKER = 9  # 1 text + 8 audio codebooks
+MIMI_FRAME_RATE_HZ = 12.5
+
+
+def minimum_sample_count(*, min_frames: int, sample_rate: int) -> int:
+    """Samples needed for Mimi to emit at least `min_frames` frames."""
+    if min_frames <= 0:
+        raise ValueError("min_frames must be positive")
+    return math.ceil(min_frames / MIMI_FRAME_RATE_HZ * sample_rate)
 
 
 class PromptDatasetError(ValueError):
@@ -30,7 +39,13 @@ def select_audio_token_stems(names: Iterable[str]) -> list[str]:
     return sorted(Path(name).stem for name in names if Path(name).suffix == ".npz")
 
 
-def prepare_stereo_audio(input_dir: Path, output_dir: Path, *, target_rate: int) -> dict[str, Any]:
+def prepare_stereo_audio(
+    input_dir: Path,
+    output_dir: Path,
+    *,
+    target_rate: int,
+    min_frames: int | None = None,
+) -> dict[str, Any]:
     import torch
     import torchaudio
 
@@ -38,11 +53,22 @@ def prepare_stereo_audio(input_dir: Path, output_dir: Path, *, target_rate: int)
     if not paths:
         raise ValueError(f"no WAV prompts found in {input_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
+    minimum_samples = (
+        minimum_sample_count(min_frames=min_frames, sample_rate=target_rate)
+        if min_frames
+        else 0
+    )
     durations = {}
+    speech_durations = {}
     for input_path in paths:
         waveform, sample_rate = torchaudio.load(str(input_path))
         if sample_rate != target_rate:
             waveform = torchaudio.functional.resample(waveform, sample_rate, target_rate)
+        speech_durations[input_path.stem] = round(waveform.shape[-1] / target_rate, 6)
+        if waveform.shape[-1] < minimum_samples:
+            # Trailing silence, so the user stream can be teacher-forced past the prompt.
+            padding = waveform.new_zeros((waveform.shape[0], minimum_samples - waveform.shape[-1]))
+            waveform = torch.cat((waveform, padding), dim=-1)
         speaker_a, speaker_b = build_stereo_prompt(waveform)
         stereo = torch.stack((speaker_a, speaker_b))
         output_path = output_dir / input_path.name
@@ -52,8 +78,11 @@ def prepare_stereo_audio(input_dir: Path, output_dir: Path, *, target_rate: int)
         "status": "pass",
         "prompt_count": len(paths),
         "sample_rate_hz": target_rate,
-        "speaker_a": "Tsukuyomi held-out reference",
+        "speaker_a": "Tsukuyomi held-out reference then silence",
         "speaker_b": "silence",
+        "min_frames_requested": min_frames,
+        "minimum_samples": minimum_samples,
+        "speech_durations_seconds": speech_durations,
         "durations_seconds": durations,
     }
 
@@ -156,6 +185,7 @@ def main() -> int:
     audio_parser.add_argument("--input-dir", type=Path, required=True)
     audio_parser.add_argument("--output-dir", type=Path, required=True)
     audio_parser.add_argument("--target-rate", type=int, default=24_000)
+    audio_parser.add_argument("--min-frames", type=int, default=None)
     audio_parser.add_argument("--report", type=Path, required=True)
 
     text_parser = subparsers.add_parser("padding-text")
@@ -171,7 +201,12 @@ def main() -> int:
     args = parser.parse_args()
 
     if args.command == "audio":
-        report = prepare_stereo_audio(args.input_dir, args.output_dir, target_rate=args.target_rate)
+        report = prepare_stereo_audio(
+            args.input_dir,
+            args.output_dir,
+            target_rate=args.target_rate,
+            min_frames=args.min_frames,
+        )
     elif args.command == "padding-text":
         report = create_padding_text_tokens(args.audio_token_dir, args.output_dir)
     else:

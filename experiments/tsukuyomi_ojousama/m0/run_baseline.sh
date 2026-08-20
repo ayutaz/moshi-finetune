@@ -13,10 +13,16 @@ artifact_root="/workspace/experiment-artifacts/baselines"
 shared_root="${artifact_root}/shared"
 tokenizer_revision="f464b76739c884d8b0479a0a7705b7fa71c3fd5a"
 prompt_count=10
-# VOICEACTRESS100_026 is 3.802 s (47 Mimi frames), so prompt_length must stay below 47.
-# generate.py drops shorter examples without logging, which would silently shrink the baseline.
+# Held-out speech is as short as 48 Mimi frames (VOICEACTRESS100_026, 3.802 s). At
+# prompt_length=50 that reaches min_length with zero margin, and generate.py drops shorter
+# examples without logging, so the prompt is taken from the first 40 frames instead.
 prompt_length=40
 generation_length=125
+# The published checkpoints generate only the Moshi stream, so the user stream is
+# teacher-forced from the example; each prompt is padded with silence to cover every
+# generated frame, plus 2 frames for the delay pattern.
+required_frames=$((prompt_length + generation_length))
+audio_context_stem=VOICEACTRESS100_032
 
 mkdir -p "${shared_root}/logs"
 exec > >(tee "${shared_root}/logs/run-baseline.log") 2>&1
@@ -29,6 +35,7 @@ uv run --no-sync python -m tools.prepare_baseline_prompts audio \
   --input-dir "${prompt_source_dir}" \
   --output-dir "${shared_root}/prompt-audio" \
   --target-rate 24000 \
+  --min-frames "$((required_frames + 2))" \
   --report "${shared_root}/prompt-audio-report.json"
 
 uv run --no-sync python -m tools.tokenize_audio \
@@ -51,7 +58,7 @@ uv run --no-sync python -m tools.prepare_dataset \
 uv run --no-sync python -m tools.prepare_baseline_prompts verify-dataset \
   --parquet-glob "${shared_root}/prompt-dataset/heldout-*.parquet" \
   --expected-count "${prompt_count}" \
-  --min-frames "${prompt_length}" \
+  --min-frames "${required_frames}" \
   --report "${shared_root}/prompt-dataset-report.json"
 
 for stage in stage2 stage3; do
@@ -60,6 +67,7 @@ for stage in stage2 stage3; do
     --pairs "experiments/tsukuyomi_ojousama/eval/persona-baseline-10.jsonl" \
     --output "${artifact_root}/${stage}/evaluation/persona-perplexity.json" \
     --tokenizer-revision "${tokenizer_revision}" \
+    --audio-context "${shared_root}/tokenized-audio/${audio_context_stem}.npz" \
     --device cuda:0 \
     --dtype bfloat16
 

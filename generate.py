@@ -282,11 +282,29 @@ def main():
     for batch in eval_dataloader:
         batch = batch.to(accelerator.device)
         prompt_tokens = batch.input_ids[..., : args.prompt_length]
+
+        # Checkpoints that only generate the Moshi stream need the user stream fed in.
+        # It is teacher-forced from the example itself, so the example must be long enough
+        # to cover the prompt plus every generated frame.
+        user_stream_tokens = None
+        if moshi_cg.num_user_codebooks:
+            start = args.prompt_length
+            stop = start + args.generation_length
+            available = batch.input_ids.shape[-1]
+            if available < stop:
+                raise ValueError(
+                    f"this checkpoint teacher-forces {moshi_cg.num_user_codebooks} user-stream "
+                    f"codebooks, so each example needs at least prompt_length + generation_length "
+                    f"= {stop} frames, but the batch only has {available}"
+                )
+            user_stream_tokens = batch.input_ids[:, 1 + moshi_lm.dep_q :, start:stop]
+
         gen_tokens = moshi_cg.generate(
             prompt_tokens=prompt_tokens,
             generation_length=args.generation_length,
             text_sampling_params=sampling_params,
             audio_sampling_params=sampling_params,
+            user_stream_tokens=user_stream_tokens,
         )
         # gen_tokens = torch.cat([prompt_tokens, gen_tokens], dim=-1).cpu().numpy()
         gen_tokens = undelay_tokens(gen_tokens, moshi_lm.delays)

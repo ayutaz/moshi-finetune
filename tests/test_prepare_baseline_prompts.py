@@ -3,6 +3,7 @@ import unittest
 from tools.prepare_baseline_prompts import (
     PromptDatasetError,
     build_stereo_prompt,
+    minimum_sample_count,
     select_audio_token_stems,
     verify_prompt_dataset,
 )
@@ -97,3 +98,23 @@ class PromptDatasetVerificationTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MinimumSampleCountTests(unittest.TestCase):
+    """Teacher-forcing the user stream needs frames beyond the prompt.
+
+    `generate.py` reads the user-stream codebooks out of the example itself, so a prompt
+    audio file must cover `prompt_length + generation_length` Mimi frames, not just the
+    prompt.
+    """
+
+    def test_converts_mimi_frames_to_samples_at_24khz(self) -> None:
+        self.assertEqual(minimum_sample_count(min_frames=165, sample_rate=24000), 316800)
+
+    def test_rounds_up_so_the_last_frame_is_complete(self) -> None:
+        self.assertEqual(minimum_sample_count(min_frames=1, sample_rate=24000), 1920)
+        self.assertEqual(minimum_sample_count(min_frames=48, sample_rate=24000), 92160)
+
+    def test_rejects_a_non_positive_frame_count(self) -> None:
+        with self.assertRaisesRegex(ValueError, "positive"):
+            minimum_sample_count(min_frames=0, sample_rate=24000)

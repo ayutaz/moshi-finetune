@@ -12,6 +12,17 @@ class MoshiForConditionalGeneration:
     def __init__(self, moshi_lm: LMModel | MoshiForFinetuning):
         self.moshi_lm = moshi_lm
 
+    @property
+    def num_user_codebooks(self) -> int:
+        """Audio codebooks the depformer does not generate.
+
+        Checkpoints published through `tools/clean_moshi.py --remove_modules_for_user_stream`
+        keep `n_q` audio streams as input but only generate `dep_q` of them. The remaining
+        streams carry the user's audio and have to be supplied from outside the model.
+        Finetuning checkpoints that model the user stream have `dep_q == n_q`, so this is 0.
+        """
+        return self.moshi_lm.num_audio_codebooks - self.moshi_lm.dep_q
+
     def prepare_generation(
         self,
         batch_size: int,
@@ -70,7 +81,11 @@ class MoshiForConditionalGeneration:
         return out
 
     @torch.no_grad()
-    def step(self, last_tokens: torch.LongTensor) -> torch.LongTensor:
+    def step(
+        self,
+        last_tokens: torch.LongTensor,
+        user_stream_tokens: torch.LongTensor | None = None,
+    ) -> torch.LongTensor:
         """
         Generate next tokens from the given last tokens.
 
@@ -79,6 +94,9 @@ class MoshiForConditionalGeneration:
                 The last tokens to generate from.
                 shape is [B, K, T], where B is the batch size, K is the number of codebooks, and T is the number of tokens.
                 T > 1 means it is the first step of generation when prompt tokens are given.
+            user_stream_tokens (torch.LongTensor | None):
+                Audio tokens for the codebooks the depformer does not generate, shape [B, num_user_codebooks].
+                Required when `num_user_codebooks > 0`, ignored otherwise.
 
         Returns:
             sampled_tokens (torch.LongTensor):
@@ -122,7 +140,22 @@ class MoshiForConditionalGeneration:
         audio_tokens = self.depformer_step_graphed(text_token, temp_out)
         assert audio_tokens.shape == (B, self.moshi_lm.dep_q), audio_tokens.shape
 
-        sampled_tokens = torch.cat([text_token[:, None], audio_tokens], dim=-1)
+        # 4 append the audio streams the depformer does not generate
+        streams = [text_token[:, None], audio_tokens]
+        if self.num_user_codebooks:
+            if user_stream_tokens is None:
+                raise ValueError(
+                    f"this checkpoint generates {self.moshi_lm.dep_q} of "
+                    f"{self.moshi_lm.num_audio_codebooks} audio codebooks, so "
+                    f"{self.num_user_codebooks} user-stream codebooks must be supplied"
+                )
+            assert user_stream_tokens.shape == (B, self.num_user_codebooks), (
+                f"Expected shape {(B, self.num_user_codebooks)}, "
+                f"but got {user_stream_tokens.shape}"
+            )
+            streams.append(user_stream_tokens)
+
+        sampled_tokens = torch.cat(streams, dim=-1)
         assert sampled_tokens.shape == (B, self.moshi_lm.num_codebooks), sampled_tokens.shape
         sampled_tokens = sampled_tokens[..., None]  # shape is [B, num_codebooks, 1]
 
@@ -134,6 +167,7 @@ class MoshiForConditionalGeneration:
         generation_length: int,
         text_sampling_params: dict[str, Any],
         audio_sampling_params: dict[str, Any],
+        user_stream_tokens: torch.LongTensor | None = None,
     ) -> torch.LongTensor:
         """
         Generate text and audio streams from the given prompt tokens.
@@ -159,6 +193,20 @@ class MoshiForConditionalGeneration:
         assert K == self.moshi_lm.num_codebooks, (
             f"Expected {self.moshi_lm.num_codebooks}, but got {K}"
         )
+        if self.num_user_codebooks:
+            if user_stream_tokens is None:
+                raise ValueError(
+                    f"this checkpoint generates {self.moshi_lm.dep_q} of "
+                    f"{self.moshi_lm.num_audio_codebooks} audio codebooks, so "
+                    f"{self.num_user_codebooks} user-stream codebooks must be supplied "
+                    f"for all {generation_length} generated frames"
+                )
+            expected = (B, self.num_user_codebooks, generation_length)
+            if tuple(user_stream_tokens.shape) != expected:
+                raise ValueError(
+                    f"Expected user_stream_tokens of shape {expected}, "
+                    f"but got {tuple(user_stream_tokens.shape)}"
+                )
 
         # prepare generation
         self.prepare_generation(B, text_sampling_params, audio_sampling_params)
@@ -166,8 +214,11 @@ class MoshiForConditionalGeneration:
         # generate
         list_of_tokens = []
         last_tokens = prompt_tokens
-        for _ in range(generation_length):
-            last_tokens = self.step(last_tokens)
+        for step_index in range(generation_length):
+            step_user_tokens = (
+                user_stream_tokens[..., step_index] if self.num_user_codebooks else None
+            )
+            last_tokens = self.step(last_tokens, step_user_tokens)
             list_of_tokens.append(last_tokens)
 
         # end generation

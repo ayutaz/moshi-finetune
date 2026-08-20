@@ -3,12 +3,58 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
 from pathlib import Path
 from typing import Any
 
 
 class PairValidationError(ValueError):
     """Raised when the fixed ten-pair persona evaluation is invalid."""
+
+
+class ScoringError(ValueError):
+    """Raised when the persona scores cannot be trusted as a baseline."""
+
+
+def build_delayed_audio_context(
+    audio_rows: list[list[int]],
+    *,
+    delays: list[int],
+    initial_token_id: int,
+    length: int,
+) -> list[list[int]]:
+    """Build `length` frames of audio conditioning with the model's delay pattern applied.
+
+    `audio_rows` holds one row per audio codebook, taken from a real Mimi-tokenised prompt.
+    Row `k` is shifted by `delays[k]` and the frames before the shift carry
+    `initial_token_id`, matching `utils.data.delay_and_pad_streams`.
+    """
+    if len(audio_rows) != len(delays):
+        raise ScoringError(
+            f"got {len(audio_rows)} audio codebooks but {len(delays)} delay values"
+        )
+    context = []
+    for row, delay in zip(audio_rows, delays, strict=True):
+        if len(row) < length:
+            raise ScoringError(
+                f"audio context needs at least {length} frames, got {len(row)}"
+            )
+        context.append(
+            [initial_token_id if index < delay else row[index - delay] for index in range(length)]
+        )
+    return context
+
+
+def assert_better_than_chance(summary: dict[str, Any], *, text_card: int) -> None:
+    """Reject scores no better than a uniform distribution over the text vocabulary."""
+    bound = math.log(text_card)
+    observed = float(summary["preferred_mean_nll"])
+    if observed >= bound:
+        raise ScoringError(
+            f"preferred_mean_nll {observed:.3f} is not better than the uniform bound "
+            f"{bound:.3f} over text_card={text_card}; the scoring setup is wrong, so these "
+            f"numbers must not be recorded as a baseline"
+        )
 
 
 def validate_pairs(rows: list[dict[str, Any]]) -> list[dict[str, str]]:
@@ -81,6 +127,7 @@ def _score_completion(
     *,
     context_ids: list[int],
     completion_ids: list[int],
+    audio_context: list[list[int]],
     device: Any,
 ) -> dict[str, float]:
     import torch
@@ -90,12 +137,13 @@ def _score_completion(
         raise PairValidationError("tokenizer produced an empty context or completion")
     text_tokens = [model.text_initial_token_id, *context_ids, *completion_ids]
     text_tensor = torch.tensor(text_tokens, dtype=torch.long, device=device).unsqueeze(0)
-    audio_tensor = torch.full(
-        (1, model.num_audio_codebooks, len(text_tokens)),
-        model.zero_token_id,
-        dtype=torch.long,
-        device=device,
+    delayed_audio = build_delayed_audio_context(
+        audio_context,
+        delays=list(model.delays[1:]),
+        initial_token_id=model.initial_token_id,
+        length=len(text_tokens),
     )
+    audio_tensor = torch.tensor(delayed_audio, dtype=torch.long, device=device).unsqueeze(0)
     input_ids = torch.cat((text_tensor.unsqueeze(1), audio_tensor), dim=1)
 
     with torch.inference_mode():
@@ -125,11 +173,23 @@ def _score_completion(
     }
 
 
+def load_audio_context(path: Path) -> list[list[int]]:
+    """Load a Mimi-tokenised prompt as speaker A followed by speaker B codebooks."""
+    import numpy as np
+
+    with np.load(path) as archive:
+        for speaker in ("A", "B"):
+            if speaker not in archive or archive[speaker].ndim != 2:
+                raise ScoringError(f"{path}: missing or malformed speaker {speaker}")
+        return [row.tolist() for row in np.concatenate((archive["A"], archive["B"]), axis=0)]
+
+
 def score_pairs(
     *,
     model_dir: Path,
     pairs: list[dict[str, str]],
     tokenizer_path: Path,
+    audio_context: list[list[int]],
     device_name: str,
     dtype_name: str,
 ) -> list[dict[str, Any]]:
@@ -156,12 +216,14 @@ def score_pairs(
             model,
             context_ids=context_ids,
             completion_ids=preferred_ids,
+            audio_context=audio_context,
             device=device,
         )
         dispreferred_score = _score_completion(
             model,
             context_ids=context_ids,
             completion_ids=dispreferred_ids,
+            audio_context=audio_context,
             device=device,
         )
         scores.append(
@@ -200,6 +262,12 @@ def main() -> int:
     parser.add_argument("--tokenizer-repo", default="rinna/japanese-gpt2-medium")
     parser.add_argument("--tokenizer-name", default="spiece.model")
     parser.add_argument("--tokenizer-revision", required=True)
+    parser.add_argument(
+        "--audio-context",
+        type=Path,
+        required=True,
+        help="Mimi-tokenised prompt (.npz with A and B) used as audio conditioning",
+    )
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument(
         "--dtype", choices=("float16", "bfloat16", "float32"), default="bfloat16"
@@ -216,13 +284,18 @@ def main() -> int:
             revision=args.tokenizer_revision,
         )
     )
+    audio_context = load_audio_context(args.audio_context)
     scores = score_pairs(
         model_dir=args.model_dir,
         pairs=pairs,
         tokenizer_path=tokenizer_path,
+        audio_context=audio_context,
         device_name=args.device,
         dtype_name=args.dtype,
     )
+    summary = summarise_scores(scores)
+    with open(args.model_dir / "moshi_lm_kwargs.json") as kwargs_file:
+        text_card = json.load(kwargs_file)["text_card"]
     report = {
         "schema_version": 1,
         "model_dir": str(args.model_dir),
@@ -231,17 +304,34 @@ def main() -> int:
         "tokenizer_revision": args.tokenizer_revision,
         "dtype": args.dtype,
         "scoring": (
-            "completion total log probability conditioned on text prompt with audio streams fixed "
-            "to zero_token_id; mean token NLL is also reported"
+            "completion total log probability conditioned on the text prompt and on real Mimi "
+            "tokens from a held-out prompt, with the model's delay pattern applied; mean token "
+            "NLL is also reported"
         ),
-        "summary": summarise_scores(scores),
+        "audio_context": str(args.audio_context),
+        "audio_context_codebooks": len(audio_context),
+        "text_card": text_card,
+        "uniform_chance_nll": math.log(text_card),
+        "summary": summary,
         "pairs": scores,
     }
+
+    # Record the numbers before enforcing the gate, so a rejected run still leaves evidence.
+    try:
+        assert_better_than_chance(summary, text_card=text_card)
+        report["status"] = "pass"
+    except ScoringError as error:
+        report["status"] = "failed-chance-gate"
+        report["error"] = str(error)
+
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         json.dumps(report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
     )
     print(json.dumps(report["summary"], ensure_ascii=False, sort_keys=True))
+    if report["status"] != "pass":
+        print(report["error"], file=sys.stderr)
+        return 1
     return 0
 
 
