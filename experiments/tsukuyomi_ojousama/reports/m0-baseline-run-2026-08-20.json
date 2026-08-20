@@ -108,6 +108,167 @@
         "8": "1778890e2be9d8baf88f893e9843dd745e3cc61ddb1a8be78ff11658d9e41b4f",
         "9": "f5266b90b2e91daa576b1e99dd5eaed9d33998082bbf280ae23d33b97eb97148"
       }
+    },
+    "audio_statistics": {
+      "note": "Speaker A carries the generated Moshi stream; speaker B is the teacher-forced silence, whose uniform peak of 402 is Mimi's reconstruction floor for digital silence and confirms the teacher forcing held for every frame.",
+      "stage2": {
+        "per_example": {
+          "0": {
+            "seconds": 9.92,
+            "a_peak": 24004,
+            "a_rms": 2905.5,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "1": {
+            "seconds": 9.92,
+            "a_peak": 23271,
+            "a_rms": 3149.7,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "2": {
+            "seconds": 9.92,
+            "a_peak": 26320,
+            "a_rms": 3259.7,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "3": {
+            "seconds": 9.92,
+            "a_peak": 30937,
+            "a_rms": 2981.5,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "4": {
+            "seconds": 9.92,
+            "a_peak": 24213,
+            "a_rms": 2623.7,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "5": {
+            "seconds": 9.92,
+            "a_peak": 25788,
+            "a_rms": 2483.7,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "6": {
+            "seconds": 9.92,
+            "a_peak": 24258,
+            "a_rms": 2570.7,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "7": {
+            "seconds": 9.92,
+            "a_peak": 23083,
+            "a_rms": 2833.7,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "8": {
+            "seconds": 9.92,
+            "a_peak": 19247,
+            "a_rms": 2284.8,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "9": {
+            "seconds": 9.92,
+            "a_peak": 20227,
+            "a_rms": 1819.9,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          }
+        },
+        "mean_a_rms": 2691.3,
+        "max_a_peak": 30937,
+        "clipped_samples_total": 0,
+        "examples_with_clipping": []
+      },
+      "stage3": {
+        "per_example": {
+          "0": {
+            "seconds": 9.92,
+            "a_peak": 32768,
+            "a_rms": 3990.6,
+            "a_clipped_samples": 10,
+            "b_peak": 402
+          },
+          "1": {
+            "seconds": 9.92,
+            "a_peak": 30593,
+            "a_rms": 3562.0,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "2": {
+            "seconds": 9.92,
+            "a_peak": 28934,
+            "a_rms": 3969.3,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "3": {
+            "seconds": 9.92,
+            "a_peak": 32113,
+            "a_rms": 4514.6,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "4": {
+            "seconds": 9.92,
+            "a_peak": 26278,
+            "a_rms": 3179.1,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "5": {
+            "seconds": 9.92,
+            "a_peak": 31472,
+            "a_rms": 4904.9,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "6": {
+            "seconds": 9.92,
+            "a_peak": 27646,
+            "a_rms": 3624.4,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "7": {
+            "seconds": 9.92,
+            "a_peak": 29760,
+            "a_rms": 3642.5,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "8": {
+            "seconds": 9.92,
+            "a_peak": 30916,
+            "a_rms": 3258.3,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          },
+          "9": {
+            "seconds": 9.92,
+            "a_peak": 29902,
+            "a_rms": 3625.4,
+            "a_clipped_samples": 0,
+            "b_peak": 402
+          }
+        },
+        "mean_a_rms": 3827.1,
+        "max_a_peak": 32768,
+        "clipped_samples_total": 10,
+        "examples_with_clipping": [
+          "0"
+        ]
+      }
     }
   },
   "persona_perplexity": {

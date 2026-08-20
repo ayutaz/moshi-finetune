@@ -115,6 +115,7 @@ M1のデータ監査はM0と並行可能とする。M2へ進むにはM0とM1の�
 - Stage 3: 固定revisionのweight/config回収とchecksum確認済み
 - Stage 2: 固定revisionのweight/config回収済み。公開HF SHA-256を固定
 - Stage 2 / Stage 3の固定生成音声: **完了**（2026-08-20）。両stageとも10 token・10 WAV、各9.92秒の24 kHz stereo。実行記録は`experiments/tsukuyomi_ojousama/reports/m0-baseline-run-2026-08-20.json`
+- baseline音声の実測差: A channel（生成側）の平均RMSはStage 2 `2691.3`、Stage 3 `3827.1`でStage 3が明確に大きい。peakはStage 2最大`30937`でクリップ0 sample、Stage 3は最大`32768`で1件（example 0）に10 sampleのクリップがある。B channel（教師強制した無音）は全20件でpeak `402`一定であり、全frameで教師強制が効いたことを確認できる
 - 生成のblocker解消: 公開Stage 2/3は`n_q=16, dep_q=8`の推論用形式で`models/moshi_for_generation.py`の`dep_q == n_q`前提と衝突していた。user streamを無音で教師強制する方式へ変更して解消（ユーザー承認済み）
 - checkpoint読み込みのblocker解消: 公開weightはoriginal Moshi名で保存されており`from_pretrained`が166 parameterで不一致だった。`tools/moshi_state_dict.py`の名前対応で解消
 - 口調perplexity: **未成立**。Stage 2 `preferred_mean_nll = 13.004`、Stage 3 `15.204`。`text_card=32000`の一様分布NLL `10.373`より悪い。音声条件を`zero_token_id`から実Mimi tokenへ変えても12.878→13.004とほぼ不変で、音声側は原因ではなかった
