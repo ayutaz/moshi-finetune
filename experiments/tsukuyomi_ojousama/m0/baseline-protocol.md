@@ -44,11 +44,13 @@
 
 一方`models/moshi_for_generation.py`の`step`は`1 + dep_q = 9` tokenを作って`num_codebooks = 1 + n_q = 17`と一致するかassertするため、`AssertionError: torch.Size([1, 9])`で停止する。このリポジトリの生成経路は`dep_q == n_q`（user streamも生成する学習形式）専用である。
 
-選択肢:
+**採用した解決策（2026-08-20、ユーザー承認）: user streamを無音で教師強制する。**
 
-- A: `MoshiForConditionalGeneration`をuser stream外部供給に対応させる。B channelは無音なので、prompt + generation長ぶんの無音tokenをdatasetへ入れて教師強制する。baselineの定義が「user streamは無音を教師強制」へ変わる。
-- B: 公開checkpointは`moshi`公式推論スタックで動かす。`clean_moshi.py`が本来想定している経路。
-- C: M0のbaselineをperplexityのみに縮小し、生成音声はM3のcontrol比較から取る。
+- `MoshiForConditionalGeneration`に`num_user_codebooks`（`num_audio_codebooks - dep_q`）を追加し、depformerが生成しないcodebookを外部から受け取る。`dep_q == n_q`のcheckpointでは`0`になり従来どおり動く。
+- `generate.py`はdelay適用済みの`batch.input_ids`から該当stream（行`1 + dep_q`以降）の`prompt_length`〜`prompt_length + generation_length`を切り出し、1 frameずつ供給する。frameが足りないexampleは明示的に失敗させる。
+- prompt音声は`prompt_length + generation_length + 2` frameぶんまで無音でpaddingする（`+2`はdelay pattern分）。A channelは先頭に原音、以降は無音になる。prompt区間は先頭40 framesで全件が原音のみなので、paddingはpromptの内容を変えない。
+
+したがって本baselineは「**user streamは無音を教師強制し、Moshi側のstreamだけを生成する**」条件と定義する。B channelは元から無音指定なので、protocolの意図とは矛盾しない。
 
 ### 2. 口調perplexity: 再実装が一様分布より悪い
 
@@ -58,11 +60,13 @@ tokenizerは原因ではない。READMEの99〜105行がJ-Moshiの`rinna/japanes
 
 原因は入力構成にあると見られる。再実装は全codebookの音声streamを系列全体で`zero_token_id`に固定するが、`zero_token_id`は学習時に損失の`ignore_index`および系列末尾のpaddingとして使われる値であり、音声条件として入力される状態ではない。過去記事の全文と実コードは回収できておらず（`artifact-recovery.md`）、この再実装が記事の方式と一致している保証もない。
 
-選択肢:
+**採用した解決策（2026-08-20、ユーザー承認）: 実音声を条件にして採点する。**
 
-- A: 音声条件を`zero_token_id`固定ではなく実際のMimi tokenにする。held-out promptの音声を条件に置いて継続テキストを採点する。記事の数値とは別指標になる。
-- B: 過去記事の方式の再現を諦め、口調評価をStyle held-out 50 pairの人手・選好評価に寄せる。
-- C: 記事の方式を著者に確認できるまで、口調perplexityをM0の完了条件から外す。
+- 音声条件を`zero_token_id`固定から、held-out promptの実Mimi token（A 8 + B 8 = 16 codebook）へ変更する。既定の条件音声は`VOICEACTRESS100_032`（8.919秒、held-out中で最長）とする。
+- 各codebookに`moshi_lm_kwargs.json`の`delays`を適用し、delay前のframeは`initial_token_id`で埋める。`utils.data.delay_and_pad_streams`と同じ整列になる。
+- 一様分布ゲートを追加する。`preferred_mean_nll`が`log(text_card)`を下回らないrunは、診断用にreportを書き出したうえで失敗させる。これにより指標として成立しない数値がbaselineとして記録されることはなくなる。
+
+この指標は過去記事の`+11.86 / +12.26`とは条件が異なるため直接比較しない。今回以後の共通baselineとして固定する。
 
 同じTsukuyomi promptを与えても過去あみたろ音声そのものの類似性評価にはならない。このbaselineの目的は、Stage 2/3間の生成安定性、明瞭度、loop、口調差を同一条件で固定することである。
 
