@@ -7,9 +7,9 @@
   "active_stop_threshold": 95.0,
   "starting_account_balance": 749.305209156038,
   "starting_balance_captured_at": "2026-08-18",
-  "dedicated_instance_id": 48004205,
-  "dedicated_instance_label": "moshi-tsukuyomi-ojousama-m0",
-  "hourly_rate": 2.778888888888889,
+  "dedicated_instance_id": 48178589,
+  "dedicated_instance_label": "moshi-tsukuyomi-ojousama-m0-b",
+  "hourly_rate": 2.66,
   "other_instance_ids_excluded": [
     48000459,
     47955178
@@ -99,11 +99,35 @@
       "outcome": "blocked",
       "detail": "prompt pipeline and checkpoint checksums passed; generation blocked by dep_q=8 vs n_q=16, persona perplexity invalid (worse than uniform chance)",
       "report": "experiments/tsukuyomi_ojousama/reports/m0-baseline-run-2026-08-18.json"
+    },
+    {
+      "run": "m0-baseline-generation-retry",
+      "date": "2026-08-20",
+      "instance_id": 48178589,
+      "outcome": "in-progress",
+      "detail": "reruns run_baseline.sh with the teacher-forced user stream and audio-conditioned persona scoring"
     }
   ],
   "instance_state": {
-    "captured_at": "2026-08-18",
-    "actual_status": "exited",
-    "note": "GPU billing stopped; the 300 GiB disk still bills at US$0.1389/h."
-  }
+    "captured_at": "2026-08-20",
+    "instance_id": 48178589,
+    "actual_status": "running",
+    "gpu": "NVIDIA A100-SXM4-80GB x2",
+    "disk_gib": 120,
+    "storage_cost_per_hour": 0.0333,
+    "ssh": "direct (proxy host refused the account key)"
+  },
+  "previous_dedicated_instances": [
+    {
+      "instance_id": 48004205,
+      "label": "moshi-tsukuyomi-ojousama-m0",
+      "hourly_rate": 2.778888888888889,
+      "retired_on": "2026-08-20",
+      "reason": "host had no free 2x A100 capacity; 20 start retries over 41 minutes all returned 'Required resources are currently unavailable'",
+      "state": "stopped",
+      "still_billing": "300 GiB disk at US$0.1389/h until destroyed",
+      "holds_irreplaceable_data": false,
+      "note": "Checkpoints are re-downloadable from Hugging Face at the pinned revisions and the exported reports are already local, so this disk can be destroyed once the user approves."
+    }
+  ]
 }
