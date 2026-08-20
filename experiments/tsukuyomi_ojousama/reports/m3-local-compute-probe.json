@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-21",
+  "question": "Can Mimi tokenisation and decoding run on this Mac, and fast enough to keep audio off a rented GPU?",
+  "why_it_matters": "tokenize_audio.py and decode_tokens.py hardcoded torch.device(\"cuda\", rank), which forced every wav through a rented instance. That is the most expensive way to run the cheapest part of the pipeline, and it also puts the tsukuyomi corpus audio on a machine the experiment does not own.",
+  "host": {
+    "platform": "darwin 25.3.0, Apple Silicon",
+    "torch": "2.4.1",
+    "mps_available": true,
+    "environment": "ephemeral uv env: moshi==0.1.0, torch, torchaudio, numpy, huggingface_hub, tqdm"
+  },
+  "correctness": {
+    "codec": "kyutai/moshiko-pytorch-bf16 tokenizer-e351c8d8-checkpoint125.safetensors",
+    "sample_rate_hz": 24000,
+    "frame_rate_hz": 12.5,
+    "encode_2s": {"cpu": "(1, 8, 25)", "mps": "(1, 8, 25)"},
+    "decode_roundtrip": {"cpu": "(1, 1, 48000)", "mps": "(1, 1, 48000)"},
+    "verdict": "Both devices encode and decode correctly; 2 s of 24 kHz audio yields the expected 25 Mimi frames."
+  },
+  "throughput": {
+    "clip_seconds": 20,
+    "note": "20 s is the target length of an M3 dialogue: B opens, A speaks one corpus sentence, B closes.",
+    "cpu": {"encode_s_per_channel": 0.41, "s_per_stereo_dialogue": 0.82, "minutes_for_160_dialogues": 2.2, "decode_s": 0.49},
+    "mps": {"encode_s_per_channel": 0.23, "s_per_stereo_dialogue": 0.46, "minutes_for_160_dialogues": 1.2, "decode_s": 0.16}
+  },
+  "conclusion": {
+    "decision": "Tokenise and decode locally for M3. The rented instance never has to see a wav.",
+    "evidence": "Both V-real and V-tts together are 160 stereo dialogues, which is 1.2 minutes on MPS or 2.2 minutes on CPU. Renting an A100 for this would cost more in bootstrap time than the work takes.",
+    "enabled_by": "The --device flag added to tools/tokenize_audio.py and tools/decode_tokens.py in commit 036f5c7; the shared rules are in tools/worker_device.py.",
+    "secondary_benefit": "The tsukuyomi corpus audio stays on this machine, which is what experiments/tsukuyomi_ojousama/DATA_CREDITS.md and the corpus terms want.",
+    "caveat": "This measures Mimi only. Full-parameter fine-tuning of the 8.4B dep_q=16 model is not runnable here and still needs 2x A100 80GB."
+  }
+}
