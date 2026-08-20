@@ -9,7 +9,11 @@ from tools.evaluation_data import (
 
 def _tts_rows(count: int = 30):
     return [
-        {"id": f"tts-{index:02d}", "text": f"未学習評価文章その{index}を朗読します。", "tags": ["clarity"]}
+        {
+            "id": f"tts-{index:02d}",
+            "text": f"未学習評価文章その{index}を朗読します。",
+            "tags": ["clarity"],
+        }
         for index in range(1, count + 1)
     ]
 
@@ -104,9 +108,7 @@ class FixedEvaluationValidationTests(unittest.TestCase):
 
     def test_ojousama_invitation_marker_is_accepted(self) -> None:
         style_rows = _style_rows()
-        style_rows[0] = dict(
-            style_rows[0], preferred="香り高い紅茶を召し上がりませんこと。"
-        )
+        style_rows[0] = dict(style_rows[0], preferred="香り高い紅茶を召し上がりませんこと。")
 
         report = validate_fixed_evaluation(
             tts_rows=_tts_rows(),

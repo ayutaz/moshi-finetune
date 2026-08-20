@@ -4,7 +4,6 @@ import argparse
 import json
 from dataclasses import asdict, dataclass
 
-
 WARNING_SPEND = 75.0
 NEW_RUN_LIMIT = 90.0
 ACTIVE_STOP = 95.0

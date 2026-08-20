@@ -26,10 +26,18 @@
     "byte_size": 66716,
     "sha256": "6a4dead5a492b6c57ffd30f84c0abf8221b9f404f7066c9c65689cd05947d0ec",
     "accepted_rows": 201,
-    "rejected_duplicate_source_rows": [20]
+    "rejected_duplicate_source_rows": [
+      20
+    ]
   },
   "notes": [
     "The upstream file named ojousamatalkscript200.jsonl currently contains 202 JSON rows.",
-    "One duplicate prompt is removed deterministically; the 201-row tracked copy is reference-only and must not be included in style training."
-  ]
+    "One duplicate prompt is removed deterministically; the 201-row tracked copy is reference-only and must not be included in style training.",
+    "The MIT permission notice is bundled at reference/LICENSE.OjousamaTalkScriptDataset; the copyright line alone does not satisfy the licence for a redistributed derivative."
+  ],
+  "bundled_license": {
+    "path": "experiments/tsukuyomi_ojousama/reference/LICENSE.OjousamaTalkScriptDataset",
+    "sha256": "fcd8fbf3ea9a8a08b3c5ffd6ede9d6d129b006eacf190c54202673f2906e207f",
+    "reason": "derived_reference is committed to this public repository, so MIT requires the permission notice to travel with it"
+  }
 }

@@ -30,15 +30,11 @@ def build_delayed_audio_context(
     `initial_token_id`, matching `utils.data.delay_and_pad_streams`.
     """
     if len(audio_rows) != len(delays):
-        raise ScoringError(
-            f"got {len(audio_rows)} audio codebooks but {len(delays)} delay values"
-        )
+        raise ScoringError(f"got {len(audio_rows)} audio codebooks but {len(delays)} delay values")
     context = []
     for row, delay in zip(audio_rows, delays, strict=True):
         if len(row) < length:
-            raise ScoringError(
-                f"audio context needs at least {length} frames, got {len(row)}"
-            )
+            raise ScoringError(f"audio context needs at least {length} frames, got {len(row)}")
         context.append(
             [initial_token_id if index < delay else row[index - delay] for index in range(length)]
         )
@@ -77,7 +73,9 @@ def validate_pairs(rows: list[dict[str, Any]]) -> list[dict[str, str]]:
         identifiers.add(row["id"])
         if row["preferred"].strip() == row["dispreferred"].strip():
             raise PairValidationError(f"{row['id']}: preferred and dispreferred must differ")
-        validated.append({field: row[field].strip() for field in ("id", "prompt", "preferred", "dispreferred")})
+        validated.append(
+            {field: row[field].strip() for field in ("id", "prompt", "preferred", "dispreferred")}
+        )
     return validated
 
 
@@ -90,14 +88,22 @@ def summarise_scores(rows: list[dict[str, float]]) -> dict[str, Any]:
         preferred_logprob = [float(row["preferred_logprob"]) for row in rows]
         dispreferred_logprob = [float(row["dispreferred_logprob"]) for row in rows]
         preferred_wins = sum(
-            left > right for left, right in zip(preferred_logprob, dispreferred_logprob)
+            left > right
+            for left, right in zip(preferred_logprob, dispreferred_logprob, strict=True)
         )
-        ties = sum(left == right for left, right in zip(preferred_logprob, dispreferred_logprob))
+        ties = sum(
+            left == right
+            for left, right in zip(preferred_logprob, dispreferred_logprob, strict=True)
+        )
     else:
         preferred_logprob = []
         dispreferred_logprob = []
-        preferred_wins = sum(left < right for left, right in zip(preferred_nll, dispreferred_nll))
-        ties = sum(left == right for left, right in zip(preferred_nll, dispreferred_nll))
+        preferred_wins = sum(
+            left < right for left, right in zip(preferred_nll, dispreferred_nll, strict=True)
+        )
+        ties = sum(
+            left == right for left, right in zip(preferred_nll, dispreferred_nll, strict=True)
+        )
     mean_preferred = sum(preferred_nll) / len(rows)
     mean_dispreferred = sum(dispreferred_nll) / len(rows)
     summary = {
@@ -203,9 +209,7 @@ def score_pairs(
     ]
     device = torch.device(device_name)
     tokenizer = SentencePieceProcessor(str(tokenizer_path))
-    model = MoshiForFinetuning.from_pretrained(
-        str(model_dir), device=device, dtype=dtype
-    ).eval()
+    model = MoshiForFinetuning.from_pretrained(str(model_dir), device=device, dtype=dtype).eval()
 
     scores = []
     for pair in pairs:
@@ -248,9 +252,7 @@ def score_pairs(
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     return [
-        json.loads(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
+        json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
     ]
 
 
@@ -269,9 +271,7 @@ def main() -> int:
         help="Mimi-tokenised prompt (.npz with A and B) used as audio conditioning",
     )
     parser.add_argument("--device", default="cuda:0")
-    parser.add_argument(
-        "--dtype", choices=("float16", "bfloat16", "float32"), default="bfloat16"
-    )
+    parser.add_argument("--dtype", choices=("float16", "bfloat16", "float32"), default="bfloat16")
     args = parser.parse_args()
 
     from huggingface_hub import hf_hub_download

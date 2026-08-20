@@ -45,9 +45,7 @@ class DelayedAudioContextTests(unittest.TestCase):
 
     def test_rejects_a_delay_count_that_does_not_match_the_codebooks(self) -> None:
         with self.assertRaisesRegex(ScoringError, "delay"):
-            build_delayed_audio_context(
-                [[1, 2], [3, 4]], delays=[0], initial_token_id=99, length=2
-            )
+            build_delayed_audio_context([[1, 2], [3, 4]], delays=[0], initial_token_id=99, length=2)
 
 
 class ChanceBoundTests(unittest.TestCase):
@@ -69,9 +67,7 @@ class ChanceBoundTests(unittest.TestCase):
 
     def test_rejects_exactly_at_the_bound(self) -> None:
         with self.assertRaises(ScoringError):
-            assert_better_than_chance(
-                {"preferred_mean_nll": math.log(32000)}, text_card=32000
-            )
+            assert_better_than_chance({"preferred_mean_nll": math.log(32000)}, text_card=32000)
 
 
 if __name__ == "__main__":

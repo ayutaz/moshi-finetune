@@ -3,9 +3,9 @@ from __future__ import annotations
 import argparse
 import json
 import unicodedata
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
-
+from typing import Any
 
 STYLE_MARKERS = (
     "ですわ",
@@ -73,7 +73,9 @@ def build_voice_evaluation_index(manifest: Iterable[dict[str, Any]]) -> list[dic
     selected: list[dict[str, Any]] = []
     for partition, source_rows in (("seen", train_rows[:10]), ("held-out", test_rows[:10])):
         for source in source_rows:
-            missing = [field for field in ("artifact_id", "text", "sha256") if not source.get(field)]
+            missing = [
+                field for field in ("artifact_id", "text", "sha256") if not source.get(field)
+            ]
             if missing:
                 raise EvaluationValidationError(
                     f"voice evaluation source is missing: {', '.join(missing)}"

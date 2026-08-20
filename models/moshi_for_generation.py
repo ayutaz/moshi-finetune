@@ -150,8 +150,7 @@ class MoshiForConditionalGeneration:
                     f"{self.num_user_codebooks} user-stream codebooks must be supplied"
                 )
             assert user_stream_tokens.shape == (B, self.num_user_codebooks), (
-                f"Expected shape {(B, self.num_user_codebooks)}, "
-                f"but got {user_stream_tokens.shape}"
+                f"Expected shape {(B, self.num_user_codebooks)}, but got {user_stream_tokens.shape}"
             )
             streams.append(user_stream_tokens)
 

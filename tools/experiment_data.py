@@ -10,9 +10,9 @@ import struct
 import unicodedata
 import wave
 from collections import defaultdict
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
-
+from typing import Any
 
 REQUIRED_FIELDS = (
     "schema_version",
@@ -126,13 +126,17 @@ def _audio_metadata(path: Path) -> dict[str, Any]:
 
 def _allocate_split_counts(count: int) -> dict[str, int]:
     if count <= 0:
-        return {split: 0 for split in SPLITS}
+        return dict.fromkeys(SPLITS, 0)
 
     ratios = {"train": 0.8, "dev": 0.1, "test": 0.1}
     raw_counts = {split: count * ratio for split, ratio in ratios.items()}
     counts = {split: math.floor(value) for split, value in raw_counts.items()}
     remainder = count - sum(counts.values())
-    order = sorted(SPLITS, key=lambda split: (raw_counts[split] - counts[split], -SPLITS.index(split)), reverse=True)
+    order = sorted(
+        SPLITS,
+        key=lambda split: (raw_counts[split] - counts[split], -SPLITS.index(split)),
+        reverse=True,
+    )
     for split in order[:remainder]:
         counts[split] += 1
     return counts
@@ -195,7 +199,7 @@ def build_manifest(
     assignments = _assign_splits(group_ids, seed)
     transcript_map = transcripts or {}
     rows = []
-    for path, group_id in zip(audio_paths, group_ids):
+    for path, group_id in zip(audio_paths, group_ids, strict=True):
         relative_path = path.relative_to(data_root).as_posix()
         media_type = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
         row = {
@@ -292,7 +296,9 @@ def validate_manifest(rows: list[dict[str, Any]], *, data_root: Path) -> dict[st
     group_splits: dict[str, set[str]] = defaultdict(set)
 
     for index, row in enumerate(rows, start=1):
-        missing = [field for field in REQUIRED_FIELDS if field not in row or row[field] in (None, "")]
+        missing = [
+            field for field in REQUIRED_FIELDS if field not in row or row[field] in (None, "")
+        ]
         if missing:
             errors.append(f"row {index}: missing required fields: {', '.join(missing)}")
             continue
@@ -343,13 +349,13 @@ def validate_manifest(rows: list[dict[str, Any]], *, data_root: Path) -> dict[st
     for checksum, artifact_ids in checksum_artifacts.items():
         if len(artifact_ids) > 1:
             duplicate_artifact_count += len(artifact_ids) - 1
-            errors.append(
-                f"checksum {checksum}: exact duplicate artifacts {sorted(artifact_ids)}"
-            )
+            errors.append(f"checksum {checksum}: exact duplicate artifacts {sorted(artifact_ids)}")
     for checksum, splits in checksum_splits.items():
         if len(splits) > 1:
             cross_split_duplicate_count += 1
-            errors.append(f"checksum {checksum}: exact duplicate occurs across splits {sorted(splits)}")
+            errors.append(
+                f"checksum {checksum}: exact duplicate occurs across splits {sorted(splits)}"
+            )
     for group_id, splits in group_splits.items():
         if len(splits) > 1:
             cross_split_duplicate_count += 1
@@ -375,9 +381,7 @@ def validate_manifest(rows: list[dict[str, Any]], *, data_root: Path) -> dict[st
         "corrupt_audio_count": corrupt_audio_count,
         "cross_split_duplicate_count": cross_split_duplicate_count,
         "duplicate_artifact_count": duplicate_artifact_count,
-        "split_counts": {
-            split: sum(row.get("split") == split for row in rows) for split in SPLITS
-        },
+        "split_counts": {split: sum(row.get("split") == split for row in rows) for split in SPLITS},
         "errors": errors,
     }
     if errors:

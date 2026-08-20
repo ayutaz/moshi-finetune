@@ -27,19 +27,55 @@ from collections import OrderedDict
 from collections.abc import Iterable
 
 _EXPOSED_TO_ORIGINAL = (
-    (r"^transformer\.layers\.\d+\.gating\.linear_in_weight$", "linear_in_weight", "linear_in.weight"),
-    (r"^transformer\.layers\.\d+\.gating\.linear_out_weight$", "linear_out_weight", "linear_out.weight"),
-    (r"^depformer\.layers\.\d+\.gating\.\d+\.linear_in_weight$", "linear_in_weight", "linear_in.weight"),
-    (r"^depformer\.layers\.\d+\.gating\.\d+\.linear_out_weight$", "linear_out_weight", "linear_out.weight"),
+    (
+        r"^transformer\.layers\.\d+\.gating\.linear_in_weight$",
+        "linear_in_weight",
+        "linear_in.weight",
+    ),
+    (
+        r"^transformer\.layers\.\d+\.gating\.linear_out_weight$",
+        "linear_out_weight",
+        "linear_out.weight",
+    ),
+    (
+        r"^depformer\.layers\.\d+\.gating\.\d+\.linear_in_weight$",
+        "linear_in_weight",
+        "linear_in.weight",
+    ),
+    (
+        r"^depformer\.layers\.\d+\.gating\.\d+\.linear_out_weight$",
+        "linear_out_weight",
+        "linear_out.weight",
+    ),
     (r"^depformer\.layers\.\d+\.self_attn\.out_proj_weight$", "out_proj_weight", "out_proj.weight"),
 )
 
 _ORIGINAL_TO_EXPOSED = (
-    (r"^transformer\.layers\.\d+\.gating\.linear_in\.weight$", "linear_in.weight", "linear_in_weight"),
-    (r"^transformer\.layers\.\d+\.gating\.linear_out\.weight$", "linear_out.weight", "linear_out_weight"),
-    (r"^depformer\.layers\.\d+\.gating\.\d+\.linear_in\.weight$", "linear_in.weight", "linear_in_weight"),
-    (r"^depformer\.layers\.\d+\.gating\.\d+\.linear_out\.weight$", "linear_out.weight", "linear_out_weight"),
-    (r"^depformer\.layers\.\d+\.self_attn\.out_proj\.weight$", "out_proj.weight", "out_proj_weight"),
+    (
+        r"^transformer\.layers\.\d+\.gating\.linear_in\.weight$",
+        "linear_in.weight",
+        "linear_in_weight",
+    ),
+    (
+        r"^transformer\.layers\.\d+\.gating\.linear_out\.weight$",
+        "linear_out.weight",
+        "linear_out_weight",
+    ),
+    (
+        r"^depformer\.layers\.\d+\.gating\.\d+\.linear_in\.weight$",
+        "linear_in.weight",
+        "linear_in_weight",
+    ),
+    (
+        r"^depformer\.layers\.\d+\.gating\.\d+\.linear_out\.weight$",
+        "linear_out.weight",
+        "linear_out_weight",
+    ),
+    (
+        r"^depformer\.layers\.\d+\.self_attn\.out_proj\.weight$",
+        "out_proj.weight",
+        "out_proj_weight",
+    ),
 )
 
 
@@ -74,15 +110,11 @@ def expose_linear_weights_in_original_state_dict(state_dict: OrderedDict) -> Ord
 
 def is_original_format_state_dict(keys: Iterable[str]) -> bool:
     """Report whether a checkpoint uses the original Moshi parameter names."""
-    return any(
-        pattern.match(key) for key in keys for pattern, _, _ in _ORIGINAL_TO_EXPOSED_RULES
-    )
+    return any(pattern.match(key) for key in keys for pattern, _, _ in _ORIGINAL_TO_EXPOSED_RULES)
 
 
 def count_original_format_keys(keys: Iterable[str]) -> int:
     """Count how many parameters would be renamed when loading an original-format checkpoint."""
     return sum(
-        1
-        for key in keys
-        if any(pattern.match(key) for pattern, _, _ in _ORIGINAL_TO_EXPOSED_RULES)
+        1 for key in keys if any(pattern.match(key) for pattern, _, _ in _ORIGINAL_TO_EXPOSED_RULES)
     )

@@ -87,7 +87,10 @@ class BuildManifestTests(unittest.TestCase):
             self.assertEqual(first, second)
             self.assertEqual({row["split"] for row in first}, {"train", "dev", "test"})
             self.assertEqual(
-                {split: sum(row["split"] == split for row in first) for split in {"train", "dev", "test"}},
+                {
+                    split: sum(row["split"] == split for row in first)
+                    for split in {"train", "dev", "test"}
+                },
                 {"train": 8, "dev": 1, "test": 1},
             )
             self.assertTrue(all(row["audio"]["sample_rate_hz"] == 24_000 for row in first))

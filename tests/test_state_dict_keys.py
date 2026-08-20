@@ -61,9 +61,7 @@ class ExposeOriginalStateDictTests(unittest.TestCase):
     def test_preserves_values_and_order(self) -> None:
         result = expose_linear_weights_in_original_state_dict(_state_dict(ORIGINAL_KEYS))
 
-        self.assertEqual(
-            list(result.values()), [f"tensor::{key}" for key in ORIGINAL_KEYS]
-        )
+        self.assertEqual(list(result.values()), [f"tensor::{key}" for key in ORIGINAL_KEYS])
 
     def test_is_the_inverse_of_the_restore_helper(self) -> None:
         exposed = _state_dict(EXPOSED_KEYS)

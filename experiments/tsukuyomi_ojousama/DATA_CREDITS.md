@@ -14,11 +14,15 @@
 本実験でCodexが新規作成する評価promptと会話scriptは、つくよみちゃんコーパスの原音・台本とは分離して管理する。`OjousamaTalkScriptDataset`を参照または派生元として使用する場合は、MIT License、取得commit、checksumを台帳へ記録する。
 
 - 参照データ: `matsuvr/OjousamaTalkScriptDataset`
+- 取得元: https://github.com/matsuvr/OjousamaTalkScriptDataset
 - 固定commit: `589f3b52324cc12ad3fb0b2ebe1520bbffce4087`
 - License: MIT
 - Copyright (c) 2023 matsu_vr
+- 許諾条項本文: [`reference/LICENSE.OjousamaTalkScriptDataset`](./reference/LICENSE.OjousamaTalkScriptDataset)（上流LICENSEの逐語コピー、SHA-256 `fcd8fbf3ea9a8a08b3c5ffd6ede9d6d129b006eacf190c54202673f2906e207f`）
 
 このデータは`reference-only`とし、固定評価promptや今後生成する学習会話と混ぜない。元ファイルの202行のうち重複prompt 1件を除いた201件を品質参照用に固定している。
+
+派生物である`reference/ojousama-talk-script-201.jsonl`は本リポジトリに含めて公開しているため、MITの「上記著作権表示および本許諾表示を、ソフトウェアのすべての複製または重要な部分に記載する」条件が適用される。著作権表示だけでは足りないので、許諾条項本文を上記のファイルとして同梱する。この派生物を別の場所へ再配布する場合も、同じ2つを併せて配布すること。
 
 ## 固定評価テキスト
 

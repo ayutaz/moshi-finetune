@@ -11,7 +11,6 @@ from collections import defaultdict
 from pathlib import Path, PurePosixPath
 from typing import Any
 
-
 CORPUS_NAME = re.compile(r"VOICEACTRESS100_(\d{3})\.wav$")
 DOCUMENT_NAMES = {
     "01 台本について.txt": "script-license.txt",

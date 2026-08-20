@@ -54,9 +54,7 @@ def prepare_reference(
 
 def _read_jsonl(path: Path) -> list[dict[str, Any]]:
     return [
-        json.loads(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
+        json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()
     ]
 
 
@@ -68,9 +66,7 @@ def main() -> int:
     parser.add_argument("--report", type=Path, required=True)
     args = parser.parse_args()
 
-    accepted, report = prepare_reference(
-        _read_jsonl(args.input), source_commit=args.source_commit
-    )
+    accepted, report = prepare_reference(_read_jsonl(args.input), source_commit=args.source_commit)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(
         "".join(json.dumps(row, ensure_ascii=False, sort_keys=True) + "\n" for row in accepted),

@@ -3,8 +3,9 @@ from __future__ import annotations
 import argparse
 import json
 import math
+from collections.abc import Iterable
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 STREAMS_PER_SPEAKER = 9  # 1 text + 8 audio codebooks
 MIMI_FRAME_RATE_HZ = 12.5
@@ -54,9 +55,7 @@ def prepare_stereo_audio(
         raise ValueError(f"no WAV prompts found in {input_dir}")
     output_dir.mkdir(parents=True, exist_ok=True)
     minimum_samples = (
-        minimum_sample_count(min_frames=min_frames, sample_rate=target_rate)
-        if min_frames
-        else 0
+        minimum_sample_count(min_frames=min_frames, sample_rate=target_rate) if min_frames else 0
     )
     durations = {}
     speech_durations = {}
@@ -146,9 +145,7 @@ def verify_prompt_dataset(
         frames = speaker_frames["A"]
         if frames < min_frames:
             too_short.append((dialogue_id, frames))
-        examples.append(
-            {"example_id": example_id, "dialogue_id": dialogue_id, "frames": frames}
-        )
+        examples.append({"example_id": example_id, "dialogue_id": dialogue_id, "frames": frames})
 
     if too_short:
         detail = ", ".join(f"{dialogue_id}={frames}" for dialogue_id, frames in too_short)
