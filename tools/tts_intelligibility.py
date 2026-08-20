@@ -19,7 +19,7 @@ import argparse
 import json
 import statistics
 import unicodedata
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any
 
@@ -50,8 +50,28 @@ def _edit_distance(reference: str, hypothesis: str) -> int:
     return previous[-1]
 
 
-def character_error_rate(reference: str, hypothesis: str) -> float:
-    """Edit distance between the readings, divided by the reference length."""
+def to_kana_reading(text: str) -> str:
+    """Katakana reading of `text`, via pyopenjtalk's grapheme-to-phoneme."""
+    import pyopenjtalk
+
+    return pyopenjtalk.g2p(text, kana=True)
+
+
+def character_error_rate(
+    reference: str,
+    hypothesis: str,
+    *,
+    reader: Callable[[str], str] | None = None,
+) -> float:
+    """Edit distance between reference and hypothesis, divided by the reference length.
+
+    With `reader`, both sides are converted to readings first. A recogniser picks its own
+    orthography - 「12月24日」 for 「十二月二十四日」, 「みずみずしい」 for 「瑞々しい」 -
+    and charging the TTS for that would measure transcription style, not pronunciation.
+    """
+    if reader is not None:
+        reference = reader(reference)
+        hypothesis = reader(hypothesis)
     ref = normalise_for_cer(reference)
     hyp = normalise_for_cer(hypothesis)
     if not ref:
@@ -108,6 +128,12 @@ def main() -> int:
     parser.add_argument("--threshold", type=float, default=0.15)
     parser.add_argument("--required", type=int, default=27)
     parser.add_argument(
+        "--compare",
+        choices=("reading", "surface"),
+        default="reading",
+        help="compare kana readings (default) or raw surface forms",
+    )
+    parser.add_argument(
         "--transcripts",
         type=Path,
         help="reuse transcripts from a previous run instead of loading the ASR model",
@@ -133,6 +159,7 @@ def main() -> int:
                 json.dumps(transcripts, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
             )
 
+    reader = to_kana_reading if args.compare == "reading" else None
     rows = []
     for name, hypothesis in sorted(transcripts.items()):
         reference = sentences.get(name)
@@ -143,7 +170,7 @@ def main() -> int:
                 "id": name,
                 "reference": reference,
                 "hypothesis": hypothesis,
-                "cer": character_error_rate(reference, hypothesis),
+                "cer": character_error_rate(reference, hypothesis, reader=reader),
             }
         )
 
@@ -153,6 +180,7 @@ def main() -> int:
         "schema_version": 1,
         "audio_dir": str(args.audio_dir),
         "asr_model": args.model,
+        "comparison": args.compare,
         "summary": summary,
         "sentences": rows,
         "status": "pass" if summary["intelligible"] >= args.required else "fail",

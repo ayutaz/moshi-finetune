@@ -80,3 +80,35 @@ class SummaryTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ReadingComparisonTests(unittest.TestCase):
+    """Whisper writes numbers and kanji its own way.
+
+    The T0 measurement charged four sentences with errors the TTS did not make:
+    「十二月二十四日」 came back as 「12月24日」 and 「瑞々しい」 as 「みずみずしい」, both
+    correctly pronounced. Comparing readings instead of surface forms measures what the
+    gate actually asks about.
+    """
+
+    def test_applies_the_reader_to_both_sides(self) -> None:
+        readings = {"十二月": "ジューニガツ", "12月": "ジューニガツ"}
+
+        rate = character_error_rate("十二月", "12月", reader=readings.__getitem__)
+
+        self.assertEqual(rate, 0.0)
+
+    def test_still_reports_a_genuine_mispronunciation(self) -> None:
+        readings = {"包丁": "ホーチョー", "放送": "ホーソー"}
+
+        rate = character_error_rate("包丁", "放送", reader=readings.__getitem__)
+
+        self.assertGreater(rate, 0.0)
+
+    def test_without_a_reader_it_compares_surface_forms(self) -> None:
+        self.assertGreater(character_error_rate("十二月", "12月"), 0.0)
+
+    def test_punctuation_is_still_dropped_after_reading(self) -> None:
+        readings = {"はい。": "ハイ。", "はい": "ハイ？"}
+
+        self.assertEqual(character_error_rate("はい。", "はい", reader=readings.__getitem__), 0.0)
