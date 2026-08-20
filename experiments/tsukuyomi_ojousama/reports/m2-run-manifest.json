@@ -49,11 +49,24 @@
       "learning_rate": 0.01,
       "batch_size": 16,
       "max_steps": 3000,
-      "precision": "fp32",
-      "device": "mps",
+      "precision": "bf16",
+      "device": "cuda",
       "save_every": 250,
-      "seconds_per_step_observed": 11.8,
-      "status": "running"
+      "seconds_per_step_observed": 1.03,
+      "status": "running",
+      "instance_id": 48187958,
+      "gpu": "NVIDIA A100-SXM4-80GB x1",
+      "hourly_rate_usd": 1.0814814814814817,
+      "estimated_minutes": 51,
+      "bootstrap": "experiments/tsukuyomi_ojousama/m2/bootstrap_tts_instance.sh",
+      "latents_uploaded": "precomputed DACVAE latents only; the corpus audio never leaves this machine",
+      "note": "First attempted on local MPS at 11.8-15.2 s/step (about 12 hours). Moved to a single A100 at 1.03 s/step after the 2x A100 instance was unavailable three times."
     }
+  },
+  "local_mps_findings": {
+    "inference_seconds_per_sentence": 17,
+    "training_seconds_per_step": 11.8,
+    "train_py_patch": "4 float64 logging accumulators changed to float32; MPS has no float64",
+    "conclusion": "inference is practical locally; training is not"
   }
 }
