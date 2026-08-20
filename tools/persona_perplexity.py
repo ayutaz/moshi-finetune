@@ -41,6 +41,46 @@ def build_delayed_audio_context(
     return context
 
 
+def build_aligned_text_stream(
+    context_ids: list[int],
+    completion_ids: list[int],
+    *,
+    num_frames: int,
+    start_frame: int,
+    text_padding_id: int,
+    end_of_text_padding_id: int,
+) -> tuple[list[int], list[int]]:
+    """Lay the pair out the way `tools/tokenize_text.py` lays out training text.
+
+    Every frame starts as `text_padding_id`; the context and completion tokens occupy
+    consecutive frames from `start_frame`; and the frame before the run carries
+    `end_of_text_padding_id`, which `tokenize_and_pad_text` writes only when the preceding
+    frame is still padding, so a run of consecutive tokens is marked exactly once.
+
+    Returns the stream and the frame index of each completion token.
+    """
+    if not completion_ids:
+        raise ScoringError("completion must contain at least one token")
+    if start_frame < 1:
+        raise ScoringError("start_frame must leave a frame for the end-of-padding marker")
+    needed = start_frame + len(context_ids) + len(completion_ids)
+    if num_frames < needed:
+        raise ScoringError(f"num_frames must be at least {needed}, got {num_frames}")
+
+    stream = [text_padding_id] * num_frames
+    stream[start_frame - 1] = end_of_text_padding_id
+    frame = start_frame
+    for token in context_ids:
+        stream[frame] = token
+        frame += 1
+    completion_frames = []
+    for token in completion_ids:
+        stream[frame] = token
+        completion_frames.append(frame)
+        frame += 1
+    return stream, completion_frames
+
+
 def assert_better_than_chance(summary: dict[str, Any], *, text_card: int) -> None:
     """Reject scores no better than a uniform distribution over the text vocabulary."""
     bound = math.log(text_card)
@@ -135,21 +175,39 @@ def _score_completion(
     completion_ids: list[int],
     audio_context: list[list[int]],
     device: Any,
+    start_frame: int,
+    end_of_text_padding_id: int,
 ) -> dict[str, float]:
     import torch
     import torch.nn.functional as functional
 
     if not context_ids or not completion_ids:
         raise PairValidationError("tokenizer produced an empty context or completion")
-    text_tokens = [model.text_initial_token_id, *context_ids, *completion_ids]
-    text_tensor = torch.tensor(text_tokens, dtype=torch.long, device=device).unsqueeze(0)
+
+    num_frames = start_frame + len(context_ids) + len(completion_ids)
+    stream, completion_frames = build_aligned_text_stream(
+        context_ids,
+        completion_ids,
+        num_frames=num_frames,
+        start_frame=start_frame,
+        text_padding_id=model.text_padding_token_id,
+        end_of_text_padding_id=end_of_text_padding_id,
+    )
     delayed_audio = build_delayed_audio_context(
         audio_context,
         delays=list(model.delays[1:]),
         initial_token_id=model.initial_token_id,
-        length=len(text_tokens),
+        length=num_frames,
     )
-    audio_tensor = torch.tensor(delayed_audio, dtype=torch.long, device=device).unsqueeze(0)
+
+    # `utils.data.delay_and_pad_streams` prepends one initial-token frame to every stream,
+    # so the scored sequence starts the same way. That shift keeps each completion frame at
+    # the same index in `targets`, which drops the leading token.
+    text_tokens = [model.text_initial_token_id, *stream]
+    audio_rows = [[model.initial_token_id, *row] for row in delayed_audio]
+
+    text_tensor = torch.tensor(text_tokens, dtype=torch.long, device=device).unsqueeze(0)
+    audio_tensor = torch.tensor(audio_rows, dtype=torch.long, device=device).unsqueeze(0)
     input_ids = torch.cat((text_tensor.unsqueeze(1), audio_tensor), dim=1)
 
     with torch.inference_mode():
@@ -164,10 +222,9 @@ def _score_completion(
         logits = model.text_linear(hidden).float()[..., :-1, :]
         targets = text_tensor[..., 1:]
 
-        completion_start = len(context_ids)
-        completion_stop = completion_start + len(completion_ids)
-        completion_logits = logits[:, completion_start:completion_stop]
-        completion_targets = targets[:, completion_start:completion_stop]
+        positions = torch.tensor(completion_frames, dtype=torch.long, device=device)
+        completion_logits = logits[:, positions]
+        completion_targets = targets[:, positions]
         token_losses = functional.cross_entropy(
             completion_logits.reshape(-1, model.text_card),
             completion_targets.reshape(-1),
@@ -198,6 +255,8 @@ def score_pairs(
     audio_context: list[list[int]],
     device_name: str,
     dtype_name: str,
+    start_frame: int,
+    end_of_text_padding_id: int,
 ) -> list[dict[str, Any]]:
     import torch
     from sentencepiece import SentencePieceProcessor
@@ -222,6 +281,8 @@ def score_pairs(
             completion_ids=preferred_ids,
             audio_context=audio_context,
             device=device,
+            start_frame=start_frame,
+            end_of_text_padding_id=end_of_text_padding_id,
         )
         dispreferred_score = _score_completion(
             model,
@@ -229,6 +290,8 @@ def score_pairs(
             completion_ids=dispreferred_ids,
             audio_context=audio_context,
             device=device,
+            start_frame=start_frame,
+            end_of_text_padding_id=end_of_text_padding_id,
         )
         scores.append(
             {
@@ -270,6 +333,18 @@ def main() -> int:
         required=True,
         help="Mimi-tokenised prompt (.npz with A and B) used as audio conditioning",
     )
+    parser.add_argument(
+        "--start-frame",
+        type=int,
+        default=12,
+        help="frames of text padding before the scored tokens, matching the training layout",
+    )
+    parser.add_argument(
+        "--end-of-text-padding-id",
+        type=int,
+        default=0,
+        help="written in the frame before the token run, as tools/tokenize_text.py does",
+    )
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--dtype", choices=("float16", "bfloat16", "float32"), default="bfloat16")
     args = parser.parse_args()
@@ -292,6 +367,8 @@ def main() -> int:
         audio_context=audio_context,
         device_name=args.device,
         dtype_name=args.dtype,
+        start_frame=args.start_frame,
+        end_of_text_padding_id=args.end_of_text_padding_id,
     )
     summary = summarise_scores(scores)
     with open(args.model_dir / "moshi_lm_kwargs.json") as kwargs_file:
@@ -310,6 +387,13 @@ def main() -> int:
         ),
         "audio_context": str(args.audio_context),
         "audio_context_codebooks": len(audio_context),
+        "start_frame": args.start_frame,
+        "end_of_text_padding_id": args.end_of_text_padding_id,
+        "text_layout": (
+            "text_padding_token_id fills the frames, end_of_text_padding_id marks the frame "
+            "before the token run, and the context and completion tokens occupy consecutive "
+            "frames, mirroring tools/tokenize_text.py"
+        ),
         "text_card": text_card,
         "uniform_chance_nll": math.log(text_card),
         "summary": summary,

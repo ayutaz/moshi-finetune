@@ -29,6 +29,10 @@ generation_length=125
 # generated frame, plus 2 frames for the delay pattern.
 required_frames=$((prompt_length + generation_length))
 audio_context_stem=VOICEACTRESS100_032
+# The training text stream is mostly text_padding_id with tokens at their word-timestamp
+# frames, so the scored pair is laid out the same way instead of densely from frame 0.
+persona_start_frame=12
+persona_end_of_text_padding_id=0
 
 mkdir -p "${shared_root}/logs"
 exec > >(tee "${shared_root}/logs/run-baseline.log") 2>&1
@@ -78,6 +82,8 @@ for stage in stage2 stage3; do
     --output "${artifact_root}/${stage}/evaluation/persona-perplexity.json" \
     --tokenizer-revision "${tokenizer_revision}" \
     --audio-context "${shared_root}/tokenized-audio/${audio_context_stem}.npz" \
+    --start-frame "${persona_start_frame}" \
+    --end-of-text-padding-id "${persona_end_of_text_padding_id}" \
     --device cuda:0 \
     --dtype bfloat16
   then
