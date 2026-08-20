@@ -60,13 +60,39 @@ tokenizerは原因ではない。READMEの99〜105行がJ-Moshiの`rinna/japanes
 
 原因は入力構成にあると見られる。再実装は全codebookの音声streamを系列全体で`zero_token_id`に固定するが、`zero_token_id`は学習時に損失の`ignore_index`および系列末尾のpaddingとして使われる値であり、音声条件として入力される状態ではない。過去記事の全文と実コードは回収できておらず（`artifact-recovery.md`）、この再実装が記事の方式と一致している保証もない。
 
-**採用した解決策（2026-08-20、ユーザー承認）: 実音声を条件にして採点する。**
+**実施した対応（2026-08-20、ユーザー承認）: 実音声を条件にして採点する。→ 効果なし。**
 
-- 音声条件を`zero_token_id`固定から、held-out promptの実Mimi token（A 8 + B 8 = 16 codebook）へ変更する。既定の条件音声は`VOICEACTRESS100_032`（8.919秒、held-out中で最長）とする。
-- 各codebookに`moshi_lm_kwargs.json`の`delays`を適用し、delay前のframeは`initial_token_id`で埋める。`utils.data.delay_and_pad_streams`と同じ整列になる。
-- 一様分布ゲートを追加する。`preferred_mean_nll`が`log(text_card)`を下回らないrunは、診断用にreportを書き出したうえで失敗させる。これにより指標として成立しない数値がbaselineとして記録されることはなくなる。
+音声条件を`zero_token_id`固定から、held-out promptの実Mimi token（`VOICEACTRESS100_032`、A 8 + B 8 = 16 codebook）へ変更し、`delays`を適用して`utils.data.delay_and_pad_streams`と同じ整列にした。あわせて一様分布ゲートを追加し、`preferred_mean_nll`が`log(text_card)`を下回らないrunは診断用reportを残したうえで失敗するようにした。
 
-この指標は過去記事の`+11.86 / +12.26`とは条件が異なるため直接比較しない。今回以後の共通baselineとして固定する。
+結果は次のとおりで、指標は成立しなかった。
+
+| 条件 | Stage 2 `preferred_mean_nll` | Stage 3 | 一様分布の上界 |
+| --- | ---: | ---: | ---: |
+| 全codebookを`zero_token_id`（2026-08-18） | `12.878` | 未実行 | `10.373` |
+| 実Mimi token条件（2026-08-20） | `13.004` | `15.204` | `10.373` |
+
+音声条件を変えてもほぼ動かないため、**音声側は原因ではない**ことが確定した。
+
+### 確定した原因: 採点しているtext streamの形が学習時と違う
+
+`tools/tokenize_text.py`の`tokenize_and_pad_text`は次を行う。
+
+1. `token_ids = [text_padding_id] * num_frames`で**全frameをpaddingで初期化**する。
+2. 単語のタイムスタンプから求めたframeにだけtokenを書き込む。
+3. tokenの直前frameがpaddingだった場合、そこへ`end_of_text_padding_id`を挿入する。
+4. tokenizeは`encode_as_pieces_wo_byte_fallback` + `piece_to_id`で、日本語では`--no_whitespace_before_word`を使う。
+
+対して`tools/persona_perplexity.py`は、`SentencePieceProcessor.encode`で得た連続したtext tokenを密に並べて採点している。padding frameが無い、`end_of_text_padding_id`が無い、時刻整列が無い、という3点で学習分布から外れており、これがNLLが一様分布より悪くなる理由である。
+
+### 残る判断
+
+指標を成立させるには、completion tokenを妥当なframe位置へ配置し、間をpaddingで埋め、`end_of_text_padding_id`を入れる必要がある。これは発話タイミングのモデル化を伴う指標の再設計であり、M5のStyle Gateの定義にも影響する。次のいずれかをユーザーが選ぶまで、口調perplexityはM0の完了条件から外して保留する。
+
+- A: 時刻整列を模した採点へ再設計する。
+- B: 口調評価をStyle held-out 50 pairのブラインド選好評価と語尾分布へ寄せ、自動perplexityは使わない。
+- C: 過去記事の方式を著者に確認できるまで保留する。
+
+生成側のbaselineは固定済みなので、この保留はM2以降の進行を止めない。
 
 同じTsukuyomi promptを与えても過去あみたろ音声そのものの類似性評価にはならない。このbaselineの目的は、Stage 2/3間の生成安定性、明瞭度、loop、口調差を同一条件で固定することである。
 

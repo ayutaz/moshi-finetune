@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "run_date": "2026-08-20",
+  "status": "partial",
+  "repository_commit": "4ef6e8a0b2beb5cb8724afc030e324bd29a330d9",
+  "instance_id": 48178589,
+  "gpu": "NVIDIA A100-SXM4-80GB x2",
+  "script": "experiments/tsukuyomi_ojousama/m0/run_baseline.sh",
+  "bootstrap": "experiments/tsukuyomi_ojousama/m0/bootstrap_instance.sh",
+  "checkpoint_verification": {
+    "status": "pass",
+    "stage2_sha256": "69a4a0112663695371a61d56372f605f549e0613e1e4f767294e2ab3811bc381",
+    "stage3_sha256": "f34b52b7c2865cc6809e2a1c0ec527de025bdf66d3163e2c9b43ccd1d7c2c072",
+    "verified_by": "bootstrap_instance.sh after re-downloading both pinned revisions"
+  },
+  "generation": {
+    "status": "pass",
+    "prompt_length_frames": 40,
+    "generation_length_frames": 125,
+    "decoded_seconds": 9.92,
+    "sampling": {
+      "temperature": 0.8,
+      "top_k": 0,
+      "top_p": 0.0,
+      "seed": 20260818
+    },
+    "user_stream": "teacher-forced from the example; speaker B is silence throughout",
+    "example_id_to_prompt": [
+      {
+        "example_id": 0,
+        "prompt": "VOICEACTRESS100_026",
+        "frames": 167
+      },
+      {
+        "example_id": 1,
+        "prompt": "VOICEACTRESS100_032",
+        "frames": 167
+      },
+      {
+        "example_id": 2,
+        "prompt": "VOICEACTRESS100_047",
+        "frames": 167
+      },
+      {
+        "example_id": 3,
+        "prompt": "VOICEACTRESS100_048",
+        "frames": 167
+      },
+      {
+        "example_id": 4,
+        "prompt": "VOICEACTRESS100_052",
+        "frames": 167
+      },
+      {
+        "example_id": 5,
+        "prompt": "VOICEACTRESS100_069",
+        "frames": 167
+      },
+      {
+        "example_id": 6,
+        "prompt": "VOICEACTRESS100_074",
+        "frames": 167
+      },
+      {
+        "example_id": 7,
+        "prompt": "VOICEACTRESS100_092",
+        "frames": 167
+      },
+      {
+        "example_id": 8,
+        "prompt": "VOICEACTRESS100_095",
+        "frames": 167
+      },
+      {
+        "example_id": 9,
+        "prompt": "VOICEACTRESS100_099",
+        "frames": 167
+      }
+    ],
+    "stage2": {
+      "generated_tokens": 10,
+      "generated_wavs": 10,
+      "wav_sha256": {
+        "0": "ae7fe54dae9a7fe5ea2274aae199ae8a028bc262a952c0d566b27127e655c67a",
+        "1": "1c7857bb64ba5be2b434f3c9b505831b108c4e20413ba06901a0e03fe04f77c0",
+        "2": "d3e6fc3dab64738a0ac5ce4d12361d05074412ef9ee2b8eae308eb716911153e",
+        "3": "971ab22794df6e41942def55c34eef6c6eec28c0fda99e659361187c371c42d2",
+        "4": "2a8eaa3ca16814144d4fecc2acdd574070c3491e2b0b2345c313c0a385b3f0e1",
+        "5": "e67a83cab4ae55d7b529890679b0b3556fef20557a08a2e8711d2f4608121e70",
+        "6": "ab3a41c21cdc71a32f413024db52060f37a856e1016cd82075fe1cd7d6e010de",
+        "7": "c14262c78f44ec0136b65f1586f9edbc55207f2eb0a87f890de6f46a1d3e2f8f",
+        "8": "3d3dd12a0d3680c245cc9bd63f9544cbeb88a08981d6ffc97d40b262cd872285",
+        "9": "0f4a7b796d848b7943b883209718d4597b792ca8862466b649f5aae0ed9037df"
+      }
+    },
+    "stage3": {
+      "generated_tokens": 10,
+      "generated_wavs": 10,
+      "wav_sha256": {
+        "0": "00236ddba2a196f7dfdf8a0cc5d000618fc5ecbfde3c029466802bb862780815",
+        "1": "c557c7f040fe67796a368400c098636504a4f5cb43f3622d71e9d2c7f8735e30",
+        "2": "d980a500bda3e4e69b33feaedf0cdb48e787218efbad5e4b5959e9a93977e18b",
+        "3": "9aaf9465ba68168d30a9254ec3a9c179f5f94319946d4f5f941ff4b24b1ba9b8",
+        "4": "39aaae7b0f0e1484035a0cf0225ebf60afdf419c70307fedf70d5afe2cc1fbfd",
+        "5": "dd976544180e8d024c294154594bacde1aed4ab9e55c1f03042aa6ef271cf0a0",
+        "6": "2cabc17afb23678a2d8099bf759ce1dfbd8e171801e219c9c566302fee63f40e",
+        "7": "206c865f2c43c8c05201f0eff487c3dee96c44682be191cf2f259fd69b1413a0",
+        "8": "1778890e2be9d8baf88f893e9843dd745e3cc61ddb1a8be78ff11658d9e41b4f",
+        "9": "f5266b90b2e91daa576b1e99dd5eaed9d33998082bbf280ae23d33b97eb97148"
+      }
+    }
+  },
+  "persona_perplexity": {
+    "status": "rejected-by-chance-gate",
+    "uniform_chance_nll": 10.373491181781864,
+    "stage2": {
+      "pair_count": 10,
+      "preferred_wins": 2,
+      "ties": 0,
+      "preferred_win_rate": 0.2,
+      "mean_nll_margin": 0.47064771652221715,
+      "preferred_mean_nll": 13.0038556098938,
+      "dispreferred_mean_nll": 13.474503326416016,
+      "preferred_perplexity": 444122.45808913466,
+      "dispreferred_perplexity": 711053.7661681934,
+      "preferred_logprob_total": -414.0740089416504,
+      "dispreferred_logprob_total": -360.2928276062012,
+      "logprob_total_difference": -53.78118133544922
+    },
+    "stage3": {
+      "pair_count": 10,
+      "preferred_wins": 1,
+      "ties": 0,
+      "preferred_win_rate": 0.1,
+      "mean_nll_margin": 0.43864173889160085,
+      "preferred_mean_nll": 15.203944206237793,
+      "dispreferred_mean_nll": 15.642585945129394,
+      "preferred_perplexity": 4008566.3082440924,
+      "dispreferred_perplexity": 6215681.587959733,
+      "preferred_logprob_total": -483.642520904541,
+      "dispreferred_logprob_total": -417.98656463623047,
+      "logprob_total_difference": -65.65595626831055
+    },
+    "audio_context": "VOICEACTRESS100_032 Mimi tokens (A 8 + B 8) with the model delay pattern applied",
+    "root_cause": "The scored text stream is not the shape the model was trained on. tools/tokenize_text.py fills every frame with text_padding_id and writes each token only at the frame matching its word-level timestamp, inserting end_of_text_padding_id in the frame before a token when that frame was padding, and it tokenises with encode_as_pieces_wo_byte_fallback + piece_to_id under --no_whitespace_before_word. tools/persona_perplexity.py instead scores dense consecutive tokens produced by SentencePieceProcessor.encode, with no padding frames, no end-of-padding marker and no time alignment. Changing the audio conditioning from zero_token_id to real Mimi tokens moved preferred_mean_nll from 12.878 to 13.004, confirming the audio side was never the problem.",
+    "resolution_requires_decision": true
+  },
+  "exported_artifacts": "data/experiments/tsukuyomi_ojousama/m0-run-2026-08-20/ (gitignored: 20 continuation WAVs, 20 token files, reports, run log, sha256sum.txt)"
+}

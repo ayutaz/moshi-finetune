@@ -1,6 +1,6 @@
 # つくよみちゃん系の声 × お嬢様口調 実験マイルストーン
 
-更新日: 2026-08-18
+更新日: 2026-08-20
 
 作業ブランチ: `experiment-j-moshi-character-voice-overfit`
 
@@ -90,7 +90,8 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と、自然�
 ### 完了条件
 
 - [x] 過去artifactの回収結果がファイル単位で記録されている。
-- [ ] Stage 2 / Stage 3の固定生成音声と評価値が保存されている。
+- [x] Stage 2 / Stage 3の固定生成音声が保存されている。
+- [ ] Stage 2 / Stage 3の口調評価値が保存されている。（指標が未成立。`m0/baseline-protocol.md`参照）
 - [x] API keyの扱いを決定済みである（2026-08-18、ユーザーが現key継続を明示承認）。
 - [x] API keyがリポジトリ内に存在せず、保存ファイルの権限が`600`相当である。
 - [x] Vast.aiに専用の稼働中インスタンスがあり、SSH接続できる。
@@ -113,20 +114,23 @@ M1のデータ監査はM0と並行可能とする。M2へ進むにはM0とM1の�
 - API key: 現key継続をユーザーが明示承認、repository外、mode `600`
 - Stage 3: 固定revisionのweight/config回収とchecksum確認済み
 - Stage 2: 固定revisionのweight/config回収済み。公開HF SHA-256を固定
-- Stage 2 / Stage 3の固定音声・口調再評価: **Blocked**。2026-08-18にVast.aiで`run_baseline.sh`を実行し、prompt準備10件とcheckpoint checksumは通過したが、生成と口調perplexityの両方が失敗した。実行記録は`experiments/tsukuyomi_ojousama/reports/m0-baseline-run-2026-08-18.json`、原因と選択肢は`m0/baseline-protocol.md`
-- Blocker 1（生成）: 公開Stage 2/3は`n_q=16, dep_q=8`の推論用形式で、`models/moshi_for_generation.py`は`dep_q == n_q`前提のため`AssertionError: torch.Size([1, 9])`で停止。baselineの定義を変える判断が必要
-- Blocker 2（口調perplexity）: Stage 2で`preferred_mean_nll = 12.88`、perplexity `391,531`、preferred勝数`1/10`。`text_card=32000`の一様分布NLL `10.373`より悪く、指標として成立していない。tokenizerは正しく（READMEがJ-Moshiの`rinna/japanese-gpt2-medium`使用を明記）、全音声codebookを`zero_token_id`固定にする入力構成が原因と見られる
+- Stage 2 / Stage 3の固定生成音声: **完了**（2026-08-20）。両stageとも10 token・10 WAV、各9.92秒の24 kHz stereo。実行記録は`experiments/tsukuyomi_ojousama/reports/m0-baseline-run-2026-08-20.json`
+- 生成のblocker解消: 公開Stage 2/3は`n_q=16, dep_q=8`の推論用形式で`models/moshi_for_generation.py`の`dep_q == n_q`前提と衝突していた。user streamを無音で教師強制する方式へ変更して解消（ユーザー承認済み）
+- checkpoint読み込みのblocker解消: 公開weightはoriginal Moshi名で保存されており`from_pretrained`が166 parameterで不一致だった。`tools/moshi_state_dict.py`の名前対応で解消
+- 口調perplexity: **未成立**。Stage 2 `preferred_mean_nll = 13.004`、Stage 3 `15.204`。`text_card=32000`の一様分布NLL `10.373`より悪い。音声条件を`zero_token_id`から実Mimi tokenへ変えても12.878→13.004とほぼ不変で、音声側は原因ではなかった
+- 口調perplexityの確定原因: 学習時のtext streamは全frameが`text_padding_id`で初期化され、単語のタイムスタンプに対応するframeにだけtokenが置かれ、直前frameに`end_of_text_padding_id`が入る（`tools/tokenize_text.py`）。採点側は連続したtext tokenを密に与えており、padding・end-of-padding marker・時刻整列の3点で学習分布から外れている
+- 無効値の再記録防止: 一様分布ゲートを追加済み。`preferred_mean_nll`が`log(text_card)`を下回らないrunは診断用reportを残したうえで失敗する
+- 実行インスタンス変更: `48004205`はホストの空き不足で起動不能となり（41分・20回の再試行がすべて拒否）、`48178589`へ移行。`m0/bootstrap_instance.sh`で再構築手順を固定し、両checkpointのSHA-256一致を再確認
 - baseline実行前検証（2026-08-18）: `run_baseline.sh`の全entrypointを実CLIと照合済み。`tools.persona_perplexity`のforwardが`finetune.py:tempformer_forward`と一致することを確認
 - baseline protocol修正: prompt長を`50 frames`から`40 frames`へ変更。held-out最短の`VOICEACTRESS100_026.wav`は3.802秒・Mimi `48 frames`で、delay分を含めると`50 frames`となり`min_length=50`をちょうど満たす。脱落はしないが余裕が1 frameも無く、`utils.data.filter_out_short_streams`は無言でexampleを捨てるため、1 frame短くなるだけで10件が9件になる。`40 frames`へ下げて`8 frames`の余裕を確保。理由は`m0/baseline-protocol.md`に記録
 - 無言脱落Gate: `tools.prepare_baseline_prompts verify-dataset`を追加し、件数・frame長・A/B整合・`example_id → dialogue_id`対応を検証。生成後もstageごとに10 token・10 WAVを検証
-- checkpoint読み込みの互換性修正: 公開Stage 2/3は`tools/clean_moshi.py`がoriginal Moshi名で保存しており、`MoshiForFinetuning.__init__`のZero-3向け改名と一致せず`from_pretrained`が171 keyのmissing/unexpectedで失敗した。`tools/moshi_state_dict.py`に名前対応を追加して解消（`tools.persona_perplexity`と`generate.py`の両方をブロックしていた）
 - prompt入力: held-out 10件をmanifestのSHA-256と照合して`data/experiments/tsukuyomi_ojousama/baseline-input/tsukuyomi-heldout`へ配置（24.8 MiB、gitignore対象で非コミット）
-- テスト: 43件成功（無言脱落Gateの6件を追加）
+- テスト: 62件成功（無言脱落Gate 6件、state dict名前対応 8件、音声条件・一様分布ゲート 8件などを追加）
 - 費用台帳: `experiments/tsukuyomi_ojousama/m0/spend-ledger.json`
-- 費用実測（2026-08-18）: 請求済み`US$2.444`、発生見込み`US$16.456`。停止中も300 GiBディスクが`US$0.1389/h`（約`US$3.33/日`）課金される
-- baseline run preflight: `spent 16.456`、`planned_hours 2.0`、予測`US$22.014`、判定`allow`
+- 費用実測（2026-08-20）: 請求済み`US$5.661`、発生見込み`US$20.979`。承認上限`US$100`に対して余裕あり
 - Vast.ai費用上限: `US$100`（2026-08-18にユーザー承認済み）
-- Vast.aiインスタンス`48004205`: 2026-08-18時点で`stopped`。baseline実行には起動が必要（`US$2.7789/h`）
+- インスタンス状態: `48178589`は`stopped`（ディスク120 GiB、`US$0.0333/h`）。旧`48004205`も`stopped`だが300 GiBが`US$0.1389/h`（約`US$3.33/日`）課金され続ける。同ディスクのcheckpointはHFから再取得可能で成果物は退避済みのため、破棄可能（ユーザー承認待ち）
+- 残課題: 口調perplexityの指標設計。生成側のbaselineは固定済みなので、M2以降のGate運用には影響しない
 
 ## M1: 権利・データ確定
 
