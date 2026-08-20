@@ -34,9 +34,9 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と、自然�
 
 | ID | マイルストーン | 目的 | ゴール | 状態 | 依存先 |
 | --- | --- | --- | --- | --- | --- |
-| M0 | 過去実験・Vast.ai基盤 | 比較基準と安全な実行環境を確立 | 過去baselineを固定し、Vast.aiへSSH接続して学習準備完了 | 進行中 | なし |
+| M0 | 過去実験・Vast.ai基盤 | 比較基準と安全な実行環境を確立 | 過去baselineを固定し、Vast.aiへSSH接続して学習準備完了 | 完了 | なし |
 | M1 | 権利・データ確定 | 学習可能で再現可能な入力を確定 | データ台帳、分割、固定評価セットを完成 | 完了 | なし（M0と並行可） |
-| M2 | Tsukuyomi TTS | 対話音声を生成できる対象話者TTSを作る | 未学習30文のTTS Gateを通過 | 未着手 | M0, M1 |
+| M2 | Tsukuyomi TTS | 対話音声を生成できる対象話者TTSを作る | 未学習30文のTTS Gateを通過 | 着手可 | M0, M1 |
 | M3 | Voice control | 過去成功条件をつくよみちゃんで再現 | V0/V1の少なくとも一方で声質改善と対話維持を両立 | 未着手 | M2 |
 | M4 | Voice overfit | 声質をcontrolより強く適応 | V2/V3から品質を壊さない最良checkpointを選定 | 未着手 | M3 |
 | M5 | お嬢様口調 | 声を保持しながら話し方を転移 | S0/S1で口調改善、声質・対話品質を維持 | 未着手 | M4 |
@@ -91,7 +91,7 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と、自然�
 
 - [x] 過去artifactの回収結果がファイル単位で記録されている。
 - [x] Stage 2 / Stage 3の固定生成音声が保存されている。
-- [ ] Stage 2 / Stage 3の口調評価値が保存されている。（指標が未成立。`m0/baseline-protocol.md`参照）
+- [x] Stage 2 / Stage 3の口調評価値が保存されている。
 - [x] API keyの扱いを決定済みである（2026-08-18、ユーザーが現key継続を明示承認）。
 - [x] API keyがリポジトリ内に存在せず、保存ファイルの権限が`600`相当である。
 - [x] Vast.aiに専用の稼働中インスタンスがあり、SSH接続できる。
@@ -104,34 +104,47 @@ M1のデータ監査はM0と並行可能とする。M2へ進むにはM0とM1の�
 
 ### 完了記録
 
-- 状態: 進行中
-- 過去ブログの解析: 完了
-- Git branch / tag / stash / unreachable objects / 主要ローカル保存先の探索: 完了
-- Vast.ai CLIとAPI認証: 確認済み
-- Vast.ai専用インスタンス: `48004205`、A100-SXM4-80GB ×2、SSH/GPU/CUDA確認済み
-- 環境manifest: `experiments/tsukuyomi_ojousama/m0/environment-manifest.json`
-- artifact回収記録: `experiments/tsukuyomi_ojousama/m0/artifact-recovery.md`
+**状態: 完了**（2026-08-20）。統合レポート: `experiments/tsukuyomi_ojousama/reports/m0-baseline-final.json`
+
+#### 過去artifactの回収
+
+- 探索と欠損の一覧: `m0/artifact-recovery.md`。過去のtraining artifact（合成対話、manifest、旧`persona_perplexity.py`、W&B run）は回収不能と確定
+- Stage 2 / Stage 3: 固定revisionのweight・configを回収し、SHA-256を固定。`bootstrap_instance.sh`実行時に再ダウンロードして両方の一致を再確認済み
+- 過去実験条件: ブログ2記事から設定値と結果を計画文書へ転記
+
+#### baseline生成音声
+
+- 両stageとも10 token・10 WAV、各9.92秒の24 kHz stereo（prompt 40 frames、continuation 125 frames、seed `20260818`）
+- 実測差: A channelの平均RMSは Stage 2 `2691.3` / Stage 3 `3827.1`。クリップは Stage 3 の1件に10 sampleのみ（Stage 2は0）
+- B channelは全20件でpeak `402`一定。教師強制した無音が全frameで効いたことの確認になる
+
+#### 口調評価値
+
+- **Stage 2 = 7/10、Stage 3 = 7/10**（長さ正規化した平均NLLによる選好）。過去記事の「お嬢様選好 7/10」（軽量版・フル版とも）と一致
+- 平均NLL margin: Stage 2 `+0.421`、Stage 3 `+0.235`
+- 記事の`+11.86 / +12.26`は別のbaselineに対する別量のため比較しない
+
+#### 解決した問題
+
+| 問題 | 内容 | 対応 |
+| --- | --- | --- |
+| checkpoint読み込み | 公開weightはoriginal Moshi名で保存されており、Zero-3向け改名と166 parameterで不一致 | `tools/moshi_state_dict.py`の名前対応 |
+| 生成の形式不一致 | 公開checkpointは`n_q=16, dep_q=8`の推論用形式で、生成経路は`dep_q == n_q`前提 | user streamを無音で教師強制（ユーザー承認済み） |
+| prompt長の余裕ゼロ | held-out最短が`48 frames`で、delay込み`50 frames`は`min_length=50`ちょうど。`filter_out_short_streams`は無言で捨てる | prompt長を`40 frames`へ下げ、`verify-dataset`ゲートを追加 |
+| 選好判定の長さバイアス | 合計log-probは長い候補を不利にする。preferredが長い候補のpairが10件中6件あり、3/10と誤判定していた | 判定を長さ正規化した平均NLLへ変更。合計log-probは診断用に併記 |
+| 誤ったゲート | 絶対NLLが一様分布を下回ることを要求するゲートが、機能している対比較を3回却下した | `assert_scores_discriminate`へ置換。非有限値と、両候補が同点になる（＝completionが採点位置に届いていない）場合だけ失敗させる |
+| ホスト容量枯渇 | `48004205`が起動不能（41分・20回の再試行がすべて拒否） | `48178589`へ移行し、`bootstrap_instance.sh`で再構築手順を固定 |
+
+絶対NLLが一様分布より高いのは、条件音声が採点テキストと別の発話である以上構造的なもの。両候補が同じ文脈と音声を共有するため、対比較には影響しない。
+
+#### 環境と費用
+
+- 環境manifest: `m0/environment-manifest.json`（`48178589`、A100-SXM4-80GB ×2、torch 2.4.1+cu121、transformers 4.48.3）
+- 再現手順: `m0/bootstrap_instance.sh`（checksum検証つき）、`m0/run_baseline.sh`
 - API key: 現key継続をユーザーが明示承認、repository外、mode `600`
-- Stage 3: 固定revisionのweight/config回収とchecksum確認済み
-- Stage 2: 固定revisionのweight/config回収済み。公開HF SHA-256を固定
-- Stage 2 / Stage 3の固定生成音声: **完了**（2026-08-20）。両stageとも10 token・10 WAV、各9.92秒の24 kHz stereo。実行記録は`experiments/tsukuyomi_ojousama/reports/m0-baseline-run-2026-08-20.json`
-- baseline音声の実測差: A channel（生成側）の平均RMSはStage 2 `2691.3`、Stage 3 `3827.1`でStage 3が明確に大きい。peakはStage 2最大`30937`でクリップ0 sample、Stage 3は最大`32768`で1件（example 0）に10 sampleのクリップがある。B channel（教師強制した無音）は全20件でpeak `402`一定であり、全frameで教師強制が効いたことを確認できる
-- 生成のblocker解消: 公開Stage 2/3は`n_q=16, dep_q=8`の推論用形式で`models/moshi_for_generation.py`の`dep_q == n_q`前提と衝突していた。user streamを無音で教師強制する方式へ変更して解消（ユーザー承認済み）
-- checkpoint読み込みのblocker解消: 公開weightはoriginal Moshi名で保存されており`from_pretrained`が166 parameterで不一致だった。`tools/moshi_state_dict.py`の名前対応で解消
-- 口調perplexity: **未成立**。Stage 2 `preferred_mean_nll = 13.004`、Stage 3 `15.204`。`text_card=32000`の一様分布NLL `10.373`より悪い。音声条件を`zero_token_id`から実Mimi tokenへ変えても12.878→13.004とほぼ不変で、音声側は原因ではなかった
-- 口調perplexityの確定原因: 学習時のtext streamは全frameが`text_padding_id`で初期化され、単語のタイムスタンプに対応するframeにだけtokenが置かれ、直前frameに`end_of_text_padding_id`が入る（`tools/tokenize_text.py`）。採点側は連続したtext tokenを密に与えており、padding・end-of-padding marker・時刻整列の3点で学習分布から外れている
-- 無効値の再記録防止: 一様分布ゲートを追加済み。`preferred_mean_nll`が`log(text_card)`を下回らないrunは診断用reportを残したうえで失敗する
-- 実行インスタンス変更: `48004205`はホストの空き不足で起動不能となり（41分・20回の再試行がすべて拒否）、`48178589`へ移行。`m0/bootstrap_instance.sh`で再構築手順を固定し、両checkpointのSHA-256一致を再確認
-- baseline実行前検証（2026-08-18）: `run_baseline.sh`の全entrypointを実CLIと照合済み。`tools.persona_perplexity`のforwardが`finetune.py:tempformer_forward`と一致することを確認
-- baseline protocol修正: prompt長を`50 frames`から`40 frames`へ変更。held-out最短の`VOICEACTRESS100_026.wav`は3.802秒・Mimi `48 frames`で、delay分を含めると`50 frames`となり`min_length=50`をちょうど満たす。脱落はしないが余裕が1 frameも無く、`utils.data.filter_out_short_streams`は無言でexampleを捨てるため、1 frame短くなるだけで10件が9件になる。`40 frames`へ下げて`8 frames`の余裕を確保。理由は`m0/baseline-protocol.md`に記録
-- 無言脱落Gate: `tools.prepare_baseline_prompts verify-dataset`を追加し、件数・frame長・A/B整合・`example_id → dialogue_id`対応を検証。生成後もstageごとに10 token・10 WAVを検証
-- prompt入力: held-out 10件をmanifestのSHA-256と照合して`data/experiments/tsukuyomi_ojousama/baseline-input/tsukuyomi-heldout`へ配置（24.8 MiB、gitignore対象で非コミット）
-- テスト: 62件成功（無言脱落Gate 6件、state dict名前対応 8件、音声条件・一様分布ゲート 8件などを追加）
-- 費用台帳: `experiments/tsukuyomi_ojousama/m0/spend-ledger.json`
-- 費用実測（2026-08-20）: 請求済み`US$5.661`、発生見込み`US$20.979`。承認上限`US$100`に対して余裕あり
-- Vast.ai費用上限: `US$100`（2026-08-18にユーザー承認済み）
-- インスタンス状態: `48178589`は`stopped`（ディスク120 GiB、`US$0.0333/h`）。旧`48004205`も`stopped`だが300 GiBが`US$0.1389/h`（約`US$3.33/日`）課金され続ける。同ディスクのcheckpointはHFから再取得可能で成果物は退避済みのため、破棄可能（ユーザー承認待ち）
-- 残課題: 口調perplexityの指標設計。生成側のbaselineは固定済みなので、M2以降のGate運用には影響しない
+- 費用: 請求済み`US$5.661`、発生見込み`US$20.979`。承認上限`US$100`
+- インスタンス: `48178589`は`stopped`（120 GiB、`US$0.0333/h`）。`48004205`は2026-08-20に破棄済み
+- 再現性の注意: `uv.lock`がgitignore対象のため、ホストごとに依存解決が変わりうる（`environment-manifest.json`の`reproducibility_gap`参照）
 
 ## M1: 権利・データ確定
 

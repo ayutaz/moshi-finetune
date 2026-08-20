@@ -42,5 +42,8 @@ jobs:
       # The suite covers the experiment data gates and the pure helpers, none of which
       # import torch, so it runs without the training dependencies. Checks that need the
       # non-redistributable raw audio skip themselves when it is absent.
+      #
+      # `python -m pytest` rather than `pytest`: the tests import `tools` and `models` from
+      # the repository root, and only the module form puts the working directory on sys.path.
       - name: Run tests
-        run: pytest tests -q
+        run: python -m pytest tests -q

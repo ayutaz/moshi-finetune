@@ -1,6 +1,6 @@
 # M0 Stage 2 / Stage 3 baseline再評価プロトコル
 
-更新日: 2026-08-18
+更新日: 2026-08-20
 
 ## 固定checkpoint
 
@@ -34,74 +34,63 @@
 
 生成後は`generated_tokens/*.npy`と`generated_wavs/*.wav`がstageごとに10件あることを確認し、一致しなければ失敗させる。
 
-## 2026-08-18実行時に判明した未解決の2点
+## 2026-08-18〜20に判明した3点
 
-実行記録は`../reports/m0-baseline-run-2026-08-18.json`。prompt準備までは10件すべて通過し、checkpoint checksumも`artifact-recovery.md`と一致したが、以下2点でこのprotocolは現状のまま完了できない。どちらも本protocolの定義自体を変える判断を要する。
+実行記録は`../reports/m0-baseline-final.json`。prompt準備とcheckpoint checksumは初回から通過したが、生成と口調評価はそれぞれ別の理由で止まり、3件とも解消した。
 
-### 1. 生成: 公開checkpointは`dep_q=8`で`generate.py`が動かない
+### 1. 生成: 公開checkpointは`dep_q=8`で`generate.py`が動かなかった
 
-公開Stage 2/3の`moshi_lm_kwargs.json`は`n_q=16`、`dep_q=8`、`depformer_context=8`である。`tools/clean_moshi.py`を`--remove_modules_for_user_stream`付きで通した推論用形式で、user streamは入力としては扱うが生成しない。
+公開Stage 2/3の`moshi_lm_kwargs.json`は`n_q=16`、`dep_q=8`、`depformer_context=8`である。`tools/clean_moshi.py`を`--remove_modules_for_user_stream`付きで通した推論用形式で、user streamは入力としては扱うが生成しない。一方`models/moshi_for_generation.py`の`step`は`1 + dep_q = 9` tokenを作って`num_codebooks = 1 + n_q = 17`と一致するかassertするため停止した。
 
-一方`models/moshi_for_generation.py`の`step`は`1 + dep_q = 9` tokenを作って`num_codebooks = 1 + n_q = 17`と一致するかassertするため、`AssertionError: torch.Size([1, 9])`で停止する。このリポジトリの生成経路は`dep_q == n_q`（user streamも生成する学習形式）専用である。
+**解決（ユーザー承認）: user streamを無音で教師強制する。** `MoshiForConditionalGeneration`に`num_user_codebooks`を追加し、`generate.py`はdelay適用済み`batch.input_ids`から該当streamを1 frameずつ供給する。prompt音声は`prompt_length + generation_length + 2` frameぶんまで無音でpaddingする。
 
-**採用した解決策（2026-08-20、ユーザー承認）: user streamを無音で教師強制する。**
+したがって本baselineは「**user streamは無音を教師強制し、Moshi側のstreamだけを生成する**」条件と定義する。B channelは元から無音指定なのでprotocolの意図と矛盾しない。生成音声20件すべてでB channelのpeakが`402`一定であることが、全frameで教師強制が効いた証拠になる。
 
-- `MoshiForConditionalGeneration`に`num_user_codebooks`（`num_audio_codebooks - dep_q`）を追加し、depformerが生成しないcodebookを外部から受け取る。`dep_q == n_q`のcheckpointでは`0`になり従来どおり動く。
-- `generate.py`はdelay適用済みの`batch.input_ids`から該当stream（行`1 + dep_q`以降）の`prompt_length`〜`prompt_length + generation_length`を切り出し、1 frameずつ供給する。frameが足りないexampleは明示的に失敗させる。
-- prompt音声は`prompt_length + generation_length + 2` frameぶんまで無音でpaddingする（`+2`はdelay pattern分）。A channelは先頭に原音、以降は無音になる。prompt区間は先頭40 framesで全件が原音のみなので、paddingはpromptの内容を変えない。
+### 2. checkpoint読み込み: 公開weightはoriginal Moshi名だった
 
-したがって本baselineは「**user streamは無音を教師強制し、Moshi側のstreamだけを生成する**」条件と定義する。B channelは元から無音指定なので、protocolの意図とは矛盾しない。
+公開weightは`clean_moshi.py`がoriginal Moshi名（`gating.linear_in.weight`）で保存しており、`MoshiForFinetuning.__init__`のDeepSpeed Zero-3向け改名（`gating.linear_in_weight`）と166 parameterで一致しなかった。`tools/moshi_state_dict.py`に双方向の名前対応を実装して解消した。`persona_perplexity`と`generate.py`の両方をブロックしていた。
 
-### 2. 口調perplexity: 再実装が一様分布より悪い
+### 3. 口調perplexity: 原因は勝敗の判定式だった
 
-Stage 2で`preferred_mean_nll = 12.88`、perplexity `391,531`、preferred勝数`1/10`、log-prob差`-64.40`となった。`text_card = 32000`の一様分布のNLLは`10.373`なので、この再実装はランダムより悪く、口調選好を測っていない。
+3回の試行で絶対NLLは一様分布（`log(32000) = 10.373`）を一度も下回らなかった。
 
-tokenizerは原因ではない。READMEの99〜105行がJ-Moshiの`rinna/japanese-gpt2-medium` `spiece.model`使用を明記しており、実行時もそれを固定revisionで使った。
+| 試行 | 条件 | Stage 2 | Stage 3 |
+| --- | --- | ---: | ---: |
+| 1 | 全codebookを`zero_token_id` | `12.878` | 未実行 |
+| 2 | 実Mimi token条件 | `13.004` | `15.204` |
+| 3 | 時刻整列を模したtext layout | `14.201` | `13.207` |
 
-原因は入力構成にあると見られる。再実装は全codebookの音声streamを系列全体で`zero_token_id`に固定するが、`zero_token_id`は学習時に損失の`ignore_index`および系列末尾のpaddingとして使われる値であり、音声条件として入力される状態ではない。過去記事の全文と実コードは回収できておらず（`artifact-recovery.md`）、この再実装が記事の方式と一致している保証もない。
+音声条件も整列も絶対値を動かすだけで答えを変えなかった。**絶対NLLが高いのは構造的な性質**である。Moshiのtext streamは自由な言語モデルではなく、与えられた音声の書き起こしに対応する。条件音声は採点テキストと別の発話なので、モデルは音声側の書き起こしを予測し、こちらのtokenには低い確率しか与えない。
 
-**実施した対応（2026-08-20、ユーザー承認）: 実音声を条件にして採点する。→ 効果なし。**
+しかし対比較では、両候補が**同じ文脈・同じ音声・同じlayout**を共有する。違いはcompletion tokenだけなので、比較は成立する。実際に問題だったのは勝敗の判定式だった。
 
-音声条件を`zero_token_id`固定から、held-out promptの実Mimi token（`VOICEACTRESS100_032`、A 8 + B 8 = 16 codebook）へ変更し、`delays`を適用して`utils.data.delay_and_pad_streams`と同じ整列にした。あわせて一様分布ゲートを追加し、`preferred_mean_nll`が`log(text_card)`を下回らないrunは診断用reportを残したうえで失敗するようにした。
+- 旧: 合計log-probで比較 → 長い候補が不利。preferredが長い候補のpairが10件中6件あり、**3/10**
+- 新: 長さ正規化した平均NLLで比較 → **Stage 2 = 7/10、Stage 3 = 7/10**
 
-結果は次のとおりで、指標は成立しなかった。
+これは過去記事の「お嬢様選好 7/10」（軽量版・フル版とも）と一致する。記事の`+11.86 / +12.26`は別baselineに対する別量のため比較しない。
 
-| 条件 | Stage 2 `preferred_mean_nll` | Stage 3 | 一様分布の上界 |
-| --- | ---: | ---: | ---: |
-| 全codebookを`zero_token_id`（2026-08-18） | `12.878` | 未実行 | `10.373` |
-| 実Mimi token条件（2026-08-20） | `13.004` | `15.204` | `10.373` |
+### 撤回したGate
 
-音声条件を変えてもほぼ動かないため、**音声側は原因ではない**ことが確定した。
+当初、`preferred_mean_nll`が`log(text_card)`を下回らないrunを失敗させる一様分布ゲートを入れた。この前提は対比較に対して誤っており、**機能している指標を3回却下した**。`assert_scores_discriminate`へ置き換え、非有限値と、全pairで両候補が同点になる場合（＝completion tokenが採点位置に届いていない、実際に壊れている形）だけを失敗させる。
 
-### 確定した原因: 採点しているtext streamの形が学習時と違う
+絶対値の妥当性ではなく、候補が結果を動かせているかを見るのが、対比較に対する正しい検査である。
 
-`tools/tokenize_text.py`の`tokenize_and_pad_text`は次を行う。
+## 口調perplexity（確定方式）
 
-1. `token_ids = [text_padding_id] * num_frames`で**全frameをpaddingで初期化**する。
-2. 単語のタイムスタンプから求めたframeにだけtokenを書き込む。
-3. tokenの直前frameがpaddingだった場合、そこへ`end_of_text_padding_id`を挿入する。
-4. tokenizeは`encode_as_pieces_wo_byte_fallback` + `piece_to_id`で、日本語では`--no_whitespace_before_word`を使う。
+`../eval/persona-baseline-10.jsonl`の10 pairを`reconstructed-v1`として固定する。rinna SentencePiece（`rinna/japanese-gpt2-medium` `spiece.model`、revision `f464b767…`）を使う。これはREADMEの99〜105行がJ-Moshiの採用tokenizerとして明記しているもので、学習時の`encode_as_pieces_wo_byte_fallback` + `piece_to_id`と本評価の`encode(out_type=int)`が10 pair全30文字列で同一IDを返すことを確認済み。
 
-対して`tools/persona_perplexity.py`は、`SentencePieceProcessor.encode`で得た連続したtext tokenを密に並べて採点している。padding frameが無い、`end_of_text_padding_id`が無い、時刻整列が無い、という3点で学習分布から外れており、これがNLLが一様分布より悪くなる理由である。
+採点条件:
 
-### 残る判断
+- 音声条件はheld-out promptの実Mimi token（`VOICEACTRESS100_032`、A 8 + B 8 = 16 codebook）。各codebookに`delays`を適用し、delay前のframeは`initial_token_id`で埋める
+- text streamは`text_padding_token_id`で埋め、`start_frame = 12`から連続frameへcontextとcompletionを置き、直前1 frameに`end_of_text_padding_id = 0`を入れる。`tools/tokenize_text.py`のlayoutに合わせる
+- 先頭に`delay_and_pad_streams`と同じinitial token frameを1つ付ける
+- Stage 2 / Stage 3で同一pair・同一tokenizer・同一音声条件を使う
 
-指標を成立させるには、completion tokenを妥当なframe位置へ配置し、間をpaddingで埋め、`end_of_text_padding_id`を入れる必要がある。これは発話タイミングのモデル化を伴う指標の再設計であり、M5のStyle Gateの定義にも影響する。次のいずれかをユーザーが選ぶまで、口調perplexityはM0の完了条件から外して保留する。
+指標:
 
-- A: 時刻整列を模した採点へ再設計する。
-- B: 口調評価をStyle held-out 50 pairのブラインド選好評価と語尾分布へ寄せ、自動perplexityは使わない。
-- C: 過去記事の方式を著者に確認できるまで保留する。
+- primary: **長さ正規化した平均NLLによるpreferred勝数 / 10**。合計log-probは長い候補を不利にするため使わない
+- secondary: 平均NLL margin、perplexity、合計log-prob（診断用に併記）
 
-生成側のbaselineは固定済みなので、この保留はM2以降の進行を止めない。
+検査は`assert_scores_discriminate`が行う。非有限値と、全pairで両候補が同点になる場合だけ失敗させる。絶対NLLの水準は判定に使わない。条件音声が採点テキストと別の発話である以上高くなるのが構造的であり、両候補が同じ条件を共有する対比較には影響しないためである。
 
-同じTsukuyomi promptを与えても過去あみたろ音声そのものの類似性評価にはならない。このbaselineの目的は、Stage 2/3間の生成安定性、明瞭度、loop、口調差を同一条件で固定することである。
-
-## 口調perplexity
-
-`../eval/persona-baseline-10.jsonl`を新規10 pair `reconstructed-v1`として固定する。rinna SentencePieceを固定revisionで使用し、ブログの方式どおりaudio streamを`zero_token_id`で埋め、各continuationのtoken log probabilityを合計する。
-
-- primary: preferred勝数 / 10、preferred合計log-prob − dispreferred合計log-prob。
-- secondary: token平均NLLとperplexity（長さ差の診断用）。
-- Stage 2 / Stage 3で同一pairとtokenizerを使う。
-
-記事に掲載された過去10 pair全文は回収できないため、記事のStage 2 `+11.86`、Stage 3 `+12.26`と新しい数値は直接比較しない。計算方法の再現と、今回以後の共通baseline固定を目的とする。
+記事に掲載された過去10 pair全文は回収できないため、記事の`+11.86 / +12.26`とは直接比較しない。ただし記事の選好7/10（軽量版・フル版とも）は本方式で再現できている。

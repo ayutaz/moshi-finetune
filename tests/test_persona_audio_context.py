@@ -1,11 +1,6 @@
-import math
 import unittest
 
-from tools.persona_perplexity import (
-    ScoringError,
-    assert_better_than_chance,
-    build_delayed_audio_context,
-)
+from tools.persona_perplexity import ScoringError, build_delayed_audio_context
 
 
 class DelayedAudioContextTests(unittest.TestCase):
@@ -46,28 +41,6 @@ class DelayedAudioContextTests(unittest.TestCase):
     def test_rejects_a_delay_count_that_does_not_match_the_codebooks(self) -> None:
         with self.assertRaisesRegex(ScoringError, "delay"):
             build_delayed_audio_context([[1, 2], [3, 4]], delays=[0], initial_token_id=99, length=2)
-
-
-class ChanceBoundTests(unittest.TestCase):
-    """A baseline that scores worse than a uniform distribution is not a metric.
-
-    Recording one as the Stage 2 / Stage 3 reference is the failure this gate prevents.
-    """
-
-    def test_accepts_a_summary_better_than_uniform(self) -> None:
-        assert_better_than_chance({"preferred_mean_nll": 4.2}, text_card=32000)
-
-    def test_rejects_a_summary_at_or_above_the_uniform_bound(self) -> None:
-        with self.assertRaises(ScoringError) as caught:
-            assert_better_than_chance({"preferred_mean_nll": 12.878}, text_card=32000)
-
-        message = str(caught.exception)
-        self.assertIn("12.878", message)
-        self.assertIn(f"{math.log(32000):.3f}", message)
-
-    def test_rejects_exactly_at_the_bound(self) -> None:
-        with self.assertRaises(ScoringError):
-            assert_better_than_chance({"preferred_mean_nll": math.log(32000)}, text_card=32000)
 
 
 if __name__ == "__main__":

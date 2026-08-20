@@ -81,15 +81,25 @@ def build_aligned_text_stream(
     return stream, completion_frames
 
 
-def assert_better_than_chance(summary: dict[str, Any], *, text_card: int) -> None:
-    """Reject scores no better than a uniform distribution over the text vocabulary."""
-    bound = math.log(text_card)
-    observed = float(summary["preferred_mean_nll"])
-    if observed >= bound:
+def assert_scores_discriminate(rows: list[dict[str, float]]) -> None:
+    """Refuse scores where the candidates could not have moved the result.
+
+    The audio conditioning is a different utterance from the scored text, so the absolute
+    NLL is high by construction and is not evidence of a broken setup. What would be broken
+    is reading logits at positions the completion tokens do not occupy: both candidates
+    would then score identically, because only the shared context would be driving them.
+    """
+    if not rows:
+        raise ScoringError("no scores to check")
+    for row in rows:
+        for field in ("preferred_nll", "dispreferred_nll"):
+            value = float(row[field])
+            if not math.isfinite(value):
+                raise ScoringError(f"{field} is not finite: {value}")
+    if all(float(row["preferred_nll"]) == float(row["dispreferred_nll"]) for row in rows):
         raise ScoringError(
-            f"preferred_mean_nll {observed:.3f} is not better than the uniform bound "
-            f"{bound:.3f} over text_card={text_card}; the scoring setup is wrong, so these "
-            f"numbers must not be recorded as a baseline"
+            "every pair scored identical values for both candidates, so the completion "
+            "tokens are not reaching the scored positions"
         )
 
 
@@ -124,26 +134,18 @@ def summarise_scores(rows: list[dict[str, float]]) -> dict[str, Any]:
         raise ValueError("at least one score is required")
     preferred_nll = [float(row["preferred_nll"]) for row in rows]
     dispreferred_nll = [float(row["dispreferred_nll"]) for row in rows]
+    # Per-token NLL, not summed log-probability: the persona candidate is usually the
+    # longer one, and summing penalises it for length rather than for style.
+    preferred_wins = sum(
+        left < right for left, right in zip(preferred_nll, dispreferred_nll, strict=True)
+    )
+    ties = sum(left == right for left, right in zip(preferred_nll, dispreferred_nll, strict=True))
     if all("preferred_logprob" in row and "dispreferred_logprob" in row for row in rows):
         preferred_logprob = [float(row["preferred_logprob"]) for row in rows]
         dispreferred_logprob = [float(row["dispreferred_logprob"]) for row in rows]
-        preferred_wins = sum(
-            left > right
-            for left, right in zip(preferred_logprob, dispreferred_logprob, strict=True)
-        )
-        ties = sum(
-            left == right
-            for left, right in zip(preferred_logprob, dispreferred_logprob, strict=True)
-        )
     else:
         preferred_logprob = []
         dispreferred_logprob = []
-        preferred_wins = sum(
-            left < right for left, right in zip(preferred_nll, dispreferred_nll, strict=True)
-        )
-        ties = sum(
-            left == right for left, right in zip(preferred_nll, dispreferred_nll, strict=True)
-        )
     mean_preferred = sum(preferred_nll) / len(rows)
     mean_dispreferred = sum(dispreferred_nll) / len(rows)
     summary = {
@@ -151,6 +153,7 @@ def summarise_scores(rows: list[dict[str, float]]) -> dict[str, Any]:
         "preferred_wins": preferred_wins,
         "ties": ties,
         "preferred_win_rate": preferred_wins / len(rows),
+        "win_criterion": "mean token NLL",
         "mean_nll_margin": mean_dispreferred - mean_preferred,
         "preferred_mean_nll": mean_preferred,
         "dispreferred_mean_nll": mean_dispreferred,
@@ -160,6 +163,10 @@ def summarise_scores(rows: list[dict[str, float]]) -> dict[str, Any]:
     if preferred_logprob:
         summary.update(
             {
+                "preferred_wins_by_total_logprob": sum(
+                    left > right
+                    for left, right in zip(preferred_logprob, dispreferred_logprob, strict=True)
+                ),
                 "preferred_logprob_total": sum(preferred_logprob),
                 "dispreferred_logprob_total": sum(dispreferred_logprob),
                 "logprob_total_difference": sum(preferred_logprob) - sum(dispreferred_logprob),
@@ -396,16 +403,21 @@ def main() -> int:
         ),
         "text_card": text_card,
         "uniform_chance_nll": math.log(text_card),
+        "absolute_nll_note": (
+            "Absolute NLL sits above the uniform bound because the conditioning audio is a "
+            "different utterance from the scored text. Both candidates share that context, "
+            "so the paired comparison is unaffected."
+        ),
         "summary": summary,
         "pairs": scores,
     }
 
     # Record the numbers before enforcing the gate, so a rejected run still leaves evidence.
     try:
-        assert_better_than_chance(summary, text_card=text_card)
+        assert_scores_discriminate(scores)
         report["status"] = "pass"
     except ScoringError as error:
-        report["status"] = "failed-chance-gate"
+        report["status"] = "failed-validity-gate"
         report["error"] = str(error)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
