@@ -37,7 +37,7 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と、自然�
 | M0 | 過去実験・Vast.ai基盤 | 比較基準と安全な実行環境を確立 | 過去baselineを固定し、Vast.aiへSSH接続して学習準備完了 | 完了 | なし |
 | M1 | 権利・データ確定 | 学習可能で再現可能な入力を確定 | データ台帳、分割、固定評価セットを完成 | 完了 | なし（M0と並行可） |
 | M2 | Tsukuyomi TTS | 対話音声を生成できる対象話者TTSを作る | 未学習30文のTTS Gateを通過 | 完了 | M0, M1 |
-| M3 | Voice control | 過去成功条件をつくよみちゃんで再現 | V0/V1の少なくとも一方で声質改善と対話維持を両立 | 未着手 | M2 |
+| M3 | Voice control | 過去成功条件をつくよみちゃんで再現 | V0/V1の少なくとも一方で声質改善と対話維持を両立 | 進行中 | M2 |
 | M4 | Voice overfit | 声質をcontrolより強く適応 | V2/V3から品質を壊さない最良checkpointを選定 | 未着手 | M3 |
 | M5 | お嬢様口調 | 声を保持しながら話し方を転移 | S0/S1で口調改善、声質・対話品質を維持 | 未着手 | M4 |
 | M6 | 最終検証 | 全条件を満たす再現可能な成果物へ統合 | final-overfitと全Gateを完了しrelease candidateを固定 | 未着手 | M5 |
@@ -266,7 +266,9 @@ Irodori-TTSで未学習のお嬢様語彙を含む30文を生成し、明瞭度�
 
 ### 完了記録
 
-- 状態: 進行中
+- 状態: 完了（2026-08-21）
+- 採用: T1 Speaker Inversion（学習パラメータ12,288、base完全凍結）
+- 証拠: [`m2-tts-gate.json`](../../experiments/tsukuyomi_ojousama/reports/m2-tts-gate.json)（条件1・2）、[`m2-listening-judgement.json`](../../experiments/tsukuyomi_ojousama/reports/m2-listening-judgement.json)（条件3）、[`m2-run-manifest.json`](../../experiments/tsukuyomi_ojousama/reports/m2-run-manifest.json)（再現条件）
 
 #### 確定した前提（2026-08-20）
 
@@ -409,8 +411,14 @@ V-realまたはV-ttsの少なくとも一方で、J-Moshi-extより対象話者�
 
 ### 完了記録
 
-- 状態: 未着手
-- 証拠: 未作成
+- 状態: 進行中
+- 実行計画: [M3 Voice control 実行計画](./j-moshi-tsukuyomi-ojousama-m3-plan.md)（37ステップ、うち課金は12。GPU見込みUS$25.63）
+- 確定した前提（実測）:
+  - 話者Bはcaption毎回生成では一人の話者にならない。1本を`--ref-wav`で凍結する。[`m3-speaker-b-probe.json`](../../experiments/tsukuyomi_ojousama/reports/m3-speaker-b-probe.json)
+  - Mimiはローカルで動き、160対話のtokenizeはMPS 1.2分。借りたGPUはwavを見ない。[`m3-local-compute-probe.json`](../../experiments/tsukuyomi_ojousama/reports/m3-local-compute-probe.json)
+  - 学習は2× A100 80GBが必須。1枚では常駐133.94 GBに対し48.04 GB不足する。
+  - checkpointは100.46 GB/本でローテーションが無く、ディスクは900 GB必要。
+- 証拠: 未作成（第3部のローカル採点で作られる）
 
 ## M4: Voice overfit
 
