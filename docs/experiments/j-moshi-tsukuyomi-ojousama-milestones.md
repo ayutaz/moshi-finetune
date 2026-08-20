@@ -36,7 +36,7 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と、自然�
 | --- | --- | --- | --- | --- | --- |
 | M0 | 過去実験・Vast.ai基盤 | 比較基準と安全な実行環境を確立 | 過去baselineを固定し、Vast.aiへSSH接続して学習準備完了 | 完了 | なし |
 | M1 | 権利・データ確定 | 学習可能で再現可能な入力を確定 | データ台帳、分割、固定評価セットを完成 | 完了 | なし（M0と並行可） |
-| M2 | Tsukuyomi TTS | 対話音声を生成できる対象話者TTSを作る | 未学習30文のTTS Gateを通過 | 着手可 | M0, M1 |
+| M2 | Tsukuyomi TTS | 対話音声を生成できる対象話者TTSを作る | 未学習30文のTTS Gateを通過 | 進行中 | M0, M1 |
 | M3 | Voice control | 過去成功条件をつくよみちゃんで再現 | V0/V1の少なくとも一方で声質改善と対話維持を両立 | 未着手 | M2 |
 | M4 | Voice overfit | 声質をcontrolより強く適応 | V2/V3から品質を壊さない最良checkpointを選定 | 未着手 | M3 |
 | M5 | お嬢様口調 | 声を保持しながら話し方を転移 | S0/S1で口調改善、声質・対話品質を維持 | 未着手 | M4 |
@@ -237,7 +237,7 @@ Irodori-TTSで未学習のお嬢様語彙を含む30文を生成し、明瞭度�
 
 ### 作業
 
-1. Irodori-TTSを全パラメータfine-tuningする。
+1. Irodori-TTSを対象話者へ適応させる。方式はT0 zero-shot（control）→ T1 Speaker Inversion → T2 LoRA → T3 全パラメータの順に比較する（[実験計画](../../docs/experiments/j-moshi-tsukuyomi-ojousama-plan.md)で2026-08-20に変更）。
 2. train/dev lossと各checkpointを保存する。
 3. 未学習30文を固定条件で生成する。
 4. 欠落、クリップ、誤読、音量、話者類似度、抑揚を評価する。
@@ -266,8 +266,24 @@ Irodori-TTSで未学習のお嬢様語彙を含む30文を生成し、明瞭度�
 
 ### 完了記録
 
-- 状態: 未着手
-- 証拠: 未作成
+- 状態: 進行中
+
+#### 確定した前提（2026-08-20）
+
+- コーパス実測は総量`10.97分`、train `8.67分`。過去のあみたろ`189.9分`の`5.8%`
+- この量では全パラメータ学習が過学習を起こし、完了条件4と直接衝突するため、適応方式をT0〜T3の比較へ変更。理由は実験計画に記録
+- Irodori-TTSはローカル（`~/Desktop/Irodori-TTS`）に存在し、`Aratako/Irodori-TTS-500M-v3`と`Semantic-DACVAE-Japanese-32dim`はHFキャッシュ済み
+- 推論はApple Silicon MPSで動作。1文あたり約17秒なので、**生成にGPUレンタルは不要**
+- 原音は再配布禁止のため、`prepare_manifest.py`は`--data-files`でローカル読み込みする。HFへのアップロードはしない
+
+#### T0: zero-shot voice cloning（base TTS control）— 完了
+
+- 参照音声はtrain splitの`VOICEACTRESS100_094.wav`（13.45秒）。test splitはheld-outのまま維持
+- 固定条件: `Aratako/Irodori-TTS-500M-v3`、seed `20260820`、MPS、48 kHz出力
+- 未学習30文すべてを生成。**欠落0、無音ファイル0**
+- 全長平均`5.98秒`、先頭無音平均`0.272秒`、末尾無音平均`0.472秒`
+- 飽和サンプルは27ファイルに計170個あるが、**連続長は最長2 sample（0.042 ms）**。`soundfile`がPCM_16書き出し時に`±1.0`超を飽和させたもので、可聴の歪みではない
+- 測定ツール: `tools/tts_audio_report.py`（テスト12件）。レポート: `data/experiments/tsukuyomi_ojousama/m2/zeroshot-report.json`（gitignore対象）
 
 ## M3: Voice control
 
