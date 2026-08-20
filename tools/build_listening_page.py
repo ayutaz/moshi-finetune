@@ -14,6 +14,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 from typing import Any
 
@@ -34,6 +35,69 @@ def tally_judgements(judgements: dict[str, str]) -> dict[str, int]:
             tally[choice] += 1
         tally["total"] += 1
     return tally
+
+
+def sign_test_p(wins: int, losses: int) -> float:
+    """Two-sided exact sign-test p for `wins` against `losses`, ties already excluded."""
+    n = wins + losses
+    if n == 0:
+        return 1.0
+    extreme = max(wins, losses)
+    tail = sum(math.comb(n, i) for i in range(extreme, n + 1))
+    return min(2 * tail / 2**n, 1.0)
+
+
+def pairs_needed_for_significance(alpha: float) -> int:
+    """Length of an unbroken run that reaches two-sided significance at `alpha`.
+
+    Worth knowing before a listening pass starts: at alpha=0.05 it is six, so a listener
+    who hears the same system win six times running can stop, and the remaining pairs were
+    never going to be decisive on their own.
+    """
+    if not 0 < alpha < 1:
+        raise ValueError("alpha must lie strictly between 0 and 1")
+    n = 1
+    while sign_test_p(n, 0) >= alpha:
+        n += 1
+        if n > 1000:
+            raise ValueError("alpha is too strict to reach with a sign test")
+    return n
+
+
+def sequential_verdict(
+    *, wins: int, losses: int, ties: int, remaining: int, alpha: float = 0.05
+) -> dict[str, Any]:
+    """Tell the listener whether the answer is settled, or how much further to go.
+
+    Ties carry no sign so they do not enter the test, but they still cost listening time,
+    which is why `remaining` is reported separately from what the test needs.
+    """
+    p = sign_test_p(wins, losses)
+    non_tie = wins + losses
+    still_needed = 0
+    while sign_test_p(wins + still_needed, losses) >= alpha:
+        still_needed += 1
+        if still_needed > remaining:
+            break
+
+    if non_tie and p < alpha:
+        state = "settled-better" if wins > losses else "settled-worse"
+    elif remaining <= 0:
+        state = "exhausted"
+    else:
+        state = "continue"
+
+    return {
+        "state": state,
+        "wins": wins,
+        "losses": losses,
+        "ties": ties,
+        "non_tie": non_tie,
+        "p_two_sided": p,
+        "alpha": alpha,
+        "wins_still_needed": still_needed,
+        "remaining": remaining,
+    }
 
 
 def _rows(listening_dir: Path, seed: int) -> list[dict[str, Any]]:
@@ -83,7 +147,14 @@ def _metrics(project_root: Path) -> dict[str, Any]:
 
 def render(rows: list[dict[str, Any]], metrics: dict[str, Any], reference: str) -> str:
     payload = json.dumps(
-        {"rows": rows, "metrics": metrics, "reference": reference}, ensure_ascii=False
+        {
+            "rows": rows,
+            "metrics": metrics,
+            "reference": reference,
+            "alpha": 0.05,
+            "unbroken_run_needed": pairs_needed_for_significance(0.05),
+        },
+        ensure_ascii=False,
     )
     return _TEMPLATE.replace("__PAYLOAD__", payload)
 
@@ -139,6 +210,8 @@ _TEMPLATE = """<!doctype html>
   .bar .inner { max-width: 860px; margin: 0 auto; display: flex; align-items: center;
     justify-content: space-between; gap: 16px; flex-wrap: wrap; }
   .count { font-variant-numeric: tabular-nums; }
+  .verdict { font-size: 14px; }
+  .verdict.settled { color: var(--accent); font-weight: 600; }
   .actions { display: flex; gap: 8px; }
   .actions button { font: inherit; font-size: 14px; padding: 8px 16px; border-radius: 8px;
     border: 1px solid var(--line); background: transparent; color: var(--fg); cursor: pointer; }
@@ -168,6 +241,7 @@ _TEMPLATE = """<!doctype html>
     <h2>聴き方</h2>
     <p>各文で「1」と「2」を聴き比べ、<b>基準の声にどちらが近いか</b>だけを選んでください。明瞭さや読み方の自然さではなく、声質（音高・響き・話速・抑揚）で判断します。全部でなくても、10文ほどで傾向は掴めます。</p>
     <p class="note">客観指標は判定を歪めないよう、選択後に各文で表示します。</p>
+    <p id="stoprule"></p>
   </div>
 
   <div id="list"></div>
@@ -175,6 +249,7 @@ _TEMPLATE = """<!doctype html>
 
 <div class="bar"><div class="inner">
   <span class="count" id="count">0 / 0 判定済み</span>
+  <span class="verdict" id="verdict"></span>
   <div class="actions">
     <button id="summary">集計を見る</button>
     <button id="copy" class="primary">結果をコピー</button>
@@ -235,6 +310,37 @@ DATA.rows.forEach((row, index) => {
   list.appendChild(card);
 });
 
+function choose(n, k) {
+  let r = 1;
+  for (let i = 1; i <= k; i++) r = r * (n - k + i) / i;
+  return Math.round(r);
+}
+
+function signTestP(wins, losses) {
+  const n = wins + losses;
+  if (n === 0) return 1;
+  const extreme = Math.max(wins, losses);
+  let tail = 0;
+  for (let i = extreme; i <= n; i++) tail += choose(n, i);
+  return Math.min(2 * tail / Math.pow(2, n), 1);
+}
+
+function stoppingState() {
+  const t = tally();
+  const judged = Object.keys(store).length;
+  const remaining = DATA.rows.length - judged;
+  const p = signTestP(t.B_adapted, t.A_base);
+  let needed = 0;
+  while (signTestP(t.B_adapted + needed, t.A_base) >= DATA.alpha && needed <= remaining) needed++;
+  let state = 'continue';
+  if (t.B_adapted + t.A_base > 0 && p < DATA.alpha) {
+    state = t.B_adapted > t.A_base ? 'settled-better' : 'settled-worse';
+  } else if (remaining <= 0) {
+    state = 'exhausted';
+  }
+  return { state, p, needed, remaining, t };
+}
+
 function tally() {
   const t = { A_base: 0, B_adapted: 0, tie: 0 };
   Object.values(store).forEach(v => { if (v in t) t[v] += 1; });
@@ -244,6 +350,23 @@ function tally() {
 function updateCount() {
   document.getElementById('count').textContent =
     `${Object.keys(store).length} / ${DATA.rows.length} 判定済み`;
+
+  const s = stoppingState();
+  const el = document.getElementById('verdict');
+  el.className = 'verdict';
+  if (s.state === 'settled-better') {
+    el.classList.add('settled');
+    el.textContent = `確定: B が有意に近い (p=${s.p.toFixed(4)})。ここで止めて構いません。`;
+  } else if (s.state === 'settled-worse') {
+    el.classList.add('settled');
+    el.textContent = `確定: A が有意に近い (p=${s.p.toFixed(4)})。ここで止めて構いません。`;
+  } else if (s.state === 'exhausted') {
+    el.textContent = `全件判定しましたが有意差には届きませんでした (p=${s.p.toFixed(4)})。`;
+  } else if (s.t.B_adapted + s.t.A_base === 0) {
+    el.textContent = '';
+  } else {
+    el.textContent = `現在 p=${s.p.toFixed(4)}。同じ側があと ${s.needed} 件で確定します。`;
+  }
 }
 
 document.getElementById('summary').addEventListener('click', () => {
@@ -291,6 +414,10 @@ document.getElementById('copy').addEventListener('click', async () => {
   document.querySelector('.wrap').appendChild(pre);
   pre.scrollIntoView({ behavior: 'smooth' });
 });
+
+document.getElementById('stoprule').textContent =
+  `引き分けを除いて同じ側が ${DATA.unbroken_run_needed} 件続けば有意水準 ${DATA.alpha} に達します。` +
+  ' 全 ' + DATA.rows.length + ' 件を聴く必要はありません。下部に残り件数を表示します。';
 
 updateCount();
 </script>

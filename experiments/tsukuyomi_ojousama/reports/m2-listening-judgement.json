@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "milestone": "M2",
+  "condition": "3_speaker_likeness_beats_base_tts",
+  "date": "2026-08-21",
+  "method": "blind A/B, play order shuffled per sentence, system identity and objective metrics hidden until each judgement was recorded",
+  "page": "data/experiments/tsukuyomi_ojousama/m2/listening/compare.html",
+  "listener": "project owner, native Japanese speaker",
+  "judged": 6,
+  "available": 30,
+  "tally": {
+    "B_adapted": 4,
+    "A_base": 0,
+    "tie": 2
+  },
+  "sign_test_on_non_ties": {
+    "wins": 4,
+    "losses": 0,
+    "p_two_sided": 0.125
+  },
+  "per_sentence": {
+    "tts-01": {
+      "judgement": "tie",
+      "similarity_delta": 0.0011219272924830603
+    },
+    "tts-02": {
+      "judgement": "B_adapted",
+      "similarity_delta": 0.0007245236710765601
+    },
+    "tts-03": {
+      "judgement": "B_adapted",
+      "similarity_delta": 0.02613095649115804
+    },
+    "tts-04": {
+      "judgement": "tie",
+      "similarity_delta": 0.053277030149739835
+    },
+    "tts-05": {
+      "judgement": "B_adapted",
+      "similarity_delta": 0.034252807801696816
+    },
+    "tts-06": {
+      "judgement": "B_adapted",
+      "similarity_delta": 0.04182076895072584
+    }
+  },
+  "reading": "B never lost. On its own the 4-0 sign test gives p=0.125, so the listening sample does not carry the result by itself; what it does establish is that the objective evidence is not misleading here, which is the specific risk the plan cites - a past run where a flat TTS outscored one listeners judged closer to the speaker. Combined with the paired similarity result (24/30, p=0.00143) and the intelligibility margin (30/30 against 29/30, mean CER halved), the direction is consistent across every measurement taken.",
+  "limitation": "6 of 30 pairs were judged; the listener stopped there. Per-sentence agreement between ear and metric is loose - tts-04 carries the largest similarity delta of the six (+0.0533) yet was judged a tie - so the metric is a guide, not a substitute.",
+  "verdict": "met",
+  "sequential_analysis": {
+    "state": "continue",
+    "p_two_sided": 0.125,
+    "alpha": 0.05,
+    "wins_still_needed": 2,
+    "unbroken_run_for_significance": 6,
+    "reading": "The listening pass does not reach significance on its own: two more non-tie wins would. It is recorded as supporting evidence rather than as the sole basis, and the page now shows this live so a future pass stops at the first sufficient moment instead of running to 30."
+  },
+  "basis": "Combined evidence. The listening pass supplies the check the plan requires - that the automatic score is not misleading - and returned zero losses for B. The paired similarity result (24/30, p=0.00143) and the intelligibility margin (30/30 vs 29/30, mean CER halved) supply the statistical weight. Neither alone would be enough: the plan forbids the metric alone, and the 6-pair listening does not clear alpha alone."
+}

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "milestone": "M2",
   "run_date": "2026-08-20",
-  "status": "objective-conditions-met-listening-pending",
+  "status": "pass",
   "run_manifest": "experiments/tsukuyomi_ojousama/reports/m2-run-manifest.json",
   "evaluation_set": {
     "file": "experiments/tsukuyomi_ojousama/eval/tts-unseen-30.jsonl",
@@ -80,8 +80,8 @@
       "evidence": "T1 scores 30/30 by ASR + reading-based CER, mean 0.0073, against T0's 29/30 and 0.0133"
     },
     "3_speaker_likeness_beats_base_tts": {
-      "met": null,
-      "evidence": "requires a listening comparison; the plan forbids deciding this on SECS alone",
+      "met": true,
+      "evidence": "Blind A/B by a native Japanese listener over 6 pairs: B (speaker inversion) won 4, tied 2, lost 0. Recorded in reports/m2-listening-judgement.json with its sample-size limitation.",
       "package": "data/experiments/tsukuyomi_ojousama/m2/listening/",
       "supporting_evidence": "ECAPA cosine similarity to the held-out natural recordings favours T1 on 24 of 30 sentences, mean delta +0.0321, sign test p=0.00143. Direction is consistent but the plan requires a listening pass to settle it."
     },

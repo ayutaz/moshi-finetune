@@ -2,7 +2,7 @@
 
 更新日: 2026-08-20
 
-ステータス: M0とM1は完了。M2（Tsukuyomi TTS）に着手できる。
+ステータス: M0、M1、M2は完了。M3（Voice control）に着手できる。
 
 作業ブランチ: `experiment-j-moshi-character-voice-overfit`
 
@@ -16,8 +16,8 @@
 | --- | --- | --- |
 | M0 | 過去実験・Vast.ai基盤 | 完了 |
 | M1 | 権利・データ確定 | 完了 |
-| M2 | Tsukuyomi TTS | 着手可 |
-| M3 | Voice control | 未着手 |
+| M2 | Tsukuyomi TTS | 完了 |
+| M3 | Voice control | 着手可 |
 | M4 | Voice overfit | 未着手 |
 | M5 | お嬢様口調 | 未着手 |
 | M6 | 最終検証 | 未着手 |

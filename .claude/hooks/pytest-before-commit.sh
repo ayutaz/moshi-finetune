@@ -10,6 +10,15 @@
 
 set -u
 
+# Check the command ourselves rather than relying on the settings `if` filter, which was
+# observed firing this hook on unrelated Bash calls. That mattered: a red suite is the
+# normal mid-TDD state, so gating every command on a green suite blocks the work.
+command_text=$(jq -r '.tool_input.command // empty' 2>/dev/null)
+case "${command_text}" in
+  *"git commit"*) ;;
+  *) exit 0 ;;
+esac
+
 [ -d tests ] || exit 0
 
 if command -v uv >/dev/null 2>&1; then
