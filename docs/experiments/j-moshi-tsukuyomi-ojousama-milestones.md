@@ -322,7 +322,20 @@ T1は平均CERを半減し、T0で唯一失敗した文も解消した。無音�
 
 ##### 残る条件3
 
-`data/experiments/tsukuyomi_ojousama/m2/listening/`にA/B比較用の一式を用意した。原音（`VOICEACTRESS100_094.wav`）を基準に、30文それぞれのA（base）とB（adapted）を比較する。計画書が「SECS単独評価は禁止」と定めているため自動判定はしない。
+計画書が指定する手順（有声区間抽出 → RMS正規化 → speaker embedding類似度）でECAPAコサイン類似度を測定した。基準は**test splitの原音10件**で、学習に使ったtrain splitではなくheld-outを使うことで、埋め込みが学習音声そのものへ寄る影響を避けている。
+
+| | T0 zero-shot | T1 speaker inversion |
+| --- | ---: | ---: |
+| mean | 0.6597 | **0.6918** |
+| median | 0.6667 | **0.6977** |
+| min | 0.5469 | **0.5806** |
+| max | 0.7525 | **0.8006** |
+
+同一30文の対応比較では、**T1が24/30で上回り**、平均差`+0.0321`、符号検定`p = 0.00143`。全統計量でT1が上であり、方向は一貫している。
+
+ただしこれは**補助材料であって判定ではない**。計画書は「自動類似度だけで採用せず、日本語話者によるブラインドA/Bを行う」「SECS単独評価は禁止する」と定めており、過去にSECSの高い棒読みTTSよりSECSの低いfull fine-tuning版の方が主観的に本人らしい事例が記録されているためである。
+
+聴取用一式は`data/experiments/tsukuyomi_ojousama/m2/listening/`（30ペア＋原音基準、`index.json`に文面と聴取観点）。条件3はこの聴取をもって確定する。
 
 
 ## M3: Voice control

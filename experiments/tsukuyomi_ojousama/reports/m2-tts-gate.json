@@ -82,7 +82,8 @@
     "3_speaker_likeness_beats_base_tts": {
       "met": null,
       "evidence": "requires a listening comparison; the plan forbids deciding this on SECS alone",
-      "package": "data/experiments/tsukuyomi_ojousama/m2/listening/"
+      "package": "data/experiments/tsukuyomi_ojousama/m2/listening/",
+      "supporting_evidence": "ECAPA cosine similarity to the held-out natural recordings favours T1 on 24 of 30 sentences, mean delta +0.0321, sign test p=0.00143. Direction is consistent but the plan requires a listening pass to settle it."
     },
     "4_pronounces_unseen_vocabulary": {
       "met": true,
@@ -97,5 +98,40 @@
     "T1 halves the mean character error rate against T0 and removes its one failure.",
     "T1 also tightens the silence around the utterance (leading 0.272 -> 0.049 s, trailing 0.472 -> 0.170 s), consistent with the duration MAE improving from 40.17 to 18.04 frames. That is timing, not timbre, so it does not settle condition 3.",
     "The first intelligibility measurement compared surface forms and scored T0 at 26/30. All four failures were the recogniser's orthography, not mispronunciation; comparing readings corrected it."
-  ]
+  ],
+  "speaker_similarity": {
+    "model": "speechbrain/spkrec-ecapa-voxceleb",
+    "target": "tsukuyomi-corpus-v1 test split, 10 clips held out from training",
+    "preparation": {
+      "voiced_frame_samples": 480,
+      "voiced_rms_threshold": 500,
+      "target_rms": 0.05
+    },
+    "T0_zero_shot": {
+      "count": 30,
+      "mean": 0.659711859051485,
+      "median": 0.6666765274195032,
+      "min": 0.5468657740183867,
+      "max": 0.7525101655298854,
+      "stdev": 0.04827919158323815
+    },
+    "T1_speaker_inversion": {
+      "count": 30,
+      "mean": 0.6918495655824249,
+      "median": 0.6976998267319778,
+      "min": 0.58063722773541,
+      "max": 0.8005699984594202,
+      "stdev": 0.04783025737627362
+    },
+    "paired_comparison": {
+      "pairs": 30,
+      "t1_higher_on": 24,
+      "mean_delta": 0.03213770653093994,
+      "median_delta": 0.034012130759360104,
+      "min_delta": -0.03086777010264985,
+      "max_delta": 0.11734427543711645,
+      "sign_test_p_two_sided": 0.001430906355381012
+    },
+    "standing": "Supporting evidence for condition 3, not a verdict. The plan forbids accepting a system on speaker similarity alone, having recorded a case where a flat rendering outscored one listeners judged closer to the speaker."
+  }
 }
