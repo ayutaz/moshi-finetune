@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-22",
+  "purpose": "Mint speaker B once, freeze it, and prove it is one voice and a different person from A before 240 turns depend on it.",
+  "decision": {
+    "selected": "male-calm",
+    "reference_wav": "data/experiments/tsukuyomi_ojousama/m3/ref/speakerB.wav",
+    "sha256": "0e05a1fe5db21a74b898dce2fbadb5823b9cdf06c88184936a61075fda0b1985",
+    "byte_size": 925518,
+    "caption": "落ち着いた成人男性の声。標準的な話し方で、感情を抑えて自然に読み上げてください。",
+    "minted_with": "Aratako/Irodori-TTS-600M-v3-VoiceDesign, --no-ref --seed 20260822, mps",
+    "used_as": "--ref-wav for every speaker-B turn in both V-real and V-tts"
+  },
+  "watermark": {
+    "disabled": true,
+    "mechanism": "experiments/tsukuyomi_ojousama/m3/nowatermark/ first on PYTHONPATH; import silentcipher raises ImportError, which irodori_tts/watermark.py handles",
+    "verified": "'silentcipher_watermark' appears 0 times and 'not be watermarked' 3 times in ref/mint.log, and 0/12 in ref-consistency/gen.log",
+    "why": "The watermark is an injected signal that would sit in every synthetic turn of both datasets while V-real's channel A carries none - a systematic difference on top of the one the comparison isolates."
+  },
+  "calibration_band": {
+    "source": "reports/m3-speaker-b-probe.json",
+    "one_real_human_10_clips": {
+      "mean": 0.6983,
+      "min": 0.5646
+    },
+    "note": "A within-group similarity means nothing without knowing what one real human scores under the same pipeline."
+  },
+  "candidates": {
+    "calm": {
+      "clips": 5,
+      "pairs": 10,
+      "mean": 0.8546869876084731,
+      "median": 0.8569417790506677,
+      "min": 0.8098771962357667,
+      "max": 0.8961896529751717,
+      "vs_a_natural": 0.06813389522980891,
+      "passes": true
+    },
+    "warm": {
+      "clips": 5,
+      "pairs": 10,
+      "mean": 0.8347812820677959,
+      "median": 0.8341726238628875,
+      "min": 0.7894414280487094,
+      "max": 0.8877087841561027,
+      "vs_a_natural": 0.11040338533962375,
+      "passes": true
+    },
+    "bright": {
+      "clips": 5,
+      "pairs": 10,
+      "mean": 0.8212611654527657,
+      "median": 0.8190192922107639,
+      "min": 0.7897790951055821,
+      "max": 0.8646037313873416,
+      "vs_a_natural": 0.11611636001167631,
+      "passes": true
+    }
+  },
+  "gates": {
+    "consistency_mean_min": 0.65,
+    "consistency_median_min": 0.65,
+    "consistency_min_min": 0.55,
+    "separation_from_a_max": 0.3,
+    "fixed_in": "m3/DATASET_SPEC.md, before any candidate existed",
+    "result": "All three candidates passed every gate. Selection went to the highest consistency, which also had the best separation."
+  },
+  "measurement_note": "Consistency was measured under --ref-wav, the condition the dataset actually uses, and the reference clip itself is included in the group because every later turn is conditioned on it. The earlier probe measured --no-ref per utterance and scored 0.4525-0.5176, below the human floor.",
+  "limits": [
+    "Five clips per candidate is a small group. The full 240-turn render is gated again at plan step 11 over the pooled B turns, where n is large enough for a percentile."
+  ]
+}
