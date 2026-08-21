@@ -42,17 +42,40 @@ def turn_filename(dialogue_id: str, index: int, speaker: str) -> str:
     return f"{dialogue_id}-t{index}-{speaker}.wav"
 
 
+def recorded_filenames(sidecar: Path) -> set[str]:
+    """Turn filenames the sidecar already has a row for."""
+    if not sidecar.is_file():
+        return set()
+    names = set()
+    for line in sidecar.read_text(encoding="utf-8").splitlines():
+        if not line.strip():
+            continue
+        try:
+            names.add(json.loads(line)["filename"])
+        except (json.JSONDecodeError, KeyError):
+            # A row torn in half by a kill is not a record of anything.
+            continue
+    return names
+
+
 def turns_to_render(
-    dialogues: list[dict[str, Any]], *, speaker: str, out_dir: Path
+    dialogues: list[dict[str, Any]], *, speaker: str, out_dir: Path, recorded: set[str]
 ) -> list[dict[str, Any]]:
-    """Every turn for `speaker` that has no wav yet, in dialogue order."""
+    """Every turn for `speaker` still to render, in dialogue order.
+
+    A turn counts as done only when the wav exists AND the sidecar has a row for it. The
+    wav is written first, so a kill in between leaves audio nobody can account for - and
+    the sidecar is what the manifest is built from, so an unrecorded wav would simply
+    vanish from the dataset while sitting on disk. Re-rendering it is cheap; a dialogue
+    silently missing a turn is not.
+    """
     pending = []
     for dialogue in dialogues:
         for index, turn in enumerate(dialogue["turns"]):
             if turn["speaker"] != speaker:
                 continue
             name = turn_filename(dialogue["dialogue_id"], index, speaker)
-            if (out_dir / name).exists():
+            if (out_dir / name).exists() and name in recorded:
                 continue
             pending.append(
                 {
@@ -115,7 +138,10 @@ def main() -> int:
     args.out_dir.mkdir(parents=True, exist_ok=True)
     args.sidecar.parent.mkdir(parents=True, exist_ok=True)
 
-    pending = turns_to_render(dialogues, speaker=args.speaker, out_dir=args.out_dir)
+    recorded = recorded_filenames(args.sidecar)
+    pending = turns_to_render(
+        dialogues, speaker=args.speaker, out_dir=args.out_dir, recorded=recorded
+    )
     if args.limit is not None:
         pending = pending[: args.limit]
     print(f"{len(pending)} turn(s) to render for speaker {args.speaker}", flush=True)
