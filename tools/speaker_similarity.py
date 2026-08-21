@@ -61,6 +61,46 @@ def cosine_similarity(left: Sequence[float], right: Sequence[float]) -> float:
     return sum(a * b for a, b in zip(left, right, strict=True)) / (left_norm * right_norm)
 
 
+def paired_comparison(
+    base: dict[str, float], candidate: dict[str, float], *, names: tuple[str, str]
+) -> dict[str, Any]:
+    """Compare two systems item by item on the same set of clips.
+
+    Paired, not pooled: the two systems render the same sentences, so the per-sentence
+    difference removes the sentence's own difficulty and is a far tighter measurement than
+    two independent means.
+
+    A key present on one side only is an error rather than something to intersect away.
+    Quietly dropping it would compare the two systems on different sentences and still
+    report the result as paired.
+    """
+    if not base or not candidate:
+        raise ValueError("both systems need at least one scored clip")
+    if set(base) != set(candidate):
+        missing = sorted(set(base) ^ set(candidate))
+        raise ValueError(f"{names[0]} and {names[1]} were scored on different clips: {missing[:5]}")
+
+    from tools.build_listening_page import sign_test_p
+
+    keys = sorted(base)
+    deltas = [candidate[key] - base[key] for key in keys]
+    wins = sum(1 for d in deltas if d > 0)
+    losses = sum(1 for d in deltas if d < 0)
+    return {
+        "systems": list(names),
+        "pairs": len(deltas),
+        "higher_on": wins,
+        "lower_on": losses,
+        "ties": len(deltas) - wins - losses,
+        "mean_delta": statistics.fmean(deltas),
+        "median_delta": statistics.median(deltas),
+        "min_delta": min(deltas),
+        "max_delta": max(deltas),
+        "sign_test_p_two_sided": sign_test_p(wins, losses),
+        "per_file_delta": dict(zip(keys, deltas, strict=True)),
+    }
+
+
 def summarise_similarity(scores: dict[str, float]) -> dict[str, Any]:
     if not scores:
         raise ValueError("at least one score is required")

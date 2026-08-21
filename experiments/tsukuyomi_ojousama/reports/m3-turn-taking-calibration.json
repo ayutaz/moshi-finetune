@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-21",
+  "purpose": "Prove the turn-taking detector recognises the monologue it exists to rule out, before it is trusted to certify absence.",
+  "detector": "tools/turn_taking.py",
+  "preparation": {
+    "frame_samples": 1920,
+    "frame_ms": 80,
+    "rms_threshold": 500,
+    "note": "1920 samples at 24 kHz is one Mimi frame, so activity frames map 1:1 onto token frames."
+  },
+  "calibration_source": {
+    "generations": 20,
+    "origin": "M0 continuation generations from the published Stage 2 and Stage 3 checkpoints",
+    "decoded_with": "tools.decode_tokens --device cpu (the flag added in 036f5c7; 10 files in 9 s)",
+    "decoded_to": "data/experiments/tsukuyomi_ojousama/m3/m0-decoded/ (gitignored)"
+  },
+  "monologue_recognition": {
+    "user_never_active": "20/20",
+    "speaker_switches": {
+      "min": 0,
+      "max": 0
+    },
+    "user_speech_ratio": {
+      "min": 0.0,
+      "max": 0.0
+    },
+    "verdict": "PASS. All 20 report user_never_active, zero speaker switches and a user speech ratio of exactly 0. The detector sees the degenerate case."
+  },
+  "observed_moshi_activity": {
+    "min": 0.137097,
+    "max": 0.483871,
+    "mean": 0.370968,
+    "longest_run_frames": {
+      "min": 5,
+      "max": 33
+    }
+  },
+  "pass_criteria_for_m3": {
+    "response_latency": "mean within 2x the J-Moshi-ext control's, per m3/DATASET_SPEC.md",
+    "speaker_switches": "must not be 0 across the 30 fixed conversations",
+    "fixed_before_candidates_exist": true
+  },
+  "limits": [
+    "M0's user channel is digital silence, so this calibrates the FAILURE signature, not health. What a healthy conversation looks like is unknown until the J-Moshi-ext control is generated at plan step 22.",
+    "user_never_active and every other partner-channel measure is worthless as evidence that a checkpoint listens: under --model_user_stream the user stream is teacher-forced from the prompt for every arm, so it describes the prompt. It is used here only to prove the detector works.",
+    "M3 trains on strictly sequential, zero-overlap dialogues, so overlap_frames measures behaviour the model was never trained toward."
+  ]
+}
