@@ -28,6 +28,11 @@ first. Progress and completion are judged in
 matrix lives in [the plan](docs/experiments/j-moshi-tsukuyomi-ojousama-plan.md). A milestone
 is complete only when each condition points at a file that proves it.
 
+M0, M1 and M2 are complete. M3 (Voice control) is in progress and has its own step-by-step
+plan with gates and costs: [the M3 plan](docs/experiments/j-moshi-tsukuyomi-ojousama-m3-plan.md).
+Its unpaid local steps all come before anything bills, because a run whose result cannot be
+judged is a run that has to be repeated.
+
 Two skills cover the recurring work: `vast-run` for GPU jobs on Vast.ai, `experiment-log`
 for writing a result into the record.
 
@@ -60,6 +65,23 @@ pre-commit hook. When one fails, the data ledger is wrong - fix the data, not th
 
 New pure logic gets a test. Heavy dependencies stay behind lazy imports inside functions so
 the suite runs without torch.
+
+## Measure the premise before building on it
+
+Three of this experiment's costliest corrections came from assumptions that a few minutes
+of measurement would have settled, so measure first and record the number:
+
+- The neutral speaker B was to be generated per utterance from a caption. Measured, that
+  produces a different voice nearly every line - below the band ten recordings of one real
+  human occupy - which would have made one channel of every training dialogue a crowd.
+  Nothing in a loss curve shows this. `reports/m3-speaker-b-probe.json`.
+- Mimi was assumed to need a GPU because the tools hardcoded CUDA. It tokenises 160
+  dialogues in 1.2 minutes on this Mac. `reports/m3-local-compute-probe.json`.
+- An intelligibility gate scored Whisper's choice of orthography rather than the model's
+  pronunciation, and failed a working checkpoint 26/30 until readings were compared instead.
+
+A calibration band is part of the measurement, not an extra: a within-group similarity of
+0.74 means nothing until you know one real human scores 0.70.
 
 ## Evaluating
 

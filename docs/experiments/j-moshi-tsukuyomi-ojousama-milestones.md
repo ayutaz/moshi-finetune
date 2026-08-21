@@ -104,7 +104,8 @@ M1のデータ監査はM0と並行可能とする。M2へ進むにはM0とM1の�
 
 ### 完了記録
 
-**状態: 完了**（2026-08-20）。統合レポート: `experiments/tsukuyomi_ojousama/reports/m0-baseline-final.json`
+- 状態: 完了（2026-08-20）
+- 証拠: [`m0-baseline-final.json`](../../experiments/tsukuyomi_ojousama/reports/m0-baseline-final.json)（統合レポート）
 
 #### 過去artifactの回収
 

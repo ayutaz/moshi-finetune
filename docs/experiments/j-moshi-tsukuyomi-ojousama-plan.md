@@ -1,8 +1,9 @@
 # J-Moshi-ext を「つくよみちゃん系の声 × お嬢様口調」に適応する実験計画
 
-更新日: 2026-08-20
+更新日: 2026-08-21
 
-ステータス: M0、M1、M2は完了。M3（Voice control）に着手できる。
+ステータス: M0、M1、M2は完了。M3（Voice control）は進行中。実行順序・ゲート・費用は
+[M3実行計画](./j-moshi-tsukuyomi-ojousama-m3-plan.md)を正とする。
 
 作業ブランチ: `experiment-j-moshi-character-voice-overfit`
 
@@ -17,7 +18,7 @@
 | M0 | 過去実験・Vast.ai基盤 | 完了 |
 | M1 | 権利・データ確定 | 完了 |
 | M2 | Tsukuyomi TTS | 完了 |
-| M3 | Voice control | 着手可 |
+| M3 | Voice control | 進行中 |
 | M4 | Voice overfit | 未着手 |
 | M5 | お嬢様口調 | 未着手 |
 | M6 | 最終検証 | 未着手 |
@@ -37,6 +38,8 @@
 | Style control LR | `3e-5` |
 | お嬢様 script | 過去100対話を回収。なければ100対話だけ再生成し、最初から1,000対話にはしない |
 | 合成音声 | 学習形式上必要。COEIROINK出力は使わず、利用可能な原音から作る独自TTSを使用 |
+| 中立話者B | VoiceDesignのcaptionから1本だけ生成し凍結、以降は`--ref-wav`で再利用。発話ごと生成は実測で話者が定まらない |
+| Voice GPU構成 | 2× A100 80GB、ディスク900 GB。1枚では常駐133.94 GBに対し48.04 GB不足する |
 | 評価 | lossだけで採用しない。声質、明瞭度、口調、full-duplex対話を別評価する |
 
 ## 結論
@@ -158,23 +161,50 @@ loss 低下だけでは成功判定にならないこと、1 話者朗読をそ�
 
 ### 2. Voice dataset の二案
 
-#### V-real: 実音を中心にした 100 対話
+M3 着手時の実測で、当初案から三点を変更した。確定した実行条件は
+[M3実行計画](./j-moshi-tsukuyomi-ojousama-m3-plan.md)にある。
+
+#### V-real: 実音を中心にした 80 対話
 
 - A の発話はつくよみちゃん公式原音をそのまま使う。
 - 各原音に対して自然につながる B の前後発話を作り、中立 TTS で音声化する。
 - A=左、B=右の stereo 対話にする。
-- A の声質は TTS 品質に制約されないが、A の内容は元の 100 文に限定される。
+- A の声質は TTS 品質に制約されないが、A の内容は元の文に限定される。
+
+**100 文ではなく train 分割の 80 文に限る。** コーパスは train 80 / dev 10 / test 10 に
+分割済みで、固定評価セット `eval/voice-seen-heldout-20.jsonl` の held-out 側は test 由来である。
+100 文すべてを学習に入れると M3 完了条件4「held-out 音声の話者らしさ」が測れなくなる。
+結果として A の音声は 8.67 分となり、過去のあみたろ 189.9 分の 4.6% にとどまる。
 
 これは過去記事が代替案として挙げた「Speaker A のみ実 corpus、Speaker B は別 TTS」を具体化したものになる。
 
-#### V-tts: TTS で作る 100 対話
+#### V-tts: TTS で作る 80 対話
 
-- Irodori-TTS をつくよみちゃん原音で全パラメータ fine-tuning する。
-- 過去の一般対話 100 script を回収または同等に再作成する。
+- A は M2 で採用した Irodori-TTS speaker inversion（T1）で生成する。全パラメータ
+  fine-tuning は M2 で不採用となった。
+- 一般対話 script は新規作成する（過去の 100 script は回収不能。`m0/artifact-recovery.md`）。
 - A をつくよみちゃん TTS、B を中立 TTS で生成する。
-- 24 kHz stereo、600〜800 turn、30〜40 分を目安にする。
+
+**当初の 600〜800 turn・30〜40 分ではなく、V-real と同じ 80 対話 240 turn に揃える。**
+規模を揃えないと V0 と V1 の差が「実音か TTS か」ではなく「データ量の差」になり、比較が成立しない。
+V-real と V-tts は script・分割・話者B音声・base・依存をすべて共有し、**違うのは
+チャンネルAのバイト列だけ**にする。
 
 Irodori-TTS の有声区間について主観評価、誤読率、発音の明瞭度、話者類似度を確認し、不合格なら V-tts を Moshi に投入しない。V-real と V-tts は最初から混ぜず、個別の効果を比較する。
+
+#### 中立話者 B
+
+Irodori-TTS-600M-v3-VoiceDesign の caption 条件（`--no-ref --caption`）で **1 本だけ生成し、
+それを凍結して以降のすべての B 発話の `--ref-wav` に使う**。
+
+発話ごとに caption から生成する方式は実測で否定された。pairwise ECAPA が 0.4525（seed 既定）
+/ 0.5176（seed 固定）となり、実人間一人の下限 0.5646 を下回る。これは「似ているが別々の声の
+集合」であって一人の話者ではなく、そのまま使えばチャンネルB が話者ではなく群衆になる。
+凍結すると 0.7373 / 最小 0.7040 で人間の帯を上回り、話者 A との分離は 0.157 となる。
+測定は [`m3-speaker-b-probe.json`](../../experiments/tsukuyomi_ojousama/reports/m3-speaker-b-probe.json)。
+
+参照音声を第三者から持ち込まないため、追加のライセンス義務は発生しない
+（VoiceDesign 自体の条項は M3 ステップ4で確認する）。
 
 ### 3. お嬢様 dataset
 
@@ -244,7 +274,7 @@ zero-shot が control になるため、T0 は方式比較の基準として必�
 | Run | dataset | tempformer LR | depformer LR | 位置付け |
 | --- | --- | ---: | ---: | --- |
 | V0 | V-real | `3e-5` | `3e-5` | 実音中心、過去 LR control |
-| V1 | V-tts | `3e-5` | `3e-5` | 過去 pipeline の再現 |
+| V1 | V-tts | `3e-5` | `3e-5` | 過去 pipeline の再現。V-real と規模を揃える |
 | V2 | V0/V1 の良い方 | `3e-5` | `6e-5` | 音声側を 2 倍にする overfit |
 | V3 | V0/V1 の良い方 | `3e-5` | `1e-4` | V2 が安定・改善した場合だけ |
 
@@ -266,7 +296,24 @@ zero-shot が control になるため、T0 は方式比較の基準として必�
 
 過去 config から scheduler を回収できるまでは、control は現行実装の既定値である `--num_warmup_steps 0` を明示する。過去値が判明した場合は、その値を再現 run にのみ使用し、別 run として記録する。
 
-設定選択用データは対話単位で 80/10/10 に分割する。1 epoch の更新数を起動ログから `S` として取得し、`--save_steps S`、`--eval_steps S` で各 epoch を保存・評価する。最良設定を固定した後だけ、100 対話すべてを使う final-overfit run を別 output directory で実行する。
+設定選択用データは対話単位で 72/8 に分割する（対話単位の test は作らない。held-out 評価は
+コーパス test 分割の音声で行う）。`S` は起動ログを待たずに**オフラインで確定して起動時に固定する**。
+起動ログは `S` の確認にのみ使い、想定と違えば即座に kill する。`--save_steps S`、`--eval_steps S`
+で各 epoch を保存・評価する。最良設定を固定した後だけ、全対話を使う final-overfit run を
+別 output directory で実行する。
+
+#### 実行環境の確定事項
+
+M3 着手時にコードから確定した。いずれも見積もりではなく計算値である。
+
+| 項目 | 値 | 影響 |
+| --- | --- | --- |
+| dep_q=16 モデル | 8,371,408,896 パラメータ | — |
+| 学習時の常駐 | 16 bytes/param = 133.94 GB | **1× A100 80GB（85.90 GB）では 48.04 GB 不足。2 枚必須** |
+| ホスト RAM | 80 GB 以上 | `finetune.py` が rank ごとに fp32 で CPU ロードする。不足すると起動時に OOM kill され、GPU をいくら積んでも解決しない |
+| ZeRO-3 checkpoint | 12 bytes/param = 100.46 GB / 本 | fp16 の重みコピーはディスクに書かれない |
+| checkpoint ローテーション | **存在しない** | `--save_total_limit` が無く、accelerate の自動命名も無効。5 epoch で 502 GB が積み上がる |
+| ディスク | 900 GB | 300 GB では V0 の 2 本目の書き込み途中で死ぬ |
 
 ### Stage 3: お嬢様口調 fine-tuning
 
