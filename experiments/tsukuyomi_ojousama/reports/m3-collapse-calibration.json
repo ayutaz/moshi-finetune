@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-21",
+  "purpose": "Freeze the collapse thresholds before any M3 candidate exists. CLAUDE.md records a gate chosen after the fact rejecting a working metric three times.",
+  "detector": "tools/dialogue_collapse.py",
+  "calibration_source": {
+    "generations": 20,
+    "origin": "M0 continuation generations from the published Stage 2 and Stage 3 checkpoints",
+    "paths": "data/experiments/tsukuyomi_ojousama/m0-run-2026-08-20/{stage2,stage3}/evaluation/continuation/generated_tokens/",
+    "frames_per_generation": 124,
+    "text_padding_id": 3,
+    "end_of_text_padding_id": 0
+  },
+  "observed_distribution": {
+    "emitted_ratio": {
+      "n": 20,
+      "min": 0.0967741935483871,
+      "max": 0.21774193548387097,
+      "mean": 0.168952,
+      "median": 0.177419
+    },
+    "distinct_ratio": {
+      "n": 20,
+      "min": 0.7727272727272727,
+      "max": 1.0,
+      "mean": 0.891255,
+      "median": 0.888889
+    },
+    "repeat_count": {
+      "n": 3,
+      "min": 2,
+      "max": 2,
+      "mean": 2.0,
+      "median": 2
+    }
+  },
+  "repeat_count_note": "Only 3 of 20 generations contain ANY 3-gram occurring more than once, and all three occur exactly twice.",
+  "thresholds": {
+    "min_n": 3,
+    "max_ngram_repeats": 4,
+    "min_distinct_ratio": 0.4,
+    "max_emitted_ratio": 0.85
+  },
+  "rationale": {
+    "max_ngram_repeats": "M0's working checkpoints reach 2. Four leaves a factor of two of headroom while still firing on the classic collapse signature, a phrase repeated five or more times.",
+    "min_distinct_ratio": "M0's floor is 0.7727. At 0.4 the backstop sits a factor of 1.93 below anything a working checkpoint produced, so it fires only on severe degeneracy and not on ordinary repetition.",
+    "max_emitted_ratio": "NOT calibrated on a healthy control, and this matters. M0's partner channel is digital silence, so M0's 0.097-0.218 says what a model does when nobody is speaking, not what a healthy model does when someone is. 0.85 is set as a GROSS monologue detector: a model emitting text on 85% of frames is talking through the user's entire turn."
+  },
+  "how_to_read_a_failure": {
+    "control_first": "The J-Moshi-ext control generated at plan step 22 is the first healthy checkpoint measured against a speaking partner. Its emitted_ratio must be reported in m3-collapse.json next to every candidate's.",
+    "if_the_control_fails": "If the control itself exceeds max_emitted_ratio, the THRESHOLD is wrong, not the candidate. Record it as a calibration failure, re-derive the threshold from the control, and say so in the report - do not fail condition 3 on it.",
+    "vacuous_metrics_excluded": "b_never_active and other partner-channel activity measures must NOT corroborate condition 3. With --model_user_stream the user stream is teacher-forced for every arm, so the partner always looks active and the metric is a tautology."
+  },
+  "self_check": {
+    "m0_under_these_thresholds": {
+      "total": 20,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 0,
+      "silent_count": 0,
+      "passes": true
+    },
+    "assertion": "The thresholds do not fire on any of M0's 20 working generations."
+  }
+}
