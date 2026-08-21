@@ -1,14 +1,8 @@
 import argparse
 import os
 
-import numpy as np
-import pandas as pd
-from tqdm import tqdm
 
-
-def merge_text_audio(
-    text_ids: np.ndarray, audio_ids: np.ndarray, text_padding_id: int
-) -> np.ndarray:
+def merge_text_audio(text_ids, audio_ids, text_padding_id: int):
     """
     Merge the tokenized text and audio stream of a single speaker.
     Args:
@@ -18,6 +12,8 @@ def merge_text_audio(
     Returns:
         Merged tokenized text and audio stream. Shape: [K=8+1, T_audio]
     """
+    import numpy as np
+
     assert text_ids.ndim == 1, f"Expected 1D tensor, got {text_ids.ndim}D tensor."
     assert audio_ids.ndim == 2, f"Expected 2D tensor, got {audio_ids.ndim}D tensor."
     # pad the text stream to match the audio stream
@@ -31,23 +27,61 @@ def merge_text_audio(
     return np.concat([text_ids[None], audio_ids], axis=0).astype(np.int32).tolist()
 
 
+class StemMismatchError(RuntimeError):
+    """The tokenized text and audio directories do not describe the same dialogues."""
+
+
+def matched_dialogue_stems(text_stems: list[str], audio_stems: list[str]) -> list[str]:
+    """The dialogue names present in both directories, sorted.
+
+    Raises instead of returning a partial set. The previous behaviour printed a message and
+    returned from main(), which exits 0: a shell chaining this with `&&` would carry on,
+    the parquet would simply not exist, and the failure would surface much later as a glob
+    matching nothing - by which time a GPU is billing.
+
+    Sorted rather than in os.listdir order, because that order decides which dialogue lands
+    in which parquet batch and is not stable across machines.
+    """
+    missing_text = sorted(set(audio_stems) - set(text_stems))
+    missing_audio = sorted(set(text_stems) - set(audio_stems))
+    if missing_text or missing_audio:
+        parts = []
+        if missing_text:
+            parts.append(f"no tokenized text for {len(missing_text)}: {missing_text[:10]}")
+        if missing_audio:
+            parts.append(f"no tokenized audio for {len(missing_audio)}: {missing_audio[:10]}")
+        raise StemMismatchError("; ".join(parts))
+
+    stems = sorted(set(text_stems))
+    if not stems:
+        # Two empty directories match perfectly, and would otherwise produce a zero-row
+        # parquet and a clean exit.
+        raise StemMismatchError("no tokenized dialogues found in either directory")
+    return stems
+
+
+def dialogue_id_for(output_prefix: str, dialogue_name: str) -> str:
+    """A dataset-unique id for one dialogue.
+
+    Namespaced by the split rather than by the output path. Upstream joined the whole
+    --output_prefix, which bakes the builder's absolute local directories into the dataset:
+    a parquet built on a laptop and uploaded to a rented instance carried the laptop's
+    paths, and the id could not be joined back to a manifest row. The basename keeps train
+    and dev from colliding, which was the point of including the prefix at all.
+    """
+    return f"{os.path.basename(output_prefix)}/{dialogue_name}"
+
+
 def main(args):
+    import numpy as np  # noqa: F401  (used by merge_text_audio via the loaded npz arrays)
+    import pandas as pd
+    from tqdm import tqdm
+
     text_dialogue_names = [os.path.splitext(f)[0] for f in os.listdir(args.tokenized_text_dir)]
     audio_dialogue_names = [os.path.splitext(f)[0] for f in os.listdir(args.tokenized_audio_dir)]
-    missing_text_dialogue_names = set(audio_dialogue_names) - set(text_dialogue_names)
-    missing_audio_dialogue_names = set(text_dialogue_names) - set(audio_dialogue_names)
-    if missing_text_dialogue_names:
-        print(f"Missing tokenized text for {len(missing_text_dialogue_names)} dialogues.")
-        open("missing_text_dialogue_names.txt", "w").write("\n".join(missing_text_dialogue_names))
-    if missing_audio_dialogue_names:
-        print(f"Missing tokenized audio for {len(missing_audio_dialogue_names)} dialogues.")
-        open("missing_audio_dialogue_names.txt", "w").write("\n".join(missing_audio_dialogue_names))
-    if missing_text_dialogue_names or missing_audio_dialogue_names:
-        print("Both text and audio tokenized dialogues should match.")
-        return
+    dialogue_names = matched_dialogue_stems(text_dialogue_names, audio_dialogue_names)
 
     os.makedirs(os.path.dirname(args.output_prefix), exist_ok=True)
-    dialogue_names = text_dialogue_names
     num_dialogues = len(dialogue_names)
     num_parquets = -(-num_dialogues // args.num_examples_per_parquet)
 
@@ -67,9 +101,7 @@ def main(args):
             audio_ids = np.load(audio_path)
             data.append(
                 {
-                    "dialogue_id": os.path.join(
-                        args.output_prefix, dialogue_name
-                    ),  # unique identifier
+                    "dialogue_id": dialogue_id_for(args.output_prefix, dialogue_name),
                     "A": merge_text_audio(text_ids["A"], audio_ids["A"], args.text_padding_id),
                     "B": merge_text_audio(text_ids["B"], audio_ids["B"], args.text_padding_id),
                 }
@@ -120,4 +152,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    main(args)
+    try:
+        main(args)
+    except StemMismatchError as error:
+        raise SystemExit(f"prepare_dataset: {error}") from error
