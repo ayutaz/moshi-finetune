@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "license_id": "MIT",
+  "retrieved_at": "2026-08-21",
+  "used_in_experiment": true,
+  "generation_method": "released-model-weights",
+  "redistribution": "permitted-under-mit-with-notice",
+  "dataset_id": "irodori-tts-500m-v3",
+  "source_url": "https://huggingface.co/Aratako/Irodori-TTS-500M-v3",
+  "license_url": "https://huggingface.co/Aratako/Irodori-TTS-500M-v3",
+  "source_version": "model.safetensors sha256 c4b8e7e982697664f829b7fb6bea307a25bd7ee013ad0d6114efc3e326acbd54; snapshot 236c1e56591279fc24e3c1bf6609fc06e48dde28",
+  "credit": "Irodori-TTS-500M-v3 (Aratako, MIT) https://huggingface.co/Aratako/Irodori-TTS-500M-v3",
+  "role": "Base for the M2 speaker-inversion checkpoint that renders speaker A in V-tts.",
+  "terms_checked_at": "2026-08-21",
+  "terms": {
+    "license": "MIT, stated on the model card as 'This model is released under MIT.'",
+    "generated_audio_license": "absent - the card places no terms on output",
+    "generated_audio_as_training_data": "absent - no restriction",
+    "commercial_use": "absent - MIT permits it",
+    "ethical_restrictions": "Non-licence conduct terms prohibit cloning or impersonating an individual's voice without consent, and generating deepfakes or misleading speech.",
+    "conclusion": "Nothing here blocks using generated audio as J-Moshi training data. Speaker A derives from the tsukuyomi corpus, whose upstream terms permit voice-synthesis use explicitly."
+  },
+  "notes": [
+    "Weights are cached locally and never redistributed by this repository."
+  ]
+}

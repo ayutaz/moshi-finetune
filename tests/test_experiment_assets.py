@@ -205,24 +205,79 @@ class DataProvenanceCoverageTests(unittest.TestCase):
             registries[registry["dataset_id"]] = registry
         return registries
 
+    def _manifest_paths(self) -> list[Path]:
+        """Every manifest, not one named one.
+
+        Naming a single file meant a manifest added later - v-real-v1, v-tts-v1 - was
+        invisible to this check, and CLAUDE.md's rule that a dataset is registered before
+        it is used went unenforced for it.
+        """
+        paths = sorted((EXPERIMENT_ROOT / "manifests").glob("*.jsonl"))
+        self.assertTrue(paths, "no manifests found; the glob or the directory is wrong")
+        return paths
+
     def test_every_manifest_dataset_is_registered_and_marked_used(self) -> None:
         registries = self._registries()
-        rows = [
-            json.loads(line)
-            for line in (EXPERIMENT_ROOT / "manifests" / "tsukuyomi-corpus-v1.jsonl")
-            .read_text(encoding="utf-8")
-            .splitlines()
-            if line.strip()
-        ]
+        for manifest in self._manifest_paths():
+            rows = [
+                json.loads(line)
+                for line in manifest.read_text(encoding="utf-8").splitlines()
+                if line.strip()
+            ]
+            self.assertTrue(rows, f"{manifest.name} is empty")
+            for row in rows:
+                registry = registries.get(row["dataset_id"])
+                self.assertIsNotNone(
+                    registry, f"{manifest.name}: {row['dataset_id']} has no registry entry"
+                )
+                self.assertNotEqual(
+                    registry.get("used_in_experiment"),
+                    False,
+                    f"{manifest.name}: {row['dataset_id']} is marked unused but appears in a manifest",
+                )
 
-        for row in rows:
-            registry = registries.get(row["dataset_id"])
-            self.assertIsNotNone(registry, f"{row['dataset_id']} has no registry entry")
-            self.assertNotEqual(
-                registry.get("used_in_experiment"),
-                False,
-                f"{row['dataset_id']} is marked unused but appears in the manifest",
+    def test_no_manifest_row_derives_from_a_held_out_corpus_utterance(self) -> None:
+        """M3 condition 4 is measured on held-out audio, so held-out audio cannot be trained on.
+
+        Every V dialogue quotes one corpus sentence. If a dev or test sentence reaches a
+        training row, the held-out speaker-likeness comparison is measuring audio the model
+        already heard, and nothing downstream would notice.
+        """
+        corpus_split = {
+            row["artifact_id"]: row["split"]
+            for row in (
+                json.loads(line)
+                for line in (EXPERIMENT_ROOT / "manifests" / "tsukuyomi-corpus-v1.jsonl")
+                .read_text(encoding="utf-8")
+                .splitlines()
+                if line.strip()
             )
+        }
+
+        for manifest in self._manifest_paths():
+            if manifest.name == "tsukuyomi-corpus-v1.jsonl":
+                continue
+            for line in manifest.read_text(encoding="utf-8").splitlines():
+                if not line.strip():
+                    continue
+                row = json.loads(line)
+                parents = row.get("derivation") or []
+                self.assertTrue(
+                    parents,
+                    f"{manifest.name}: {row.get('artifact_id')} records no derivation, so "
+                    "leakage cannot be checked",
+                )
+                for parent in parents:
+                    parent_id = parent if isinstance(parent, str) else parent.get("artifact_id")
+                    split = corpus_split.get(parent_id)
+                    if split is None:
+                        continue
+                    self.assertEqual(
+                        split,
+                        "train",
+                        f"{manifest.name}: {row.get('artifact_id')} derives from {parent_id}, "
+                        f"which is in the corpus {split} split",
+                    )
 
     def test_every_registry_records_its_terms_and_provenance(self) -> None:
         for dataset_id, registry in self._registries().items():

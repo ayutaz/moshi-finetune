@@ -9,6 +9,22 @@
 
 原音ZIP、展開したWAV、および原音から作成した素材用音声はGitやデータセットとして再配布しない。第三者が声質を利用できるcheckpointを公開する場合は、公開前に公式規約の「声質を使用した音声合成ソフト等を公開する」の条件を再監査し、規定のクレジット・禁止事項・規約継承をmodel cardへ記載する。
 
+### 上流規約の確認（2026-08-21）
+
+| 論点 | 規約の記載 |
+| --- | --- |
+| 音声合成モデルの学習への使用 | 「個人・法人、営利・非営利、研究用・開発用を問わずご利用いただけます。」 |
+| 声質を使える音声合成ソフト等の公開 | **可能**。有料・無料を問わない。条件はクレジット表記 |
+| 生成音声の公開 | 自分だけで使う場合は制限なし。公開する場合はクレジット必須 |
+| コーパス本体の再配布 | 「本品そのものの再配布は原則的には禁止です。」 |
+
+公開時に必要なクレジット文は次の通りで、URLを併記する。
+
+> 本ソフトウェアの音声合成には、フリー素材キャラクター「つくよみちゃん」が無料公開している音声データを使用しています。
+
+M3 は checkpoint を公開しないため、この条件が発火するのは M6 の公開審査時である。
+規約上 **公開そのものは許諾されている**ので、M6 の論点はクレジットと規約継承の記載方法に限られる。
+
 ### 追加候補: 夢前黎の音声データの寄せ集め（未取得）
 
 - 取得元: https://tyc.rei-yumesaki.net/material/corpus/yoseatsume/
@@ -21,6 +37,27 @@
 現在は未取得で、manifestにも1件も含まれていない。台帳は`registry/tsukuyomi-yoseatsume-candidate.json`にあり、`used_in_experiment: false`として管理する。
 
 取得する場合は次の2点に注意する。第一に、この寄せ集めはつくよみちゃんコーパスVol.1の100文を**含む上位集合**なので、`tsukuyomi-corpus-v1`と重複排除してから分割しないと、固定held-outがtrainへ再流入する。第二に、JSUT basic5000部分は別の上流条件を持つため、使用前に別途台帳化する。取得後の音声とその派生物は再配布禁止のため、下記「非公開対象」に加える。
+
+## 音声合成モデル（Irodori-TTS）
+
+対象話者A（M2のTTS、M3のV-tts）と中立話者B（M3の全対話の片チャンネル）は、いずれも
+Irodori-TTS で生成する。2026-08-21にmodel card を確認した結果は次の通り。
+
+| モデル | 用途 | ライセンス |
+| --- | --- | --- |
+| [`Aratako/Irodori-TTS-500M-v3`](https://huggingface.co/Aratako/Irodori-TTS-500M-v3) | 話者A（M2 speaker inversion のbase） | MIT |
+| [`Aratako/Irodori-TTS-600M-v3-VoiceDesign`](https://huggingface.co/Aratako/Irodori-TTS-600M-v3-VoiceDesign) | 話者B（caption から1本生成し凍結） | MIT |
+| [`Aratako/Semantic-DACVAE-Japanese-32dim`](https://huggingface.co/Aratako/Semantic-DACVAE-Japanese-32dim) | 両者のcodec | MIT |
+| [`Aratako/Irodori-TTS`](https://github.com/Aratako/Irodori-TTS) | 学習・推論コード | MIT |
+
+**生成音声の利用について、model card は制限を置いていない。** 生成物のライセンス、
+機械学習データとしての利用、商用利用、帰属のいずれも記載がなく、MITは出力物に条件を及ぼさない。
+したがって生成音声を J-Moshi の学習データにすることに、Irodori-TTS 側の障害はない。
+
+model card はライセンスとは別に倫理条項を置いており、**個人の声のクローン・なりすまし**と
+**ディープフェイク**を禁じている。話者Bは参照音声を持たず caption のみから設計するため、
+該当する個人が存在しない。話者Aはつくよみちゃんコーパスに由来し、その利用は下記の通り
+上流規約が明示的に許諾している。
 
 ## お嬢様口調テキスト
 

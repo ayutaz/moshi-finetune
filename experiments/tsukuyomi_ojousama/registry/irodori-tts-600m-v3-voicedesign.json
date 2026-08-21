@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "license_id": "MIT",
+  "retrieved_at": "2026-08-21",
+  "used_in_experiment": true,
+  "generation_method": "released-model-weights",
+  "redistribution": "permitted-under-mit-with-notice",
+  "dataset_id": "irodori-tts-600m-v3-voicedesign",
+  "source_url": "https://huggingface.co/Aratako/Irodori-TTS-600M-v3-VoiceDesign",
+  "license_url": "https://huggingface.co/Aratako/Irodori-TTS-600M-v3-VoiceDesign",
+  "source_version": "snapshot e863a3a93e652e09afeff3e84823a206a0a60314",
+  "credit": "Irodori-TTS-600M-v3-VoiceDesign (Aratako, MIT) https://huggingface.co/Aratako/Irodori-TTS-600M-v3-VoiceDesign",
+  "role": "Mints the frozen neutral speaker B, who occupies one channel of every V-real and V-tts dialogue.",
+  "terms_checked_at": "2026-08-21",
+  "terms": {
+    "license": "MIT",
+    "generated_audio_license": "absent - the card places no terms on output",
+    "generated_audio_as_training_data": "absent - no restriction",
+    "commercial_use": "absent - MIT permits it",
+    "ethical_restrictions": "Non-licence conduct terms prohibit cloning or impersonating an individual's voice without consent, and generating deepfakes or misleading speech.",
+    "conclusion": "Satisfied trivially for speaker B: the voice is designed from a caption with --no-ref, so no individual's recording is involved and there is nobody to impersonate."
+  },
+  "notes": [
+    "Speaker B is minted ONCE and frozen; per-utterance caption generation was measured and rejected (reports/m3-speaker-b-probe.json).",
+    "Watermarking is disabled at generation: silentcipher is absent from the environment."
+  ]
+}

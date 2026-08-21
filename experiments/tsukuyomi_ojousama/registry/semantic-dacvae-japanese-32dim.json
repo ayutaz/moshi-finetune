@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "license_id": "MIT",
+  "retrieved_at": "2026-08-21",
+  "used_in_experiment": true,
+  "generation_method": "released-model-weights",
+  "redistribution": "permitted-under-mit-with-notice",
+  "dataset_id": "semantic-dacvae-japanese-32dim",
+  "source_url": "https://huggingface.co/Aratako/Semantic-DACVAE-Japanese-32dim",
+  "license_url": "https://huggingface.co/Aratako/Semantic-DACVAE-Japanese-32dim",
+  "source_version": "snapshot 47376ee24834d7a05a48ebabfe3cde29b3c5e214",
+  "credit": "Semantic-DACVAE-Japanese-32dim (Aratako, MIT) https://huggingface.co/Aratako/Semantic-DACVAE-Japanese-32dim",
+  "role": "Codec shared by both Irodori-TTS checkpoints; encodes the training latents and decodes generated speech.",
+  "terms_checked_at": "2026-08-21",
+  "terms": {
+    "license": "MIT",
+    "conclusion": "No restriction on output."
+  },
+  "notes": []
+}
