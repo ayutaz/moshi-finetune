@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-22",
+  "artifact": {
+    "path": "experiments/tsukuyomi_ojousama/m3/scripts/dialogues-v1.jsonl",
+    "rows": 80,
+    "byte_size": 49609,
+    "sha256": "4e22d04f2d33f98172684beeb08187d8c8002cf256782281e2b4971894ece6c0"
+  },
+  "structure": {
+    "turns_per_dialogue": 3,
+    "speaker_order": [
+      "B",
+      "A",
+      "B"
+    ],
+    "a_turn_rule": "A speaks one corpus train sentence verbatim; in V-real the audio for that turn IS the corpus recording, so any edit desynchronises text from audio."
+  },
+  "checks": {
+    "status": "pass",
+    "a_texts_match_corpus_as_a_set": true,
+    "why_set_equality": "Eighty rows where one sentence appears twice and another never appears counts eighty, trains twice on one and silently drops the other. A count cannot see it.",
+    "eval_overlap_count": 0,
+    "eval_texts_compared": 256,
+    "duplicate_dialogue_ids": 0,
+    "bad_turn_structure": 0,
+    "empty_turns": 0
+  },
+  "length": {
+    "floor_frames": 200,
+    "floor_seconds": 16.0,
+    "projection": "mora / mora_per_second, at the FAST end of the measured rate, frames floored",
+    "mora_per_second_used": 7.5,
+    "measured_rates": {
+      "tsukuyomi_corpus_pooled": 6.475,
+      "speaker_b_frozen_ref": 6.13,
+      "speaker_b_no_ref": 4.914
+    },
+    "min_frames": 201,
+    "max_frames": 306,
+    "mean_frames": 241.5,
+    "below_floor": 0,
+    "revision_note": "Eleven dialogues projected under the floor on the first pass (173-198 frames). The B turns were lengthened; the floor was not lowered, per m3/DATASET_SPEC.md."
+  },
+  "split": {
+    "train": 72,
+    "dev": 8,
+    "test": 0,
+    "seed": 20260822,
+    "map": "experiments/tsukuyomi_ojousama/m3/scripts/split-map-v1.json",
+    "shared_by": [
+      "v-real-v1",
+      "v-tts-v1"
+    ]
+  },
+  "limits": [
+    "Projection is mora over a measured rate, not synthesis. Realised durations are gated again after rendering, at plan step 11.",
+    "The 7.5 mora/s used for the floor is deliberately faster than any rate measured, because a voice that speaks faster than projected lands SHORT - the direction that breaks the floor.",
+    "B turns were authored to vary their openings. A single template would teach the model that every user utterance starts the same way."
+  ]
+}
