@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-22",
+  "status": "pass",
+  "purpose": "Three frozen prompt sets, built locally through all five M0 stages, so the control and every candidate are generated from identical inputs.",
+  "conditions": {
+    "prompt_length": 40,
+    "generation_length": 125,
+    "required_frames": 165,
+    "sample_rate": 24000,
+    "source": "identical to M0's run_baseline.sh"
+  },
+  "sets": {
+    "held-out-10": {
+      "parquet": "data/experiments/tsukuyomi_ojousama/m3/eval-prompts/held-out/dataset/prompts-001-of-001.parquet",
+      "sha256": "27012b0832e5e5d0d15fb70a030726bd50593992ef5e8735c7df447040a8a7b7",
+      "status": "pass",
+      "prompt_count": 10,
+      "min_frames_observed": 167,
+      "example_id_to_dialogue_id": {
+        "0": "prompts/voice-held-out-11",
+        "1": "prompts/voice-held-out-12",
+        "2": "prompts/voice-held-out-13",
+        "3": "prompts/voice-held-out-14",
+        "4": "prompts/voice-held-out-15",
+        "5": "prompts/voice-held-out-16",
+        "6": "prompts/voice-held-out-17",
+        "7": "prompts/voice-held-out-18",
+        "8": "prompts/voice-held-out-19",
+        "9": "prompts/voice-held-out-20"
+      },
+      "corpus_split": "test",
+      "channel": "A",
+      "role": "Condition 4. The model has never heard these recordings, from any stage of the experiment."
+    },
+    "seen-10": {
+      "parquet": "data/experiments/tsukuyomi_ojousama/m3/eval-prompts/seen/dataset/prompts-001-of-001.parquet",
+      "sha256": "74e2922f7b3deae5fee83320d7d2c09eaf629f781b9655d1bbd4ab8fcb464c22",
+      "status": "pass",
+      "prompt_count": 10,
+      "min_frames_observed": 167,
+      "example_id_to_dialogue_id": {
+        "0": "prompts/voice-seen-01",
+        "1": "prompts/voice-seen-02",
+        "2": "prompts/voice-seen-03",
+        "3": "prompts/voice-seen-04",
+        "4": "prompts/voice-seen-05",
+        "5": "prompts/voice-seen-06",
+        "6": "prompts/voice-seen-07",
+        "7": "prompts/voice-seen-08",
+        "8": "prompts/voice-seen-09",
+        "9": "prompts/voice-seen-10"
+      },
+      "corpus_split": "train",
+      "channel": "A",
+      "role": "The memorisation control RUBRIC.md requires. Without it, a checkpoint that stored its 72 training sentences passes every other measurement M3 takes."
+    },
+    "general-30": {
+      "parquet": "data/experiments/tsukuyomi_ojousama/m3/eval-prompts/general30/dataset/prompts-001-of-001.parquet",
+      "sha256": "46c77b9657f0bf50efe8e44c9a7202cb34c4d688d51aea3a36c9b99d4d7d291c",
+      "status": "pass",
+      "prompt_count": 30,
+      "min_frames_observed": 207,
+      "example_id_to_dialogue_id": {
+        "0": "prompts/general-01",
+        "1": "prompts/general-02",
+        "2": "prompts/general-03",
+        "3": "prompts/general-04",
+        "4": "prompts/general-05",
+        "5": "prompts/general-06",
+        "6": "prompts/general-07",
+        "7": "prompts/general-08",
+        "8": "prompts/general-09",
+        "9": "prompts/general-10",
+        "10": "prompts/general-11",
+        "11": "prompts/general-12",
+        "12": "prompts/general-13",
+        "13": "prompts/general-14",
+        "14": "prompts/general-15",
+        "15": "prompts/general-16",
+        "16": "prompts/general-17",
+        "17": "prompts/general-18",
+        "18": "prompts/general-19",
+        "19": "prompts/general-20",
+        "20": "prompts/general-21",
+        "21": "prompts/general-22",
+        "22": "prompts/general-23",
+        "23": "prompts/general-24",
+        "24": "prompts/general-25",
+        "25": "prompts/general-26",
+        "26": "prompts/general-27",
+        "27": "prompts/general-28",
+        "28": "prompts/general-29",
+        "29": "prompts/general-30"
+      },
+      "channel": "B",
+      "lead_in_frames": 40,
+      "role": "Conditions 3 and 5. The USER speaks and the model answers.",
+      "user_voice_in_generated_window": {
+        "window_frames": "[40, 165)",
+        "floor": 25,
+        "min": 37,
+        "max": 80,
+        "mean": 51.3,
+        "prompts_below_floor": 0,
+        "moshi_channel_active_frames_max": 0
+      }
+    }
+  },
+  "defect_this_step_closed": {
+    "what": "prepare_baseline_prompts could only build assistant-side prompts: audio on channel A, silence on B, and trailing padding only.",
+    "consequence": "For the fixed conversations the user would have been silent through every frame generate.py returns. 'Does it ignore the user' and every turn-taking figure would have been measured against silence - the degenerate regime the past depformer-only run collapsed into, where nothing distinguishes health from failure.",
+    "fix": "--channel B places the audio on the user stream and --lead-in-frames delays it into the window; user_voiced_frames_in_window counts what lands there.",
+    "evidence": "All 30 prompts carry 37-80 user-voiced frames inside the window against a floor of 25, and channel A is silent in all 30. M0's prompts score 0 by construction."
+  },
+  "limits": [
+    "The user speaks once per conversation and the timeline has no overlap, so barge-in following can be probed but was never trained toward.",
+    "Speaker B is the same frozen voice as the training data's channel B, so the model hears a familiar partner. A different partner voice is not tested."
+  ]
+}
