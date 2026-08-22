@@ -1,0 +1,103 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-22",
+  "condition": "1. dataset 検証で channel・時刻・テキスト不一致が0件",
+  "status": "pass",
+  "datasets": {
+    "v-real": {
+      "dialogues": 80,
+      "minutes": 27.83,
+      "frames": {
+        "min": 213,
+        "max": 321,
+        "mean": 261.4
+      },
+      "counts": {
+        "channel_mismatches": 0,
+        "timestamp_violations": 0,
+        "text_mismatches": 0,
+        "non_stereo": 0,
+        "wrong_sample_rate": 0,
+        "zero_length": 0,
+        "below_min_frames": 0,
+        "text_frames_exceeding_audio": 0,
+        "saturated_files": 0
+      },
+      "channel_assignment": {
+        "method": "per turn, the speaking channel must carry energy and the other must not",
+        "turns_checked": 240,
+        "turns_with_energy_on_the_wrong_channel": 0
+      }
+    },
+    "v-tts": {
+      "dialogues": 80,
+      "minutes": 28.63,
+      "frames": {
+        "min": 215,
+        "max": 334,
+        "mean": 268.9
+      },
+      "counts": {
+        "channel_mismatches": 0,
+        "timestamp_violations": 0,
+        "text_mismatches": 0,
+        "non_stereo": 0,
+        "wrong_sample_rate": 0,
+        "zero_length": 0,
+        "below_min_frames": 0,
+        "text_frames_exceeding_audio": 0,
+        "saturated_files": 0
+      },
+      "channel_assignment": {
+        "method": "per turn, the speaking channel must carry energy and the other must not",
+        "turns_checked": 240,
+        "turns_with_energy_on_the_wrong_channel": 0
+      }
+    }
+  },
+  "checks": {
+    "channel_mismatches": 0,
+    "timestamp_violations": 0,
+    "text_mismatches": 0,
+    "non_stereo": 0,
+    "wrong_sample_rate": 0,
+    "zero_length": 0,
+    "below_min_frames": 0,
+    "text_frames_exceeding_audio": 0,
+    "saturated_files": 0,
+    "pairs_checked": 160
+  },
+  "timeline": {
+    "lead_in_seconds": 0.5,
+    "gap_seconds": 0.4,
+    "overlap": "none",
+    "sample_rate": 24000,
+    "channel_0": "speaker A",
+    "channel_1": "speaker B",
+    "word_timing": "mora-weighted proportional allocation from pyopenjtalk run_frontend"
+  },
+  "corrections_made_during_this_step": [
+    {
+      "gate": "channel assignment",
+      "was": "whole-channel A/B RMS ratio >= 1.5",
+      "problem": "A dialogue is B-A-B, so B speaks twice and A once; the whole-channel ratio favours B by construction and all 160 pairs failed.",
+      "now": "per-turn: during each turn the speaking channel carries energy and the other carries none",
+      "note": "This corrects WHAT is measured, not the threshold. The requirement is stricter than before, because the whole-channel comparison diluted A across B's two turns.",
+      "reported_ratio_is_meaningless": "An earlier draft of this report quoted per-turn RMS ratios of 5e11 and 4e12. Those are an artefact: the timeline has no overlap, so the non-speaking channel is digitally zero during a turn and the ratio is whatever epsilon sat in the denominator. The check is sound - a left/right swap silences the speaking channel and fails it - but the number is not evidence of margin and has been removed rather than presented as one."
+    },
+    {
+      "gate": "text agreement",
+      "was": "surface string equality between script and transcript",
+      "problem": "pyopenjtalk's frontend expands numerals - 1931 becomes 千九百三十一 - which is what is actually spoken. v-063 failed on it.",
+      "now": "kana readings are compared instead",
+      "verified": "A dropped word still fails the reading comparison.",
+      "precedent": "M2's intelligibility gate had the same fault, scoring Whisper's orthography rather than pronunciation, and failed a working checkpoint 26/30."
+    }
+  ],
+  "honest_note": "V-tts is 28.63 minutes against V-real's 27.83, a 2.9% difference, because the TTS renders speaker A slightly slower than the corpus recordings. The scripts, split, speaker-B audio and timeline are identical; only channel A's bytes differ, which is the intended difference. No parity threshold was pre-registered, so this is reported rather than gated.",
+  "limits": [
+    "Word timings are proportional allocation, not forced alignment: right on average, wrong in detail. The floor and the agreement checks bound the consequence; they do not measure the alignment error.",
+    "The timeline has no overlap, so the model never trains toward barge-in."
+  ]
+}
