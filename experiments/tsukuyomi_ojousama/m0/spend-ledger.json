@@ -87,17 +87,35 @@
       "amount": 2.069,
       "source": "vastai invoices current bucket",
       "note": "M0 baseline reruns"
+    },
+    {
+      "recorded_at": "2026-08-22",
+      "instance_id": 48178589,
+      "component": "storage-while-stopped",
+      "quantity_hours": 48,
+      "rate": 0.055417,
+      "amount": 2.66,
+      "source": "derived: disk_space from `vastai show instances` x the ledger's 0.1389/h-per-300GiB rate"
+    },
+    {
+      "recorded_at": "2026-08-22",
+      "instance_id": 48187958,
+      "component": "storage-while-stopped",
+      "quantity_hours": 48,
+      "rate": 0.037083,
+      "amount": 1.78,
+      "source": "derived: disk_space from `vastai show instances` x the ledger's 0.1389/h-per-300GiB rate"
     }
   ],
   "status": "tracking",
   "invoiced_to_date": 7.949,
   "billing_lag_note": "Invoiced GPU hours lag well behind actual runtime on 48004205 (0.793 h invoiced against roughly 6.56 h of measured uptime). `vastai show invoices` also returns only the current bucket, so invoiced_to_date is a sum of the buckets observed on 2026-08-18 and 2026-08-20. Budget decisions use accrued_estimate.",
   "accrued_estimate": {
-    "captured_at": "2026-08-20",
-    "method": "48004205 GPU 6.56 h * 2.64 + observed storage 13.223 h * 0.1389 + network 0.090; 48178589 invoiced 1.641 + network 0.090; plus instance 48187958 invoiced 0.219 for M2 T1",
+    "captured_at": "2026-08-22",
+    "method": "48004205 GPU 6.56 h * 2.64 + observed storage 13.223 h * 0.1389 + network 0.090; 48178589 invoiced 1.641 + network 0.090; plus instance 48187958 invoiced 0.219 for M2 T1; plus 2 days of stopped-disk on 48178589 (120 GB) and 48187958 (80 GB) at US$2.22/day = US$4.44",
     "instance_48004205": 19.248,
     "instance_48178589": 1.731,
-    "total": 21.198
+    "total": 25.638
   },
   "stopped_state_cost_per_hour": 0.1389,
   "stopped_state_note": "A stopped instance still bills the 300 GiB disk at US$0.1389/h (about US$3.33/day). Destroying the instance deletes /workspace, so artifacts must be exported first.",
@@ -151,12 +169,13 @@
     }
   ],
   "instance_state": {
-    "captured_at": "2026-08-20",
+    "captured_at": "2026-08-22",
     "experiment_instances": {
       "48178589": "stopped",
       "48187958": "stopped"
     },
-    "note": "Instances outside this experiment (piper, vokra) are listed in other_instance_ids_excluded and are not charged to it."
+    "stopped_disk_cost_per_day_usd": 2.22,
+    "note": "Both are stopped and still billing for disk. Their contents are already exported: M0 to reports/m0-baseline-final.json and data/.../m0-run-2026-08-20/, M2 to data/.../m2/speaker_inversion/ with the adopted embedding's sha256 re-verified 2026-08-22. Destroying them is safe and awaiting the user's decision. Instances outside this experiment (piper, vokra) are in other_instance_ids_excluded and are not charged here."
   },
   "previous_dedicated_instances": [
     {
