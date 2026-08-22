@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-22",
+  "step": "22 smoke-test the never-executed training path",
+  "result": "pass after three defects, on the fourth attempt",
+  "startup_assertions": {
+    "Num examples": 72,
+    "Total train batch size": 8,
+    "Total optimization steps": 9,
+    "matches_offline_computation": true,
+    "note": "reports/m3-tokenize-report.json predicted exactly these from the realised parquet."
+  },
+  "defects_found": [
+    {
+      "n": 1,
+      "what": "--report_to none is rejected; the only choice is wandb.",
+      "impact": "launch fails immediately",
+      "fix": "omit the flag"
+    },
+    {
+      "n": 2,
+      "what": "finetune.py raised AttributeError: 'Namespace' object has no attribute 'with_tracking'.",
+      "cause": "args.with_tracking was assigned only inside `if args.report_to is not None`, so any run without W&B crashed at line 601 before the first step.",
+      "impact": "the training path could not run at all without W&B configured, which is why it had never been executed",
+      "fix": "set it unconditionally; regression test in tests/test_finetune_args.py"
+    },
+    {
+      "n": 3,
+      "what": "CUDA out of memory on 2x A100 80GB with the stock ZeRO-3 config.",
+      "measured": [
+        "stock config: 74.44 GiB allocated of 79.25, 2.48 GiB lost to fragmentation",
+        "tightened gathers + expandable_segments: fragmentation gone (189 MiB reserved-unallocated) and still OOM at 76.93 GiB"
+      ],
+      "cause": "ZeRO-3 + fp16 + AdamW is 16 bytes/param resident = 133.94 GB, i.e. 66.97 GB per card of a 79.25 GiB budget, leaving too little for activations and gathers.",
+      "fix": "offload the optimiser states to host RAM (ds_configs/zero3-fp16-offload-act_ckpt.json). They are 12 bytes/param = 100.46 GB, so roughly 50 GB per card is freed. The M3 plan named host RAM as the reason not to do this; this instance has 1316 GiB available, so it does not bind."
+    }
+  ],
+  "checkpoint": {
+    "measured_bytes": 100457453556,
+    "measured_gb": 100.46,
+    "predicted_gb": 100.46,
+    "note": "Exactly the 12 bytes/param the plan derived from the deepspeed source. Five checkpoints are 502 GB, comfortably inside the 900 GB disk (751 GB free with one on disk).",
+    "du_sh_shows": "94G, which is gibibytes"
+  },
+  "throughput": {
+    "seconds_per_step_observed": [
+      76.87,
+      82.79,
+      141.09
+    ],
+    "cost_of_offload": "Steps are far slower than the 28 minutes for 65 steps the past experiment recorded without offload.",
+    "revised_session_estimate_hours": {
+      "at_80s": 7.8,
+      "at_110s": 8.55,
+      "at_141s": 9.32
+    },
+    "stop_line_hours": 9.0,
+    "stop_line_usd": 27.51,
+    "verdict": "The planned 6.6 h no longer holds. At 80-110 s/step the session lands inside the 9.0 h stop line; at 141 s/step it does not. The run is watched against the stop line rather than assumed to fit."
+  },
+  "why_this_step_exists": "Two steps on an instance already running cost about US$0.20 each. The same three failures inside a 45-step run would have cost the run."
+}
