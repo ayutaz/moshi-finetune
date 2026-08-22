@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-22",
+  "step": "19-21 rent, bootstrap, build base models, upload frozen data",
+  "instance": {
+    "id": 48370306,
+    "offer_id": 46658351,
+    "label": "moshi-tsukuyomi-m3-voice",
+    "gpu": "2x NVIDIA A100-SXM4-80GB (81920 MiB each)",
+    "disk_gb": 900,
+    "inet_down_mbps": 8084,
+    "dph_total": 3.0566666666666666,
+    "selected_for": "network speed among offers meeting every hard requirement inside the stop line"
+  },
+  "host_checks": {
+    "gpus": 2,
+    "gpu_mib_each": 81920,
+    "mem_available_gib": 1316.4,
+    "cpu_cores": 128,
+    "verified": "measured on the instance, not read from the offer",
+    "why_it_matters": "ZeRO-3 + fp16 + AdamW needs 133.94 GB resident for the 8.37B dep_q=16 model, so one 80 GB card is 48 GB short; and finetune.py loads the model on CPU in float32 per rank before partitioning, so too little host RAM OOM-kills at load with no GPU able to help."
+  },
+  "offer_search_defect": {
+    "what": "The plan's search filter used gpu_ram>=79.",
+    "problem": "vastai reports gpu_ram in MiB per card, so gpu_ram>=79 matches every GPU ever made. The first qualifying-looking offer was 2x A100 SXM4 with gpu_ram 40960 - 40 GB cards, 80 GB total - which cannot hold the resident state at all.",
+    "fix": "Filter on gpu_ram>=80000 and verify nvidia-smi on the instance before trusting either.",
+    "caught_before": "renting"
+  },
+  "repo": {
+    "branch": "experiment-j-moshi-character-voice-overfit",
+    "head": "5e01e322209456af2bfafabe28979f918eadf6ae",
+    "verified": "instance HEAD compared to local HEAD, exact match"
+  },
+  "base_models": {
+    "train-dq16": {
+      "dep_q": 16,
+      "depformer_context": 16,
+      "n_q": 16,
+      "weights_gb": 16.74,
+      "built_with": "tools.init_moshi_for_ft --extend_modules_for_user_stream"
+    },
+    "control-dq8": {
+      "dep_q": 8,
+      "depformer_context": 8,
+      "n_q": 16,
+      "weights_gb": 15.38
+    }
+  },
+  "uploaded": {
+    "files": 7,
+    "checksums_verified": true,
+    "contents": "4 training parquets and 3 prompt-set parquets",
+    "note": "No audio was uploaded. Every dataset was built, tokenised and turned into parquet on the laptop, so the tsukuyomi corpus never reaches hardware this experiment does not own."
+  },
+  "disk": {
+    "used_gb": 56,
+    "free_gb": 845,
+    "budget": "5 ZeRO-3 checkpoints at 100.46 GB = 502 GB, plus conversion scratch"
+  },
+  "bootstrap": "experiments/tsukuyomi_ojousama/m3/bootstrap_m3_instance.sh, exit 0, no failures in the log"
+}

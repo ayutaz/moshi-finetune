@@ -7,9 +7,9 @@
   "active_stop_threshold": 95.0,
   "starting_account_balance": 749.305209156038,
   "starting_balance_captured_at": "2026-08-18",
-  "dedicated_instance_id": 48178589,
-  "dedicated_instance_label": "moshi-tsukuyomi-ojousama-m0-b",
-  "hourly_rate": 2.66,
+  "dedicated_instance_id": 48370306,
+  "dedicated_instance_label": "moshi-tsukuyomi-m3-voice",
+  "hourly_rate": 3.0566666666666666,
   "other_instance_ids_excluded": [
     48000459,
     47955178,
@@ -161,6 +161,19 @@
       "gate_verified": "experiment_budget exits 0 at 6.6 h and 9.0 h, and exits 1 at 25 h with status reject-new-run",
       "m3_increment": 20.19,
       "note": "The M3 plan quotes US$20.28 planned plus US$5.35 contingency. The disk is 900 GB because finetune.py writes five ZeRO-3 checkpoints at 100.46 GB with no rotation - 502 GB - which reports/m3-tokenize-report.json derives from the realised parquet rather than from an assumption."
+    },
+    {
+      "run": "m3-voice-control-rental",
+      "decided_at": "2026-08-22",
+      "spent_at_decision": 25.638,
+      "hourly_rate": 3.0566666666666666,
+      "planned_hours": 6.6,
+      "stop_line_hours": 9.0,
+      "predicted_spend_at_stop_line": 53.148,
+      "decision": "allow",
+      "instance_id": 48370306,
+      "offer_id": 46658351,
+      "selection": "Chosen for network speed at the user's request - 8084 Mbps down, the fastest among offers meeting every hard requirement inside the stop line. Bootstrap pulls 15.76 GB."
     }
   ],
   "runs": [
@@ -195,7 +208,9 @@
   ],
   "instance_state": {
     "captured_at": "2026-08-22",
-    "experiment_instances": {},
+    "experiment_instances": {
+      "48370306": "running"
+    },
     "destroyed": [
       {
         "instance_id": 48178589,
@@ -214,8 +229,7 @@
         "verified_before_destroy": "The adopted embedding checkpoint_final.speaker.safetensors is local and its sha256 matches reports/m2-tts-gate.json; 13 checkpoints, 30 generated wavs and 80 training latents present."
       }
     ],
-    "note": "No instance belongs to this experiment now. M3 rents fresh hardware (2x A100 80GB, 900 GB disk), so nothing on these was needed. Inspecting a stopped instance requires starting it, at US$2.66/h and US$1.08/h - more than the US$2.22/day the disks were costing - so the decision rested on verifying the local copies instead. Instances outside this experiment (piper, vokra) are in other_instance_ids_excluded and are not this experiment's to stop or destroy.",
-    "saving": "US$2.22/day of stopped-disk billing ends here."
+    "note": "M3 voice control. 2x A100-SXM4-80GB, 900 GB disk, 8084 Mbps down. --disk cannot be changed after create, and 300 GB would die partway through V0's second checkpoint write, so it is sized for five ZeRO-3 checkpoints at 100.46 GB."
   },
   "previous_dedicated_instances": [
     {
