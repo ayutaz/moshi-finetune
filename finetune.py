@@ -295,8 +295,10 @@ def postprocess_args(args: argparse.Namespace):
             "eval_steps is required when eval_data_files is provided."
         )
 
-    if args.report_to is not None:
-        args.with_tracking = True
+    # Set unconditionally. Assigning it only inside the branch meant every run without
+    # --report_to raised AttributeError at the first `if args.with_tracking`, which is to
+    # say the training path could not run at all without W&B configured.
+    args.with_tracking = args.report_to is not None
 
     if args.resume_from_checkpoint:
         assert os.path.exists(args.resume_from_checkpoint), (
