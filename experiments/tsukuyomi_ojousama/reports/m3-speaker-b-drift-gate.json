@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-22",
+  "gate": "Speaker B identity across the whole rendered set, before anything is tokenised.",
+  "render": {
+    "turns": 160,
+    "dialogues": 80,
+    "wavs_on_disk": 160,
+    "orphan_wavs": 0,
+    "sidecar_rows_without_audio": 0,
+    "watermarked_rows": 0,
+    "seconds": {
+      "min": 3.24,
+      "max": 12.36,
+      "mean": 6.53,
+      "total_minutes": 17.4
+    },
+    "reference": "data/experiments/tsukuyomi_ojousama/m3/ref/speakerB.wav (male-calm, sha256 0e05a1fe5db21a74...)",
+    "renderer": "tools/synthesize_turns.py, one long-lived runtime, 19-26 s per turn on mps"
+  },
+  "measurement": {
+    "embedding": "speechbrain/spkrec-ecapa-voxceleb on cpu",
+    "clips": 160,
+    "excluded_under_1s": 0,
+    "pairs_sampled": 4000,
+    "sampling_note": "160 clips give 12,720 pairs; 4,000 were sampled with a recorded seed, which is ample for a 5th percentile.",
+    "seed": 20260822
+  },
+  "results": {
+    "mean": 0.8390415924390067,
+    "median": 0.8428243729807313,
+    "p5": 0.7638966332128277,
+    "min": 0.6542091023358121,
+    "pairs_below_0_50": 0,
+    "vs_speaker_a_mean": 0.07667936557135496
+  },
+  "gates": {
+    "mean>=0.65": true,
+    "median>=0.65": true,
+    "p5>=0.55": true,
+    "pairs_below_0.50==0": true,
+    "vs_speaker_a<0.30": true,
+    "fixed_in": "m3/DATASET_SPEC.md, before any turn was rendered",
+    "status": "pass"
+  },
+  "interpretation": "The worst pair in 4,000 scores 0.6542, which is close to the MEAN a single real human produces (0.6983) under the same pipeline. Channel B is one speaker by a wide margin, and at 0.0767 against the target speaker it is unambiguously a different person.",
+  "limits": [
+    "ECAPA similarity says these clips come from one voice; it does not say the voice is pleasant or the reading correct. Intelligibility of channel B is not gated here, and B never appears in the held-out evaluation."
+  ]
+}
