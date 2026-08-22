@@ -144,6 +144,23 @@
       "predicted_spend": 22.013778,
       "decision": "allow",
       "reason": "within budget"
+    },
+    {
+      "run": "m3-voice-control",
+      "decided_at": "2026-08-22",
+      "spent_at_decision": 25.638,
+      "spent_source": "accrued_estimate.total, not invoiced_to_date",
+      "hourly_rate": 3.0589815,
+      "hardware": "2x A100-SXM4-80GB, 900 GB disk, >= 85 GiB host RAM",
+      "planned_hours": 6.6,
+      "predicted_spend": 45.827278,
+      "stop_line_hours": 9.0,
+      "predicted_spend_at_stop_line": 53.168834,
+      "decision": "allow",
+      "reason": "within budget",
+      "gate_verified": "experiment_budget exits 0 at 6.6 h and 9.0 h, and exits 1 at 25 h with status reject-new-run",
+      "m3_increment": 20.19,
+      "note": "The M3 plan quotes US$20.28 planned plus US$5.35 contingency. The disk is 900 GB because finetune.py writes five ZeRO-3 checkpoints at 100.46 GB with no rotation - 502 GB - which reports/m3-tokenize-report.json derives from the realised parquet rather than from an assumption."
     }
   ],
   "runs": [
