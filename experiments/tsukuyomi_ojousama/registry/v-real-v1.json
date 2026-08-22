@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "retrieved_at": "2026-08-22",
+  "used_in_experiment": true,
+  "license_id": "tsukuyomi-corpus-custom-terms",
+  "license_url": "https://tyc.rei-yumesaki.net/material/corpus/",
+  "credit": "つくよみちゃんコーパス（CV.夢前黎） https://tyc.rei-yumesaki.net/material/corpus/",
+  "redistribution": "prohibited-derives-from-a-corpus-that-may-not-be-redistributed",
+  "local_data_root": "data/experiments/tsukuyomi_ojousama",
+  "dataset_id": "v-real-v1",
+  "source_url": "local://experiments/tsukuyomi_ojousama/m3/scripts/dialogues-v1.jsonl",
+  "source_version": "dialogues-v1 (sha256 in reports/m3-script-validation.json) + tsukuyomi-corpus-v1 train split + m3/ref/speakerB.wav",
+  "generation_method": "assembled-stereo-real-a",
+  "derivation": [
+    "tsukuyomi-corpus-v1",
+    "irodori-tts-600m-v3-voicedesign"
+  ],
+  "role": "V0. Channel A is the tsukuyomi corpus recording itself; channel B is the frozen synthetic speaker.",
+  "terms": {
+    "inherited_from": "tsukuyomi-corpus-v1",
+    "training_use": "Permitted: the corpus terms allow use for any purpose including commercial model training.",
+    "redistribution": "The corpus itself may not be redistributed, and this dataset embeds its audio, so neither may this.",
+    "credit_on_publication": "本ソフトウェアの音声合成には、フリー素材キャラクター「つくよみちゃん」が無料公開している音声データを使用しています。"
+  },
+  "notes": [
+    "Speaker B is the same frozen wav in both datasets, byte for byte, so the two differ only in channel A.",
+    "Only the corpus TRAIN split is used. The 10 dev and 10 test sentences never enter either dataset, because condition 4 is measured on held-out audio.",
+    "The 72/8 split comes from m3/scripts/split-map-v1.json and is shared by both datasets, so the comparison stays paired.",
+    "Audio is gitignored. The scripts, split map, manifest and reports are committed.",
+    "Channel A carries 8.67 minutes across 80 sentences - 4.6% of the 189.9 minutes the past amitaro experiment used. A null result on condition 4 is ambiguous between method and quantity; reports/m3-dataset-agreement.json and the M3 plan both say so."
+  ]
+}

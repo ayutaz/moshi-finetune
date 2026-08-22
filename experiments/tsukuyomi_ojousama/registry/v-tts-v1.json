@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "retrieved_at": "2026-08-22",
+  "used_in_experiment": true,
+  "license_id": "tsukuyomi-corpus-custom-terms",
+  "license_url": "https://tyc.rei-yumesaki.net/material/corpus/",
+  "credit": "つくよみちゃんコーパス（CV.夢前黎） https://tyc.rei-yumesaki.net/material/corpus/",
+  "redistribution": "prohibited-derives-from-a-corpus-that-may-not-be-redistributed",
+  "local_data_root": "data/experiments/tsukuyomi_ojousama",
+  "dataset_id": "v-tts-v1",
+  "source_url": "local://experiments/tsukuyomi_ojousama/m3/scripts/dialogues-v1.jsonl",
+  "source_version": "dialogues-v1 + M2 speaker-inversion checkpoint_final (sha256 b9e10f13c450f2630b7560a93f52d207b4f666deb9cce9824d253d9844e6cf2b) + m3/ref/speakerB.wav",
+  "generation_method": "assembled-stereo-synthetic-a",
+  "derivation": [
+    "tsukuyomi-corpus-v1",
+    "irodori-tts-500m-v3",
+    "irodori-tts-600m-v3-voicedesign"
+  ],
+  "role": "V1. Channel A is synthesised by the M2 speaker-inversion embedding; channel B is the same frozen speaker as V-real.",
+  "terms": {
+    "inherited_from": "tsukuyomi-corpus-v1 (via the M2 embedding, which was trained on it)",
+    "training_use": "Permitted. Irodori-TTS is MIT and places no terms on generated audio; the corpus permits voice-synthesis use explicitly.",
+    "redistribution": "Withheld pending the publication review, since the voice derives from the corpus.",
+    "credit_on_publication": "本ソフトウェアの音声合成には、フリー素材キャラクター「つくよみちゃん」が無料公開している音声データを使用しています。"
+  },
+  "notes": [
+    "Speaker B is the same frozen wav in both datasets, byte for byte, so the two differ only in channel A.",
+    "Only the corpus TRAIN split is used. The 10 dev and 10 test sentences never enter either dataset, because condition 4 is measured on held-out audio.",
+    "The 72/8 split comes from m3/scripts/split-map-v1.json and is shared by both datasets, so the comparison stays paired.",
+    "Audio is gitignored. The scripts, split map, manifest and reports are committed.",
+    "Channel A runs 9.47 minutes against V-real's 8.67 because the TTS speaks slightly slower than the corpus. Reported, not gated: no parity threshold was pre-registered."
+  ]
+}

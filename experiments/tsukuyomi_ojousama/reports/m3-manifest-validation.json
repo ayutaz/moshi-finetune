@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-22",
+  "status": "pass",
+  "manifests": {
+    "v-real-v1": {
+      "path": "experiments/tsukuyomi_ojousama/manifests/v-real-v1.jsonl",
+      "byte_size": 121278,
+      "sha256": "666b459b699fddcaef0eaaa2f7c6cc6c837b84267a1af885011d90ecd2024dcf",
+      "status": "pass",
+      "artifact_count": 80,
+      "coeiroink_artifact_count": 0,
+      "corrupt_audio_count": 0,
+      "cross_split_duplicate_count": 0,
+      "duplicate_artifact_count": 0,
+      "split_counts": {
+        "train": 72,
+        "dev": 8,
+        "test": 0
+      },
+      "errors": []
+    },
+    "v-tts-v1": {
+      "path": "experiments/tsukuyomi_ojousama/manifests/v-tts-v1.jsonl",
+      "byte_size": 123491,
+      "sha256": "c25ae3adc1ce3a82a3365111107491d0f48ec08d9ca5f571225b99ff881410b5",
+      "status": "pass",
+      "artifact_count": 80,
+      "coeiroink_artifact_count": 0,
+      "corrupt_audio_count": 0,
+      "cross_split_duplicate_count": 0,
+      "duplicate_artifact_count": 0,
+      "split_counts": {
+        "train": 72,
+        "dev": 8,
+        "test": 0
+      },
+      "errors": []
+    }
+  },
+  "split": {
+    "source": "experiments/tsukuyomi_ojousama/m3/scripts/split-map-v1.json",
+    "seed": 20260822,
+    "counts": {
+      "train": 72,
+      "dev": 8,
+      "test": 0
+    },
+    "shared_by_both_datasets": true,
+    "why_not_inherited": "Every dialogue quotes a corpus TRAIN sentence, so inheriting the parent's split would put all 80 in train and leave no dev. Inheritance is enforced as a CONSTRAINT instead - tests/test_experiment_assets.py fails any row deriving from a corpus dev or test utterance - and the train/dev split is assigned at dialogue level from a recorded seed.",
+    "why_overridden": "build_manifest re-derives splits from a hash of the group id. Left alone it would have given V-real and V-tts different splits from the same scripts, and the paired comparison would have stopped being paired."
+  },
+  "derivation": {
+    "per_row": true,
+    "why": "build_manifest copies one dataset-wide derivation onto every row, but each dialogue quotes a different corpus sentence and the leakage assertion reads derivation PER ROW. One shared value would have made that check vacuous.",
+    "parents": {
+      "v-real-v1": [
+        "the dialogue's corpus sentence",
+        "irodori-tts-600m-v3-voicedesign"
+      ],
+      "v-tts-v1": [
+        "the dialogue's corpus sentence",
+        "irodori-tts-500m-v3",
+        "irodori-tts-600m-v3-voicedesign"
+      ]
+    }
+  },
+  "registry": {
+    "entries_added": [
+      "v-real-v1",
+      "v-tts-v1"
+    ],
+    "gate_behaviour": "The manifests were written before the registry entries existed, and the suite failed with 'v-real-v1 has no registry entry' - the rule in CLAUDE.md enforced by the glob added in 1a97bca, on exactly the datasets it was widened for."
+  },
+  "condition_2_precursor": "Tokenisation accounting is condition 2 and is produced at step 14."
+}

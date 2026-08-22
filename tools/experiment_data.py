@@ -158,6 +158,59 @@ def _assign_splits(group_ids: Iterable[str], seed: str) -> dict[str, str]:
     return assignments
 
 
+def resolve_splits(
+    group_ids: Iterable[str], *, seed: str, override: dict[str, str] | None
+) -> dict[str, str]:
+    """Split assignment for each group, from an explicit map when one is given.
+
+    M3 needs the override. Its split is committed in `m3/scripts/split-map-v1.json` and
+    shared by V-real and V-tts, which are built from the same scripts; re-deriving it from
+    a hash per dataset would give the two different splits and the paired comparison would
+    stop being paired.
+
+    A group the override does not mention is an error rather than a fallback to the hash.
+    Falling back is how half a dataset ends up on a different split from the other half,
+    with nothing to show for it.
+    """
+    if override is None:
+        return _assign_splits(group_ids, seed)
+
+    groups = set(group_ids)
+    missing = sorted(groups - set(override))
+    unknown = sorted(set(override) - groups)
+    if missing:
+        raise ValueError(f"split override does not cover: {missing[:10]}")
+    if unknown:
+        raise ValueError(f"split override names groups that do not exist: {unknown[:10]}")
+    bad = sorted({value for value in override.values()} - set(SPLITS))
+    if bad:
+        raise ValueError(f"unknown split name(s): {bad}")
+    return dict(override)
+
+
+def apply_row_overrides(
+    rows: list[dict[str, Any]], overrides: dict[str, dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Merge per-row fields into a built manifest, keyed by group_id.
+
+    `derivation` is the reason this exists. build_manifest copies one dataset-wide value
+    onto every row, but each V dialogue quotes a different corpus sentence, and the leakage
+    assertion in tests/test_experiment_assets.py reads derivation PER ROW. One shared value
+    would make that check vacuous.
+
+    A row without an override, or an override without a row, is an error: both mean the
+    caller's idea of the dataset and the manifest's have diverged.
+    """
+    by_group = {row["group_id"]: row for row in rows}
+    missing = sorted(set(by_group) - set(overrides))
+    unknown = sorted(set(overrides) - set(by_group))
+    if missing:
+        raise ValueError(f"no row override for: {missing[:10]}")
+    if unknown:
+        raise ValueError(f"row overrides for absent rows: {unknown[:10]}")
+    return [{**row, **overrides[row["group_id"]]} for row in rows]
+
+
 def build_manifest(
     *,
     data_root: Path,
@@ -165,6 +218,7 @@ def build_manifest(
     metadata: dict[str, Any],
     seed: str,
     transcripts: dict[str, str] | None = None,
+    split_override: dict[str, str] | None = None,
 ) -> list[dict[str, Any]]:
     """Inventory WAV files and deterministically assign 80/10/10 splits."""
     data_root = data_root.resolve()
@@ -196,7 +250,7 @@ def build_manifest(
         raise ValueError(f"no WAV files found below {source_dir}")
 
     group_ids = [path.relative_to(source_dir).with_suffix("").as_posix() for path in audio_paths]
-    assignments = _assign_splits(group_ids, seed)
+    assignments = resolve_splits(group_ids, seed=seed, override=split_override)
     transcript_map = transcripts or {}
     rows = []
     for path, group_id in zip(audio_paths, group_ids, strict=True):
