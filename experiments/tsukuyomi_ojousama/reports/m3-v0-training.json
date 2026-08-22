@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-22",
+  "step": "23-25 control generation, V0 training, V0 conversion",
+  "control": {
+    "model": "j-moshi-ext dq8",
+    "generated_before_any_training": true,
+    "counts": {
+      "held-out": 10,
+      "seen": 10,
+      "general30": 30
+    },
+    "failures": 0,
+    "why_first": "If training later failed, the control would still exist and not have to be re-rented."
+  },
+  "v0_training": {
+    "dataset": "v-real",
+    "status": "complete",
+    "exit_code": 0,
+    "steps": 45,
+    "epochs": 5,
+    "seconds_per_step": 85.94,
+    "wall_clock": "1 h 04 m",
+    "startup_assertions": {
+      "Num examples": 72,
+      "Total train batch size": 8,
+      "Total optimization steps": 45,
+      "matched_offline_computation": true
+    },
+    "loss_range": {
+      "total": [
+        1.43,
+        1.6
+      ],
+      "text": [
+        0.27,
+        0.52
+      ],
+      "audio": [
+        0.99,
+        1.23
+      ]
+    },
+    "checkpoints_written": 5,
+    "checkpoint_size_gb": 100.46,
+    "config": "ds_configs/zero3-fp16-offload-act_ckpt.json"
+  },
+  "conversion_defects": [
+    {
+      "what": "zero_to_fp32 raised ValueError: Unable to find 'latest'.",
+      "cause": "checkpoint_dir is step_N; the `latest` file naming the tag sits at step_N/latest, not inside step_N/pytorch_model.",
+      "fix": "pass step_N"
+    },
+    {
+      "what": "safetensors raised a bare IoError with no path context.",
+      "cause": "zero_to_fp32 does not create its output directory.",
+      "fix": "mkdir -p first"
+    },
+    {
+      "what": "clean_moshi raised FileNotFoundError on model.safetensors.",
+      "cause": "--safe_serialization writes seven shards plus an index, but MoshiForFinetuning.from_pretrained opens a single model.safetensors.",
+      "fix": "merge the shards before calling clean_moshi"
+    }
+  ],
+  "nothing_lost": "All three failures hit the conversion loop across all five checkpoints, and not one was lost: the loop keeps a ZeRO state whenever any stage fails. Deleting unconditionally would have destroyed an hour of training on the first error.",
+  "verified_against_prediction": {
+    "parameters": 8371408896,
+    "exported_dq8_bytes": 15375500136,
+    "note": "Byte-identical to the published j-moshi-ext weight, and the parameter count matches what the plan derived from the config rather than measured."
+  },
+  "schedule": {
+    "original_stop_line_hours": 9.0,
+    "new_stop_line_hours": 14.0,
+    "authorised_by": "user",
+    "why": "The 9.0 h line predates the smoke test, which measured 86 s/step with the optimiser offloaded - offload itself forced by 2x A100 80GB being unable to hold 16 bytes/param resident. At that speed V0 alone consumes the session, and V1 is what makes the real-versus-TTS comparison possible.",
+    "predicted_spend_at_new_line": 68.43,
+    "cap": 100
+  }
+}
