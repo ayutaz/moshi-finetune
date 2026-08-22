@@ -182,7 +182,7 @@ def resolve_splits(
         raise ValueError(f"split override does not cover: {missing[:10]}")
     if unknown:
         raise ValueError(f"split override names groups that do not exist: {unknown[:10]}")
-    bad = sorted({value for value in override.values()} - set(SPLITS))
+    bad = sorted(set(override.values()) - set(SPLITS))
     if bad:
         raise ValueError(f"unknown split name(s): {bad}")
     return dict(override)

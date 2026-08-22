@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-22",
+  "condition": "2. tokenize の skip 理由と採否がすべて記録されている",
+  "status": "pass",
+  "accounting": {
+    "dialogue_dataset_pairs": 160,
+    "accepted": 160,
+    "rejected": 0,
+    "skips": 0,
+    "dropped_frame_warnings": 0,
+    "per_split_counts": {
+      "v-real/train": {
+        "wav": 72,
+        "tok_audio": 72,
+        "tok_text": 72
+      },
+      "v-real/dev": {
+        "wav": 8,
+        "tok_audio": 8,
+        "tok_text": 8
+      },
+      "v-tts/train": {
+        "wav": 72,
+        "tok_audio": 72,
+        "tok_text": 72
+      },
+      "v-tts/dev": {
+        "wav": 8,
+        "tok_audio": 8,
+        "tok_text": 8
+      }
+    },
+    "unaccounted_dialogues": 0
+  },
+  "environment": {
+    "device": "cpu (local)",
+    "gpu_used": false,
+    "text_tokenizer": "nu-dialogue/j-moshi-ext tokenizer_spm_32k_3.model",
+    "torch": "2.4.1",
+    "torchaudio": "2.4.1"
+  },
+  "defects_found_by_running_it": [
+    {
+      "what": "Every dialogue was skipped on the first attempt with 'Failed to decode the last byte tokens'.",
+      "cause": "tools/tokenize_text.py defaults --text_tokenizer_repo to kyutai/moshiko-pytorch-bf16, an English tokenizer. Every Japanese character falls to byte fallback and encode_as_pieces_wo_byte_fallback cannot reassemble it.",
+      "fix": "Pass --text_tokenizer_repo nu-dialogue/j-moshi-ext explicitly.",
+      "note": "This is not a data defect. The condition-2 ledger distinguishes it, because a skip caused by the wrong tokenizer says nothing about the dialogue."
+    },
+    {
+      "what": "tokenize_audio failed to start with 'Symbol not found: _aoti_torch_abi_version'.",
+      "cause": "torch and torchaudio resolved to a mismatched pair in the ephemeral environment; uv.lock is gitignored so this differs per run.",
+      "fix": "Pin torch==2.4.1 and torchaudio==2.4.1 together."
+    }
+  ],
+  "parquet": {
+    "files": {
+      "v-real/train": {
+        "path": "data/experiments/tsukuyomi_ojousama/m3/v-real/parquet/train-001-of-001.parquet",
+        "byte_size": 305978,
+        "sha256": "28da029e472fdcbe75b124e60fc097a0e9fd2c234440bdf70867cff85120b571"
+      },
+      "v-real/dev": {
+        "path": "data/experiments/tsukuyomi_ojousama/m3/v-real/parquet/dev-001-of-001.parquet",
+        "byte_size": 49742,
+        "sha256": "b1b6e25836d66db118441f0af9cf9ddd9ea0e778f270f09f1f811a2ec7b746d3"
+      },
+      "v-tts/train": {
+        "path": "data/experiments/tsukuyomi_ojousama/m3/v-tts/parquet/train-001-of-001.parquet",
+        "byte_size": 316715,
+        "sha256": "15fdfb65cddd562a785634be2284f6b90fd9bbee7e94ef3fc08955e1904d423e"
+      },
+      "v-tts/dev": {
+        "path": "data/experiments/tsukuyomi_ojousama/m3/v-tts/parquet/dev-001-of-001.parquet",
+        "byte_size": 51136,
+        "sha256": "1dd212b56b52c7d621395e298c4a115b4d1981d4b10f5c8300f79387abb8ae09"
+      }
+    },
+    "train_rows": 72,
+    "dev_rows": 8,
+    "identical_across_datasets": true,
+    "streams_per_example": 17,
+    "frames": {
+      "v-real": {
+        "min": 213,
+        "max": 321
+      },
+      "v-tts": {
+        "min": 215,
+        "max": 334
+      }
+    },
+    "min_length_flag": "omitted, so nothing is dropped by length at training time"
+  },
+  "training_shape": {
+    "per_device_train_batch_size": 1,
+    "num_processes": 2,
+    "gradient_accumulation_steps": 4,
+    "global_batch_size": 8,
+    "steps_per_epoch": 9,
+    "num_train_epochs": 5,
+    "total_steps": 45,
+    "save_steps_to_use": 9,
+    "checkpoint_steps": [
+      9,
+      18,
+      27,
+      36,
+      45
+    ],
+    "checkpoint_count": 5,
+    "zero3_checkpoint_gb": 100.46,
+    "checkpoint_disk_gb": 502.3,
+    "why_computed_offline": "finetune.py prints these only after loading an 8.4B model onto two GPUs. Computing them costs nothing and lets --save_steps be pinned correctly at launch; the startup log then verifies rather than discovers.",
+    "why_the_count_is_not_just_the_epochs": "finetune.py saves in-loop on save_steps and again unconditionally after the loop, with no rotation. At 72 rows S is 9 and the post-loop save reuses step_45, giving five. At 80 rows S would be 10, total 50, and the post-loop save would add a sixth directory - 100 GB of disk nobody planned for."
+  },
+  "launch_assertions": {
+    "Num examples": 72,
+    "Total train batch size": 8,
+    "Total optimization steps": 45,
+    "action_if_different": "kill immediately; the dataset is not the one this was computed from"
+  }
+}

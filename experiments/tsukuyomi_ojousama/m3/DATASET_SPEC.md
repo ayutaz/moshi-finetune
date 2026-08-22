@@ -133,6 +133,18 @@ V-real のチャンネルA（原音）には載らないためである。比較
 読み比較でも語の欠落は検出される（確認済み）。M2 で明瞭度ゲートが Whisper の表記選択を
 測っていて動作中の checkpoint を不合格にした件と、同じ誤りである。
 
+### tokenize の実行条件（2026-08-22 追記）
+
+**`--text_tokenizer_repo nu-dialogue/j-moshi-ext` を必ず明示する。**
+`tools/tokenize_text.py` の既定は `kyutai/moshiko-pytorch-bf16` で、これは英語向けのため
+日本語がすべて byte-fallback になり、`encode_as_pieces_wo_byte_fallback` が復号に失敗して
+**全対話が skip される**。実行して初めて判明した。skip の理由は「データが悪い」ではなく
+「別の言語の tokenizer を使った」であり、条件2の台帳ではデータのバグと区別して記録する。
+
+**torch と torchaudio はバージョンを揃えて固定する。** 揃わないと `torchaudio` が
+`Symbol not found: _aoti_torch_abi_version` で dlopen に失敗し、`tokenize_audio` が起動しない。
+`uv.lock` が gitignore されているため、環境は実行ごとに解決される。
+
 ### 条件2: tokenize の skip がすべて記録
 
 報告: `reports/m3-tokenize-report.json`（ステップ14が書く）
