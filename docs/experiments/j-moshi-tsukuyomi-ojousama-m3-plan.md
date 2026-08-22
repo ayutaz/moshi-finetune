@@ -91,9 +91,48 @@ watcher が死んだ場合の最悪ケースを吸収できる容量が要る。
 
 ## ステップ
 
-### 第1部: ローカル準備（無課金、ステップ1〜18）
+### 第1部: ローカル準備（無課金、ステップ1〜18）— **完了（2026-08-22）**
 
 課金が始まる前にすべての測定器とデータを完成させる。**測れないものを作る run は、作り直す run である。**
+
+全18ステップ完了。GPU課金は発生していない（累計 US$25.638 はすべて M0・M2 分）。
+
+| 通過したゲート | 結果 | 記録 |
+| --- | --- | --- |
+| 条件1 dataset 一致 | 160ペアで9種類の不一致がすべて0 | [`m3-dataset-agreement.json`](../../experiments/tsukuyomi_ojousama/reports/m3-dataset-agreement.json) |
+| 条件2 tokenize 台帳 | skip 0、dropped 0、160ペア全数説明 | [`m3-tokenize-report.json`](../../experiments/tsukuyomi_ojousama/reports/m3-tokenize-report.json) |
+| 話者B一貫性 | 平均0.8390、最悪ペア0.6542（実人間の平均0.6983に近い） | [`m3-speaker-b-drift-gate.json`](../../experiments/tsukuyomi_ojousama/reports/m3-speaker-b-drift-gate.json) |
+| script 検証 | A文が train 80文と集合一致、eval 重複0 | [`m3-script-validation.json`](../../experiments/tsukuyomi_ojousama/reports/m3-script-validation.json) |
+| manifest | 両者 72/8、重複0、破損0 | [`m3-manifest-validation.json`](../../experiments/tsukuyomi_ojousama/reports/m3-manifest-validation.json) |
+| prompt set | 3種。general30 は生成区間内に37〜80フレームのユーザー音声 | [`m3-prompt-sets.json`](../../experiments/tsukuyomi_ojousama/reports/m3-prompt-sets.json) |
+
+実データから確定した実行パラメータ:
+
+| 項目 | 値 |
+| --- | --- |
+| train / dev | 72 / 8（両データセットで一致） |
+| streams per example | 17 |
+| global batch size | 8 |
+| **S（steps per epoch）** | **9** |
+| total steps | 45 |
+| checkpoint | 9/18/27/36/45 の5本 = 502 GB |
+| 起動時 assertion | `Num examples 72` / `batch 8` / `steps 45`。違えば即 kill |
+
+課金前に見つけて直した欠陥（いずれも GPU 上なら金を失っていた）:
+
+1. 話者Bが発話ごと生成では一人にならない（0.45〜0.52 < 実人間の下限0.565）
+2. 全生成音声に SilentCipher の透かしが入っていた
+3. `prepare_dataset` が不一致でも終了コード0を返す
+4. `dialogue_id` にローカル絶対パスが焼き込まれる
+5. parquet の行順が `os.listdir` 依存で非決定的
+6. sidecar と wav の不整合で1ターンが消える
+7. `tokenize_text` の既定 tokenizer が英語向けで全対話 skip
+8. torch / torchaudio のバージョン不整合で `tokenize_audio` が起動しない
+9. チャンネル判定が全体RMS比で全80対話が不合格（`B→A→B` でBが2ターン）
+10. テキスト一致が表層比較で数詞展開（`1931`→`千九百三十一`）を不一致と判定
+11. prompt が assistant 側しか作れず、生成区間でユーザーが常に無音
+12. 既存の重複検出が逐語再生を見落とす（Jaccard 0.3967）
+13. 停止インスタンスのディスク課金 US$4.44 が台帳から漏れていた
 
 | # | 作業 | ゲート |
 | --- | --- | --- |

@@ -412,8 +412,13 @@ V-realまたはV-ttsの少なくとも一方で、J-Moshi-extより対象話者�
 
 ### 完了記録
 
-- 状態: 進行中
+- 状態: 進行中（第1部完了、GPU未着手）
 - 実行計画: [M3 Voice control 実行計画](./j-moshi-tsukuyomi-ojousama-m3-plan.md)（37ステップ、うち課金は12。GPU見込みUS$25.63）
+- **第1部（ローカル準備、ステップ1〜18）完了（2026-08-22）**。GPU課金は未発生
+  - 条件1（dataset一致）と条件2（tokenize台帳）は**達成済み**。証拠は[`m3-dataset-agreement.json`](../../experiments/tsukuyomi_ojousama/reports/m3-dataset-agreement.json)、[`m3-tokenize-report.json`](../../experiments/tsukuyomi_ojousama/reports/m3-tokenize-report.json)
+  - データセット: `v-real-v1` / `v-tts-v1`、各80対話・train 72 / dev 8。scriptと話者B音声は共有し、**違うのはチャンネルAのバイト列だけ**
+  - 実行パラメータ確定: global batch 8、S=9、total 45 steps、checkpoint 5本（502 GB）
+  - 条件3〜6の測定器は実装・校正済み（collapse、turn-taking、対応符号検定、暗記検出）
 - 確定した前提（実測）:
   - 話者Bはcaption毎回生成では一人の話者にならない。1本を`--ref-wav`で凍結する。[`m3-speaker-b-probe.json`](../../experiments/tsukuyomi_ojousama/reports/m3-speaker-b-probe.json)
   - Mimiはローカルで動き、160対話のtokenizeはMPS 1.2分。借りたGPUはwavを見ない。[`m3-local-compute-probe.json`](../../experiments/tsukuyomi_ojousama/reports/m3-local-compute-probe.json)
