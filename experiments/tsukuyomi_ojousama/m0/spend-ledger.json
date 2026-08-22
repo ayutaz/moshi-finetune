@@ -105,6 +105,14 @@
       "rate": 0.037083,
       "amount": 1.78,
       "source": "derived: disk_space from `vastai show instances` x the ledger's 0.1389/h-per-300GiB rate"
+    },
+    {
+      "recorded_at": "2026-08-22",
+      "instance_id": null,
+      "component": "note",
+      "quantity_hours": 0,
+      "amount": 0.0,
+      "source": "Both experiment instances destroyed 2026-08-22 after verifying their artefacts were exported. No further stopped-disk charges accrue to this experiment."
     }
   ],
   "status": "tracking",
@@ -170,12 +178,27 @@
   ],
   "instance_state": {
     "captured_at": "2026-08-22",
-    "experiment_instances": {
-      "48178589": "stopped",
-      "48187958": "stopped"
-    },
-    "stopped_disk_cost_per_day_usd": 2.22,
-    "note": "Both are stopped and still billing for disk. Their contents are already exported: M0 to reports/m0-baseline-final.json and data/.../m0-run-2026-08-20/, M2 to data/.../m2/speaker_inversion/ with the adopted embedding's sha256 re-verified 2026-08-22. Destroying them is safe and awaiting the user's decision. Instances outside this experiment (piper, vokra) are in other_instance_ids_excluded and are not charged here."
+    "experiment_instances": {},
+    "destroyed": [
+      {
+        "instance_id": 48178589,
+        "label": "moshi-tsukuyomi-ojousama-m0-b",
+        "destroyed_at": "2026-08-22",
+        "disk_gb": 120,
+        "stopped_cost_per_day_usd": 1.33,
+        "verified_before_destroy": "Every data/ path referenced by reports/m0-baseline-final.json exists locally; 20 generated token files, 20 decoded wavs and both stage configs present."
+      },
+      {
+        "instance_id": 48187958,
+        "label": "moshi-tsukuyomi-m2-tts",
+        "destroyed_at": "2026-08-22",
+        "disk_gb": 80,
+        "stopped_cost_per_day_usd": 0.89,
+        "verified_before_destroy": "The adopted embedding checkpoint_final.speaker.safetensors is local and its sha256 matches reports/m2-tts-gate.json; 13 checkpoints, 30 generated wavs and 80 training latents present."
+      }
+    ],
+    "note": "No instance belongs to this experiment now. M3 rents fresh hardware (2x A100 80GB, 900 GB disk), so nothing on these was needed. Inspecting a stopped instance requires starting it, at US$2.66/h and US$1.08/h - more than the US$2.22/day the disks were costing - so the decision rested on verifying the local copies instead. Instances outside this experiment (piper, vokra) are in other_instance_ids_excluded and are not this experiment's to stop or destroy.",
+    "saving": "US$2.22/day of stopped-disk billing ends here."
   },
   "previous_dedicated_instances": [
     {
