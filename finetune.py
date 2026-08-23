@@ -963,17 +963,26 @@ def main():
                             _, log = forward(moshi_lm=moshi_lm, batch=batch, args=args)
                             for key, value in log.items():
                                 eval_logging_buffer[f"evaluation_{key}"].append(value)
+                    gathered_metrics = accelerator.gather(
+                        {
+                            key: torch.tensor(values, device=accelerator.device)
+                            for key, values in eval_logging_buffer.items()
+                        }
+                    )
+                    eval_means = {
+                        key: float(values.nanmean()) for key, values in gathered_metrics.items()
+                    }
+                    # Log to stdout regardless of --with_tracking. Reporting these only
+                    # through W&B meant a run without it finished with no eval loss anywhere
+                    # - not in a file, not in the log - and the numbers cannot be recovered
+                    # afterwards because the dep_q=16 weights are gone once the checkpoints
+                    # are converted for inference.
+                    logger.info(
+                        f"Evaluation at step {current_steps}: "
+                        + ", ".join(f"{k}={v:.5f}" for k, v in sorted(eval_means.items()))
+                    )
                     if args.with_tracking:
-                        gathered_metrics = accelerator.gather(
-                            {
-                                key: torch.tensor(values, device=accelerator.device)
-                                for key, values in eval_logging_buffer.items()
-                            }
-                        )
-                        accelerator.log(
-                            {key: values.nanmean() for key, values in gathered_metrics.items()},
-                            step=current_steps,
-                        )
+                        accelerator.log(eval_means, step=current_steps)
 
                 # Save checkpoint
                 if args.save_steps is not None and current_steps % args.save_steps == 0:

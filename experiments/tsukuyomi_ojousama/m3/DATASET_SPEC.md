@@ -222,15 +222,39 @@ M3 は control との比較であって、絶対品質の到達点ではない�
 > decode したテキストに対してしか測れない。自己参照であり、反復するモデルは低い CER を出しうる。
 > 数値は補助であり、盲検聴取が判定を持つ。
 
+### live 対話評価について（2026-08-23 記録）
+
+計画のステップ28は「破棄前に live full-duplex パスを実行する」と定めていた。**これは実行しない。**
+
+理由は能力の欠如である。`moshi.server` はインスタンス上で利用可能だが、live full-duplex とは
+**マイクを持つ人間が実際に話しかけて割り込む**ことであり、私にはマイク入力がない。
+「実行した」と記録できる形で満たせない。
+
+代替として、**general 30 の生成が同じ失敗を捕まえる**。生成区間の内側にユーザー音声が
+37〜80フレーム入っており（[`m3-prompt-sets.json`](../reports/m3-prompt-sets.json)）、
+collapse 検出器と turn-taking 検出器がそこに適用される。これで検出できるのは
+独話 loop・反復 collapse・ユーザー無視・応答遅延である。
+
+**検出できないもの**: 割り込み（barge-in）への追随、長時間対話での劣化、
+人間が「不自然」と感じる質。`CLAUDE.md` は「live 対話で崩壊する checkpoint は loss に
+関わらず不合格」と定めており、この判定は**人手で行う必要が残る**。M3 の完了記録には
+「自動評価は通ったが live 対話は未検証」と明記し、公開判断（M6）の前提としない。
+
 ### 条件6: 中間 checkpoint の採用理由
 
 報告: `reports/m3-voice-control-gate.json`（ステップ37）
 
 - 行数 == 10（2 run × 5 epoch）。
-- 全10行に train loss と eval loss。
+- 全10行に train loss。**eval loss は取得できなかった**（下記）。
 - 全評価 epoch に collapse 判定・対応 likeness delta・turn-taking・明瞭度。
 - 全指標が揃わない epoch は、揃わない旨を明記する（欠測を空欄にしない）。
 
+> **eval loss は 2026-08-22 の run で失われた。** `finetune.py` は evaluation の結果を
+> `--with_tracking`（W&B）経由でしか出力せず、W&B を使わなかったため 10 epoch 分が
+> ログにもファイルにも残っていない。変換時に dq16 の重みと ZeRO state を削除したため
+> **再計算もできない**。`finetune.py` は `--with_tracking` の有無にかかわらずログへ出すよう
+> 修正したので、M4 以降は残る。train loss は全ステップ分ログにある。
+>
 > **V0 と V1 の eval loss を同じ列に並べてはならない。** 各 run は自分の dev 音声で
 > 評価しており、V-tts の dev 音声は TTS 由来である。比較可能なのは
 > **run 内の epoch 間**だけである。

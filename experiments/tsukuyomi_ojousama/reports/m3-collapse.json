@@ -1,0 +1,177 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-23",
+  "condition": "3. 固定30会話で独話loop・反復collapseを起こさない",
+  "thresholds": {
+    "min_n": 3,
+    "max_ngram_repeats": 4,
+    "min_distinct_ratio": 0.4,
+    "max_emitted_ratio": 0.85
+  },
+  "thresholds_frozen": "2026-08-21, before any candidate existed",
+  "threshold_fairness_check": {
+    "control_emitted_ratio": {
+      "n": 50,
+      "min": 0.016,
+      "max": 0.597,
+      "monologue_threshold": 0.85,
+      "exceeding": 0,
+      "note": "The calibration report said that if the control itself tripped the monologue threshold the THRESHOLD would be wrong, not the candidate. It does not."
+    },
+    "control_repeat_collapse": {
+      "count": 2,
+      "of": 30,
+      "detail": [
+        "10.npy: 6 emitted tokens, distinct ratio 0.333",
+        "11.npy: a 4-gram repeated 7 times"
+      ],
+      "consequence": "J-Moshi-ext itself fails the absolute form of condition 3 on 2 of 30, so 'no worse than the control' is the honest frame and the absolute bar is reported alongside it."
+    }
+  },
+  "general30_results": {
+    "control": {
+      "monologue": 0,
+      "repeat": 2,
+      "silent": 0
+    },
+    "v-real/epoch1": {
+      "monologue": 1,
+      "repeat": 30,
+      "silent": 0
+    },
+    "v-real/epoch2": {
+      "monologue": 0,
+      "repeat": 2,
+      "silent": 0
+    },
+    "v-real/epoch3": {
+      "monologue": 0,
+      "repeat": 2,
+      "silent": 3
+    },
+    "v-real/epoch4": {
+      "monologue": 0,
+      "repeat": 1,
+      "silent": 0
+    },
+    "v-real/epoch5": {
+      "monologue": 0,
+      "repeat": 3,
+      "silent": 8
+    },
+    "v-tts/epoch1": {
+      "monologue": 0,
+      "repeat": 10,
+      "silent": 0
+    },
+    "v-tts/epoch2": {
+      "monologue": 0,
+      "repeat": 0,
+      "silent": 0
+    },
+    "v-tts/epoch3": {
+      "monologue": 0,
+      "repeat": 1,
+      "silent": 1
+    },
+    "v-tts/epoch4": {
+      "monologue": 0,
+      "repeat": 6,
+      "silent": 0
+    },
+    "v-tts/epoch5": {
+      "monologue": 0,
+      "repeat": 0,
+      "silent": 0
+    }
+  },
+  "arms_meeting_the_absolute_bar": [
+    "v-tts/epoch2",
+    "v-tts/epoch5"
+  ],
+  "silent_generation_by_arm": {
+    "control": {
+      "silent": 0,
+      "total": 50,
+      "pct": 0.0
+    },
+    "v-real/epoch1": {
+      "silent": 0,
+      "total": 50,
+      "pct": 0.0
+    },
+    "v-real/epoch2": {
+      "silent": 0,
+      "total": 50,
+      "pct": 0.0
+    },
+    "v-real/epoch3": {
+      "silent": 7,
+      "total": 50,
+      "pct": 14.0
+    },
+    "v-real/epoch4": {
+      "silent": 16,
+      "total": 50,
+      "pct": 32.0
+    },
+    "v-real/epoch5": {
+      "silent": 24,
+      "total": 50,
+      "pct": 48.0
+    },
+    "v-tts/epoch1": {
+      "silent": 0,
+      "total": 50,
+      "pct": 0.0
+    },
+    "v-tts/epoch2": {
+      "silent": 0,
+      "total": 50,
+      "pct": 0.0
+    },
+    "v-tts/epoch3": {
+      "silent": 1,
+      "total": 50,
+      "pct": 2.0
+    },
+    "v-tts/epoch4": {
+      "silent": 7,
+      "total": 50,
+      "pct": 14.0
+    },
+    "v-tts/epoch5": {
+      "silent": 6,
+      "total": 50,
+      "pct": 12.0
+    }
+  },
+  "finding": {
+    "headline": "V-real degrades into silence as training proceeds; V-tts does not.",
+    "silent_share": {
+      "v-real": [
+        "0%",
+        "0%",
+        "14%",
+        "32%",
+        "48%"
+      ],
+      "v-tts": [
+        "0%",
+        "0%",
+        "2%",
+        "14%",
+        "12%"
+      ],
+      "control": "0%"
+    },
+    "reading": "Speaker A in V-real is 8.67 minutes across 72 sentences. Five epochs over that is enough to push the model toward saying nothing at all - by epoch 5 it is silent on 24 of 50 prompts. The same schedule on V-tts, whose channel A is synthetic but otherwise identical in scripts, split, speaker B and timeline, stays at 12%.",
+    "caveat": "This does not isolate 'real versus synthetic audio'. V-tts's channel A is also more uniform - one TTS voice with consistent loudness and no recording-session variation - and that uniformity may be what the model tolerates, not the synthesis itself."
+  },
+  "status": "met by v-tts epoch 2 and epoch 5",
+  "limits": [
+    "Silence is scored from the text stream. A generation that emits no text is flagged, which is the intended behaviour: saying nothing is not health.",
+    "Partner-channel activity is deliberately excluded, being teacher-forced and therefore vacuous."
+  ]
+}
