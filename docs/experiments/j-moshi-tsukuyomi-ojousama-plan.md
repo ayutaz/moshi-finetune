@@ -2,8 +2,12 @@
 
 更新日: 2026-08-21
 
-ステータス: M0、M1、M2は完了。M3（Voice control）は進行中。実行順序・ゲート・費用は
-[M3実行計画](./j-moshi-tsukuyomi-ojousama-m3-plan.md)を正とする。
+ステータス: M0、M1、M2は完了。M3（Voice control）は**評価を完了したが不合格**。
+V0/V1のいずれも採用基準を満たさず、M4へ渡すcheckpointがないためM4はBlocked。
+判定と証拠は[マイルストーン文書](./j-moshi-tsukuyomi-ojousama-milestones.md)、
+実行順序・ゲート・費用は[M3実行計画](./j-moshi-tsukuyomi-ojousama-m3-plan.md)を正とする。
+
+**GPU予算US$100を超過した（累計US$102.70）。** 追加のGPU作業は新しい上限の承認を要する。
 
 作業ブランチ: `experiment-j-moshi-character-voice-overfit`
 
@@ -18,8 +22,8 @@
 | M0 | 過去実験・Vast.ai基盤 | 完了 |
 | M1 | 権利・データ確定 | 完了 |
 | M2 | Tsukuyomi TTS | 完了 |
-| M3 | Voice control | 進行中 |
-| M4 | Voice overfit | 未着手 |
+| M3 | Voice control | 完了（不合格） |
+| M4 | Voice overfit | Blocked |
 | M5 | お嬢様口調 | 未着手 |
 | M6 | 最終検証 | 未着手 |
 

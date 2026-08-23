@@ -25,6 +25,7 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と、自然�
 | --- | --- |
 | 未着手 | 入力または前段マイルストーンの完了待ち |
 | 進行中 | 作業中。完了条件をすべて満たしてはいない |
+| 完了（不合格） | 全条件を評価したが合格しなかった。証拠は揃っており、やり直しの判断材料になる |
 | Blocked | 外部許可、データ、計算資源などがなく進められない |
 | 完了 | 成果物と検証証拠が揃い、完了条件をすべて確認済み |
 
@@ -37,8 +38,8 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と、自然�
 | M0 | 過去実験・Vast.ai基盤 | 比較基準と安全な実行環境を確立 | 過去baselineを固定し、Vast.aiへSSH接続して学習準備完了 | 完了 | なし |
 | M1 | 権利・データ確定 | 学習可能で再現可能な入力を確定 | データ台帳、分割、固定評価セットを完成 | 完了 | なし（M0と並行可） |
 | M2 | Tsukuyomi TTS | 対話音声を生成できる対象話者TTSを作る | 未学習30文のTTS Gateを通過 | 完了 | M0, M1 |
-| M3 | Voice control | 過去成功条件をつくよみちゃんで再現 | V0/V1の少なくとも一方で声質改善と対話維持を両立 | 進行中 | M2 |
-| M4 | Voice overfit | 声質をcontrolより強く適応 | V2/V3から品質を壊さない最良checkpointを選定 | 未着手 | M3 |
+| M3 | Voice control | 過去成功条件をつくよみちゃんで再現 | V0/V1の少なくとも一方で声質改善と対話維持を両立 | **完了（不合格）** | M2 |
+| M4 | Voice overfit | 声質をcontrolより強く適応 | V2/V3から品質を壊さない最良checkpointを選定 | **Blocked** | M3（不合格のため採用checkpointなし） |
 | M5 | お嬢様口調 | 声を保持しながら話し方を転移 | S0/S1で口調改善、声質・対話品質を維持 | 未着手 | M4 |
 | M6 | 最終検証 | 全条件を満たす再現可能な成果物へ統合 | final-overfitと全Gateを完了しrelease candidateを固定 | 未着手 | M5 |
 
@@ -412,7 +413,64 @@ V-realまたはV-ttsの少なくとも一方で、J-Moshi-extより対象話者�
 
 ### 完了記録
 
-- 状態: 進行中（第1部完了、GPU未着手）
+- 状態: **完了（不合格）**（2026-08-23）。全6条件を評価し、**V0/V1のいずれも採用基準を満たさなかった**
+- 判定: マイルストーンのゴールは「V-realまたはV-ttsの少なくとも一方で、J-Moshi-extより
+  対象話者らしさを改善し、独話loop・反復collapse・重大な明瞭度低下を起こさない」。**どちらも満たさない。**
+
+| # | 条件 | 判定 | 証拠 |
+| --- | --- | --- | --- |
+| 1 | dataset検証で不一致0 | **達成** | [`m3-dataset-agreement.json`](../../experiments/tsukuyomi_ojousama/reports/m3-dataset-agreement.json) |
+| 2 | tokenizeのskipが全記録 | **達成** | [`m3-tokenize-report.json`](../../experiments/tsukuyomi_ojousama/reports/m3-tokenize-report.json) |
+| 3 | 独話loop・反復collapseなし | **未達** | [`m3-collapse.json`](../../experiments/tsukuyomi_ojousama/reports/m3-collapse.json) |
+| 4 | held-out話者らしさが改善 | **未達** | [`m3-speaker-likeness.json`](../../experiments/tsukuyomi_ojousama/reports/m3-speaker-likeness.json) |
+| 5 | 明瞭度とturn-taking | **部分評価** | [`m3-turn-taking.json`](../../experiments/tsukuyomi_ojousama/reports/m3-turn-taking.json) |
+| 6 | 中間checkpointの採用理由 | **達成（記録として）** | [`m3-voice-control-gate.json`](../../experiments/tsukuyomi_ojousama/reports/m3-voice-control-gate.json) |
+
+#### 中心的な発見: lossは下がり、モデルは黙った
+
+train lossは両runとも **11.39 → 1.73** へ単調に減少した。同じ期間に生成は劣化した。
+
+| run | epoch | train loss | 劣化生成/50 | held-out有声フレーム中央値 |
+| --- | ---: | ---: | ---: | ---: |
+| control | — | — | 2 | 125 |
+| V-real | 2 | 5.88 | 15 | 228 |
+| V-real | 4 | 2.41 | 17 | **0** |
+| V-real | 5 | **1.73** | 29 | **0** |
+| V-tts | 2 | 5.62 | **1** | 214 |
+| V-tts | 5 | 1.62 | 6 | 108 |
+
+**V-realは最良のlossで音を出さない。** これは`CLAUDE.md`が記録する過去のdepformer-only実験の
+崩壊（audio loss 6.88→1.02）の再現であり、「lossだけで判定しない」という原則が実データで裏づけられた。
+
+原因はデータ量と考えられる。V-realの話者Aは**8.67分・72文**で、過去のあみたろ実験189.9分の4.6%。
+5 epochはこの量に対して過剰である。ただし**「実音 vs 合成音」を分離した結果ではない** —
+V-ttsのチャンネルAは単一TTS音声で均質であり、モデルが耐えたのはその均質さかもしれない。
+
+#### 採用checkpoint: なし
+
+条件3・4のいずれも満たす腕がないため、M4へ渡すcheckpointを採用しない。
+
+最も惜しい腕は **`v-tts/epoch2`**（劣化1/50、controlの2/50より良い。10/10が採点可能、30/30で応答）
+だが、**export されていない**。exportしたのはepoch 3と5のみで、インスタンスは破棄済み。
+
+#### 次へ進む条件について
+
+計画の「両方不合格なら学習率を上げず、M2またはdataset構築へ戻る」に該当する。**M4へは進まない。**
+
+#### 満たせなかった項目
+
+- **eval loss**: `finetune.py`がW&B経由でしか出力せず、dq16重みも削除済みで再計算不能。
+  コードは修正済みでM4以降は残る
+- **live対話**: マイクを持つ人間が必要。`CLAUDE.md`の「live対話で崩壊するcheckpointは
+  lossに関わらず不合格」は**未検証のまま**
+- **明瞭度**: 生成対話に正解テキストがなく、局所的に測る手段がない
+
+#### 予算
+
+**上限US$100を超過した（累計US$102.70）。** M3セッションが打ち切り線14.0時間に対し25.21時間動き、
+超過分US$34.27がそのまま上限突破の原因。詳細と原因は`m0/spend-ledger.json`の`cap_breach`に記録。
+
+- 実行計画: [M3 Voice control 実行計画](./j-moshi-tsukuyomi-ojousama-m3-plan.md)
 - 実行計画: [M3 Voice control 実行計画](./j-moshi-tsukuyomi-ojousama-m3-plan.md)（37ステップ、うち課金は12。GPU見込みUS$25.63）
 - **第1部（ローカル準備、ステップ1〜18）完了（2026-08-22）**。GPU課金は未発生
   - 条件1（dataset一致）と条件2（tokenize台帳）は**達成済み**。証拠は[`m3-dataset-agreement.json`](../../experiments/tsukuyomi_ojousama/reports/m3-dataset-agreement.json)、[`m3-tokenize-report.json`](../../experiments/tsukuyomi_ojousama/reports/m3-tokenize-report.json)
