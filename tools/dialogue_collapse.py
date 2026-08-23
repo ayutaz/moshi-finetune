@@ -161,6 +161,11 @@ def verdict_for(summaries: Sequence[dict[str, Any]]) -> dict[str, Any]:
         "monologue_loop_count": monologue,
         "exact_repeat_collapse_count": repeats,
         "silent_count": silent,
+        # A silent generation trips neither collapse flag - summarise_generation returns
+        # early with both False - so quoting the two collapse counts alone makes a mute
+        # checkpoint look clean, and the absolute bar gets EASIER the more an arm degrades.
+        # This single number cannot be quoted without the silence in it.
+        "degenerate_count": monologue + repeats + silent,
         "passes": monologue == 0 and repeats == 0 and silent == 0,
     }
 

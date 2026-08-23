@@ -132,6 +132,26 @@ class VerdictTests(unittest.TestCase):
         self.assertEqual(verdict["monologue_loop_count"], 0)
         self.assertFalse(verdict["passes"])
 
+    def test_a_mute_run_is_degenerate_even_though_no_collapse_flag_fires(self) -> None:
+        # This is how the first condition-3 verdict went wrong: the two collapse counts were
+        # quoted without the silence beside them, and a checkpoint that had stopped speaking
+        # read as clean. degenerate_count cannot be quoted without the silence in it.
+        summaries = [{"exact_repeat_collapse": False, "monologue_loop": False, "silent": True}] * 8
+        verdict = verdict_for(summaries)
+        self.assertEqual(verdict["monologue_loop_count"], 0)
+        self.assertEqual(verdict["exact_repeat_collapse_count"], 0)
+        self.assertEqual(verdict["degenerate_count"], 8)
+        self.assertFalse(verdict["passes"])
+
+    def test_degenerate_count_sums_all_three_failure_modes(self) -> None:
+        summaries = [
+            {"exact_repeat_collapse": True, "monologue_loop": False, "silent": False},
+            {"exact_repeat_collapse": False, "monologue_loop": True, "silent": False},
+            {"exact_repeat_collapse": False, "monologue_loop": False, "silent": True},
+            {"exact_repeat_collapse": False, "monologue_loop": False, "silent": False},
+        ]
+        self.assertEqual(verdict_for(summaries)["degenerate_count"], 3)
+
     def test_a_clean_run_passes(self) -> None:
         summaries = [
             {"exact_repeat_collapse": False, "monologue_loop": False, "silent": False}

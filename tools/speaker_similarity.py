@@ -101,6 +101,56 @@ def paired_comparison(
     }
 
 
+def paired_comparison_over_fixed_set(
+    base: dict[str, float],
+    candidate: dict[str, float],
+    *,
+    all_keys: Sequence[str],
+    names: tuple[str, str],
+) -> dict[str, Any]:
+    """Compare two systems over a FIXED clip set, where either side may fail to produce one.
+
+    `paired_comparison` requires both sides to cover the same clips. That is right when both
+    systems always speak, and wrong here: a degraded checkpoint emits nothing at all on some
+    prompts, and those clips have no embedding to compare.
+
+    The trap is counting them inconsistently. Treating an absent clip as not-higher in the
+    win count while dropping it from the mean lets an arm pass its effect-size bar on the
+    average of exactly the clips where it still behaved - the more it degrades, the better
+    its mean looks. So both means are computed and both are named:
+
+    - `mean_delta_survivors` averages the clips both sides produced. Optimistic.
+    - `mean_delta_full_set` charges a delta of 0 for every clip the candidate could not
+      produce, over the full denominator. This is the one condition 4 is judged on, because
+      it uses the same denominator as the win count.
+
+    There is no key called `mean_delta`, so a report cannot quote one without saying which.
+    """
+    all_keys = list(all_keys)
+    if not all_keys:
+        raise ValueError("a fixed clip set is required")
+
+    scorable = [k for k in all_keys if k in base and k in candidate]
+    deltas = {k: candidate[k] - base[k] for k in scorable}
+    survivors = list(deltas.values())
+    wins = sum(1 for d in survivors if d > 0)
+
+    return {
+        "systems": list(names),
+        "denominator": len(all_keys),
+        "scorable": len(scorable),
+        "unscorable": sum(1 for k in all_keys if k not in candidate),
+        "base_unscorable": sum(1 for k in all_keys if k not in base),
+        "higher_on": wins,
+        "lower_on": sum(1 for d in survivors if d < 0),
+        "ties": sum(1 for d in survivors if d == 0),
+        "mean_delta_survivors": statistics.fmean(survivors) if survivors else None,
+        "mean_delta_full_set": sum(survivors) / len(all_keys),
+        "mean_delta_is_full_set": len(scorable) == len(all_keys),
+        "per_clip_delta": deltas,
+    }
+
+
 def summarise_similarity(scores: dict[str, float]) -> dict[str, Any]:
     if not scores:
         raise ValueError("at least one score is required")
