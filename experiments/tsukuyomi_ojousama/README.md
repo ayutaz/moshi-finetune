@@ -12,7 +12,7 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と自然な�
 M0（過去baseline固定・Vast.ai基盤）、M1（権利・データ確定）、M2（Tsukuyomi TTS）は完了。
 **M3（Voice control）は評価を完了したが不合格**で、M4へ渡すcheckpointがないためM4はBlocked。
 
-経緯と原因の通読は [M3実施報告](../../docs/experiments/j-moshi-tsukuyomi-ojousama-m3-report.md)、
+経緯の通読は [M3実施報告](../../docs/experiments/j-moshi-tsukuyomi-ojousama-m3-report.md)（**原因の読みは撤回済み** — [M3検証記録](../../docs/experiments/j-moshi-tsukuyomi-ojousama-m3-verification.md) を参照）、
 実行順序・ゲートは [M3実行計画](../../docs/experiments/j-moshi-tsukuyomi-ojousama-m3-plan.md) にある。
 
 **GPU予算US$100を超過している（累計US$102.70）。** 追加のGPU作業は新しい上限の承認を要する。
