@@ -1,0 +1,148 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-23",
+  "condition": "5. 明瞭度と turn-taking が許容範囲内である",
+  "status": "PARTIALLY EVALUATED - turn-taking measured, intelligibility not measurable locally",
+  "turn_taking": {
+    "measured_on": "the 30 fixed conversations, decoded stereo, channel 0 Moshi / channel 1 user",
+    "instrument": "tools/turn_taking.py, calibrated in m3-turn-taking-calibration.json",
+    "control_baseline": {
+      "n": 30,
+      "moshi_speech_ratio": 0.1616,
+      "user_speech_ratio": 0.404,
+      "speaker_switches_mean": 0.93,
+      "conversations_with_zero_switches": 16,
+      "response_latency_mean_frames": 23.5,
+      "conversations_with_no_response": 16
+    },
+    "per_arm": {
+      "control": {
+        "n": 30,
+        "moshi_speech_ratio": 0.1616,
+        "user_speech_ratio": 0.404,
+        "speaker_switches_mean": 0.93,
+        "conversations_with_zero_switches": 16,
+        "response_latency_mean_frames": 23.5,
+        "conversations_with_no_response": 16
+      },
+      "v-real/epoch1": {
+        "n": 30,
+        "moshi_speech_ratio": 0.1785,
+        "user_speech_ratio": 0.404,
+        "speaker_switches_mean": 2.2,
+        "conversations_with_zero_switches": 0,
+        "response_latency_mean_frames": 16.0,
+        "conversations_with_no_response": 0
+      },
+      "v-real/epoch2": {
+        "n": 30,
+        "moshi_speech_ratio": 0.4194,
+        "user_speech_ratio": 0.404,
+        "speaker_switches_mean": 1.8,
+        "conversations_with_zero_switches": 0,
+        "response_latency_mean_frames": 23.2,
+        "conversations_with_no_response": 0
+      },
+      "v-real/epoch3": {
+        "n": 30,
+        "moshi_speech_ratio": 0.1376,
+        "user_speech_ratio": 0.404,
+        "speaker_switches_mean": 0.97,
+        "conversations_with_zero_switches": 4,
+        "response_latency_mean_frames": 33.4,
+        "conversations_with_no_response": 4
+      },
+      "v-real/epoch4": {
+        "n": 30,
+        "moshi_speech_ratio": 0.2694,
+        "user_speech_ratio": 0.404,
+        "speaker_switches_mean": 1.23,
+        "conversations_with_zero_switches": 0,
+        "response_latency_mean_frames": 28.8,
+        "conversations_with_no_response": 0
+      },
+      "v-real/epoch5": {
+        "n": 30,
+        "moshi_speech_ratio": 0.1704,
+        "user_speech_ratio": 0.404,
+        "speaker_switches_mean": 0.73,
+        "conversations_with_zero_switches": 8,
+        "response_latency_mean_frames": 33.5,
+        "conversations_with_no_response": 8
+      },
+      "v-tts/epoch1": {
+        "n": 30,
+        "moshi_speech_ratio": 0.2613,
+        "user_speech_ratio": 0.404,
+        "speaker_switches_mean": 2.07,
+        "conversations_with_zero_switches": 0,
+        "response_latency_mean_frames": 16.8,
+        "conversations_with_no_response": 0
+      },
+      "v-tts/epoch2": {
+        "n": 30,
+        "moshi_speech_ratio": 0.3831,
+        "user_speech_ratio": 0.404,
+        "speaker_switches_mean": 1.6,
+        "conversations_with_zero_switches": 0,
+        "response_latency_mean_frames": 24.6,
+        "conversations_with_no_response": 0
+      },
+      "v-tts/epoch3": {
+        "n": 30,
+        "moshi_speech_ratio": 0.2987,
+        "user_speech_ratio": 0.404,
+        "speaker_switches_mean": 1.33,
+        "conversations_with_zero_switches": 1,
+        "response_latency_mean_frames": 28.8,
+        "conversations_with_no_response": 1
+      },
+      "v-tts/epoch4": {
+        "n": 30,
+        "moshi_speech_ratio": 0.3753,
+        "user_speech_ratio": 0.404,
+        "speaker_switches_mean": 1.4,
+        "conversations_with_zero_switches": 0,
+        "response_latency_mean_frames": 27.1,
+        "conversations_with_no_response": 0
+      },
+      "v-tts/epoch5": {
+        "n": 30,
+        "moshi_speech_ratio": 0.3586,
+        "user_speech_ratio": 0.404,
+        "speaker_switches_mean": 1.53,
+        "conversations_with_zero_switches": 0,
+        "response_latency_mean_frames": 25.9,
+        "conversations_with_no_response": 0
+      }
+    },
+    "criteria": {
+      "response_latency": "within 2x the control's mean",
+      "speaker_switches": "must not be 0 across the 30 conversations"
+    },
+    "result": {
+      "control_responds_in": "14 of 30 conversations; 16 have zero speaker switches",
+      "every_candidate_arm_responds_more_often": true,
+      "best": "v-real/epoch1, v-real/epoch2, v-real/epoch4, v-tts/epoch1..5 all respond in 30 of 30",
+      "latency_vs_control": "control 23.5 frames; candidates 16.0 to 33.5, all inside 2x",
+      "verdict": "turn-taking is NOT worse than the control for any arm, and better for most"
+    },
+    "surprise": "The control - J-Moshi-ext itself - stays silent in 16 of 30 conversations. Fine-tuning made the model MORE likely to answer, not less. That is the opposite of what the silence finding on the voice prompt sets suggests, and the two are consistent: the voice sets have a silent partner and the degraded arms fall mute against silence, while general30 has a speaking partner and every arm answers it."
+  },
+  "intelligibility": {
+    "status": "not measurable from what exists",
+    "why": "Generated dialogue has no ground-truth text. ASR against the model's own decoded text stream is self-referential and rewards repetition - a model stuck on one phrase transcribes perfectly. RUBRIC.md's bar is a blind 1-5 human rating, which needs a listener. Neither is available here.",
+    "what_was_NOT_done": "No CER number is reported, because any number computable here would measure something other than intelligibility.",
+    "how_it_could_be_closed": "A human listening pass over the adopted arm's 30 conversations, scored on RUBRIC.md's 1-5 scale against the control."
+  },
+  "prompt_design_error": {
+    "what": "m3-prompt-sets.json recorded that the user speaks 37-80 frames INSIDE the window [40,165). The census was run on the prompt wavs, where frame 0 is the start of the prompt. generate.py returns only the generated frames, re-indexed to 0, so the 40-frame lead-in is cut off and the user audio lands at frames 1-37 of the returned array.",
+    "consequence": "The user speaks at the START of the generated window rather than inside it. The model answers after the user finishes, which is still a valid turn-taking test and is what the measured latencies describe - but it is not the barge-in-adjacent design the step intended, and the recorded frame numbers in m3-prompt-sets.json describe the prompt, not the measurement.",
+    "not_corrected_because": "The measurement it produced is sound; only the description was wrong. Re-rendering would cost another GPU session."
+  },
+  "limits": [
+    "Partner-channel metrics are excluded as vacuous under --model_user_stream teacher forcing; only the Moshi channel's behaviour and the timing between the two are used.",
+    "Barge-in following is not tested: the user finishes before the model starts in every prompt."
+  ]
+}

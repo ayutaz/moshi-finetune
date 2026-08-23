@@ -34,85 +34,97 @@
     "what_was_wrong": "The first cut judged condition 3 on general30 alone and reported v-tts epoch 2 and epoch 5 as meeting the absolute bar. Judged across all three prompt sets - held-out, seen and general30 - NO arm meets it, including those two.",
     "how_it_was_missed": "general30 hides the failure mode. v-real/epoch4 is silent on 0 of 30 general30 prompts and on 8 of 10 held-out and 8 of 10 seen. The prompt sets differ: general30 has a speaking user inside the generated window, the voice sets have a silent partner, and the degraded checkpoints only fall silent against the silent partner.",
     "second_defect": "tools/dialogue_collapse.py returns monologue_loop=False and exact_repeat_collapse=False for a silent generation - verified on v-real/epoch5/held-out/2.npy. So the absolute bar gets EASIER as an arm goes silent. Reporting the two collapse counts without the silence count beside them, as the first cut did in its headline, makes a mute checkpoint look clean.",
-    "found_by": "the adversarial critique of the local scoring plan, not by the original pass"
+    "found_by": "the adversarial critique of the local scoring plan, not by the original pass",
+    "third_defect": "degenerate_count first summed the three failure counts, giving 70 of 50 for v-real/epoch1 because a generation can both repeat and monologue. It counts distinct failing generations now."
   },
   "per_arm_all_sets": {
     "control": {
-      "n": 50,
-      "monologue": 0,
-      "repeat": 2,
-      "silent": 0,
-      "passes_all_three": false
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 2,
+      "silent_count": 0,
+      "degenerate_count": 2,
+      "passes": false
     },
     "v-real/epoch1": {
-      "n": 50,
-      "monologue": 20,
-      "repeat": 50,
-      "silent": 0,
-      "passes_all_three": false
+      "total": 50,
+      "monologue_loop_count": 20,
+      "exact_repeat_collapse_count": 50,
+      "silent_count": 0,
+      "degenerate_count": 50,
+      "passes": false
     },
     "v-real/epoch2": {
-      "n": 50,
-      "monologue": 0,
-      "repeat": 15,
-      "silent": 0,
-      "passes_all_three": false
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 15,
+      "silent_count": 0,
+      "degenerate_count": 15,
+      "passes": false
     },
     "v-real/epoch3": {
-      "n": 50,
-      "monologue": 0,
-      "repeat": 2,
-      "silent": 7,
-      "passes_all_three": false
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 2,
+      "silent_count": 7,
+      "degenerate_count": 9,
+      "passes": false
     },
     "v-real/epoch4": {
-      "n": 50,
-      "monologue": 0,
-      "repeat": 1,
-      "silent": 16,
-      "passes_all_three": false
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 1,
+      "silent_count": 16,
+      "degenerate_count": 17,
+      "passes": false
     },
     "v-real/epoch5": {
-      "n": 50,
-      "monologue": 0,
-      "repeat": 5,
-      "silent": 24,
-      "passes_all_three": false
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 5,
+      "silent_count": 24,
+      "degenerate_count": 29,
+      "passes": false
     },
     "v-tts/epoch1": {
-      "n": 50,
-      "monologue": 0,
-      "repeat": 18,
-      "silent": 0,
-      "passes_all_three": false
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 18,
+      "silent_count": 0,
+      "degenerate_count": 18,
+      "passes": false
     },
     "v-tts/epoch2": {
-      "n": 50,
-      "monologue": 0,
-      "repeat": 1,
-      "silent": 0,
-      "passes_all_three": false
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 1,
+      "silent_count": 0,
+      "degenerate_count": 1,
+      "passes": false
     },
     "v-tts/epoch3": {
-      "n": 50,
-      "monologue": 0,
-      "repeat": 3,
-      "silent": 1,
-      "passes_all_three": false
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 3,
+      "silent_count": 1,
+      "degenerate_count": 4,
+      "passes": false
     },
     "v-tts/epoch4": {
-      "n": 50,
-      "monologue": 0,
-      "repeat": 8,
-      "silent": 7,
-      "passes_all_three": false
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 8,
+      "silent_count": 7,
+      "degenerate_count": 15,
+      "passes": false
     },
     "v-tts/epoch5": {
-      "n": 50,
-      "monologue": 0,
-      "repeat": 0,
-      "silent": 6,
-      "passes_all_three": false
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 0,
+      "silent_count": 6,
+      "degenerate_count": 6,
+      "passes": false
     }
   },
   "per_arm_by_set": {

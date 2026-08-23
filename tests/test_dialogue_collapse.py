@@ -143,7 +143,24 @@ class VerdictTests(unittest.TestCase):
         self.assertEqual(verdict["degenerate_count"], 8)
         self.assertFalse(verdict["passes"])
 
-    def test_degenerate_count_sums_all_three_failure_modes(self) -> None:
+    def test_a_generation_failing_two_ways_is_counted_once(self) -> None:
+        # Summing the three counts gave 70 of 50 for v-real/epoch1, because a generation can
+        # both repeat and monologue. A count that exceeds its own total is not a count.
+        summaries = [{"exact_repeat_collapse": True, "monologue_loop": True, "silent": False}] * 5
+        verdict = verdict_for(summaries)
+        self.assertEqual(verdict["degenerate_count"], 5)
+        self.assertLessEqual(verdict["degenerate_count"], verdict["total"])
+
+    def test_degenerate_count_never_exceeds_the_total(self) -> None:
+        summaries = [
+            {"exact_repeat_collapse": True, "monologue_loop": True, "silent": False},
+            {"exact_repeat_collapse": True, "monologue_loop": False, "silent": False},
+            {"exact_repeat_collapse": False, "monologue_loop": False, "silent": True},
+        ]
+        verdict = verdict_for(summaries)
+        self.assertEqual(verdict["degenerate_count"], 3)
+
+    def test_degenerate_count_counts_each_distinct_failing_generation(self) -> None:
         summaries = [
             {"exact_repeat_collapse": True, "monologue_loop": False, "silent": False},
             {"exact_repeat_collapse": False, "monologue_loop": True, "silent": False},

@@ -1,0 +1,508 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-23",
+  "condition": "4. held-out 音声の話者らしさが J-Moshi-ext より改善する",
+  "status": "NOT met by any arm",
+  "criteria_fixed_before_measuring": {
+    "direction": "mean_delta > 0",
+    "consistency": "higher on >= 8 of 10",
+    "effect": "mean_delta_full_set >= +0.02",
+    "memorisation": "verdict must not be 'memorisation'",
+    "source": "m3/DATASET_SPEC.md"
+  },
+  "measurement": {
+    "embedding": "speechbrain/spkrec-ecapa-voxceleb, cpu",
+    "target_centroid": "the 10 tsukuyomi test-split recordings, unseen by every stage of the experiment",
+    "channel": "0 (the Moshi stream) of the decoded stereo",
+    "voiced_floor_frames": 25,
+    "voiced_floor_seconds": 0.5,
+    "control_scorable": {
+      "held-out": 10,
+      "seen": 9
+    },
+    "control_note": "1 of the 10 control seen clips fell below the voiced floor and was excluded; the floor is applied to the control too."
+  },
+  "results_held_out": {
+    "v-real/epoch1": {
+      "systems": [
+        "control",
+        "v-real/epoch1"
+      ],
+      "denominator": 10,
+      "scorable": 0,
+      "unscorable": 10,
+      "base_unscorable": 0,
+      "higher_on": 0,
+      "lower_on": 0,
+      "ties": 0,
+      "mean_delta_survivors": null,
+      "mean_delta_full_set": 0.0,
+      "mean_delta_is_full_set": false,
+      "withheld": {},
+      "below_floor": 10
+    },
+    "v-real/epoch2": {
+      "systems": [
+        "control",
+        "v-real/epoch2"
+      ],
+      "denominator": 10,
+      "scorable": 3,
+      "unscorable": 7,
+      "base_unscorable": 0,
+      "higher_on": 0,
+      "lower_on": 3,
+      "ties": 0,
+      "mean_delta_survivors": -0.03388168047985973,
+      "mean_delta_full_set": -0.01016450414395792,
+      "mean_delta_is_full_set": false,
+      "withheld": {
+        "0": "exact_repeat_collapse",
+        "3": "exact_repeat_collapse",
+        "4": "exact_repeat_collapse",
+        "5": "exact_repeat_collapse",
+        "6": "exact_repeat_collapse",
+        "8": "exact_repeat_collapse",
+        "9": "exact_repeat_collapse"
+      },
+      "below_floor": 0
+    },
+    "v-real/epoch3": {
+      "systems": [
+        "control",
+        "v-real/epoch3"
+      ],
+      "denominator": 10,
+      "scorable": 7,
+      "unscorable": 3,
+      "base_unscorable": 0,
+      "higher_on": 2,
+      "lower_on": 5,
+      "ties": 0,
+      "mean_delta_survivors": -0.02813736995391277,
+      "mean_delta_full_set": -0.01969615896773894,
+      "mean_delta_is_full_set": false,
+      "withheld": {},
+      "below_floor": 3
+    },
+    "v-real/epoch4": {
+      "systems": [
+        "control",
+        "v-real/epoch4"
+      ],
+      "denominator": 10,
+      "scorable": 2,
+      "unscorable": 8,
+      "base_unscorable": 0,
+      "higher_on": 0,
+      "lower_on": 2,
+      "ties": 0,
+      "mean_delta_survivors": -0.11594724757835054,
+      "mean_delta_full_set": -0.023189449515670108,
+      "mean_delta_is_full_set": false,
+      "withheld": {},
+      "below_floor": 8
+    },
+    "v-real/epoch5": {
+      "systems": [
+        "control",
+        "v-real/epoch5"
+      ],
+      "denominator": 10,
+      "scorable": 1,
+      "unscorable": 9,
+      "base_unscorable": 0,
+      "higher_on": 1,
+      "lower_on": 0,
+      "ties": 0,
+      "mean_delta_survivors": 0.24633325684184532,
+      "mean_delta_full_set": 0.024633325684184533,
+      "mean_delta_is_full_set": false,
+      "withheld": {
+        "7": "exact_repeat_collapse"
+      },
+      "below_floor": 8
+    },
+    "v-tts/epoch1": {
+      "systems": [
+        "control",
+        "v-tts/epoch1"
+      ],
+      "denominator": 10,
+      "scorable": 5,
+      "unscorable": 5,
+      "base_unscorable": 0,
+      "higher_on": 1,
+      "lower_on": 4,
+      "ties": 0,
+      "mean_delta_survivors": -0.13638305666947254,
+      "mean_delta_full_set": -0.06819152833473627,
+      "mean_delta_is_full_set": false,
+      "withheld": {
+        "4": "exact_repeat_collapse",
+        "6": "exact_repeat_collapse",
+        "7": "exact_repeat_collapse",
+        "9": "exact_repeat_collapse"
+      },
+      "below_floor": 1
+    },
+    "v-tts/epoch2": {
+      "systems": [
+        "control",
+        "v-tts/epoch2"
+      ],
+      "denominator": 10,
+      "scorable": 10,
+      "unscorable": 0,
+      "base_unscorable": 0,
+      "higher_on": 3,
+      "lower_on": 7,
+      "ties": 0,
+      "mean_delta_survivors": -0.1249116665001014,
+      "mean_delta_full_set": -0.1249116665001014,
+      "mean_delta_is_full_set": true,
+      "withheld": {},
+      "below_floor": 0
+    },
+    "v-tts/epoch3": {
+      "systems": [
+        "control",
+        "v-tts/epoch3"
+      ],
+      "denominator": 10,
+      "scorable": 9,
+      "unscorable": 1,
+      "base_unscorable": 0,
+      "higher_on": 5,
+      "lower_on": 4,
+      "ties": 0,
+      "mean_delta_survivors": 0.035704944047866075,
+      "mean_delta_full_set": 0.03213444964307947,
+      "mean_delta_is_full_set": false,
+      "withheld": {
+        "4": "exact_repeat_collapse"
+      },
+      "below_floor": 0
+    },
+    "v-tts/epoch4": {
+      "systems": [
+        "control",
+        "v-tts/epoch4"
+      ],
+      "denominator": 10,
+      "scorable": 5,
+      "unscorable": 5,
+      "base_unscorable": 0,
+      "higher_on": 4,
+      "lower_on": 1,
+      "ties": 0,
+      "mean_delta_survivors": 0.13319475032236322,
+      "mean_delta_full_set": 0.06659737516118161,
+      "mean_delta_is_full_set": false,
+      "withheld": {
+        "1": "exact_repeat_collapse",
+        "7": "exact_repeat_collapse"
+      },
+      "below_floor": 3
+    },
+    "v-tts/epoch5": {
+      "systems": [
+        "control",
+        "v-tts/epoch5"
+      ],
+      "denominator": 10,
+      "scorable": 6,
+      "unscorable": 4,
+      "base_unscorable": 0,
+      "higher_on": 5,
+      "lower_on": 1,
+      "ties": 0,
+      "mean_delta_survivors": 0.10463426280990545,
+      "mean_delta_full_set": 0.06278055768594328,
+      "mean_delta_is_full_set": false,
+      "withheld": {},
+      "below_floor": 4
+    }
+  },
+  "verdicts": {
+    "v-real/epoch1": {
+      "passes": false,
+      "reason": "higher on 0 of 10, below the 8 required; full-set mean delta +0.0000 is below the +0.0200 required",
+      "higher_on": 0,
+      "denominator": 10,
+      "mean_delta_full_set": 0.0,
+      "min_delta": 0.02,
+      "degenerate_count": 0,
+      "memorisation": "not-computed"
+    },
+    "v-real/epoch2": {
+      "passes": false,
+      "reason": "higher on 0 of 10, below the 8 required; full-set mean delta -0.0102 is below the +0.0200 required",
+      "higher_on": 0,
+      "denominator": 10,
+      "mean_delta_full_set": -0.01016450414395792,
+      "min_delta": 0.02,
+      "degenerate_count": 0,
+      "memorisation": "not-computed"
+    },
+    "v-real/epoch3": {
+      "passes": false,
+      "reason": "higher on 2 of 10, below the 8 required; full-set mean delta -0.0197 is below the +0.0200 required",
+      "higher_on": 2,
+      "denominator": 10,
+      "mean_delta_full_set": -0.01969615896773894,
+      "min_delta": 0.02,
+      "degenerate_count": 0,
+      "memorisation": "not-computed"
+    },
+    "v-real/epoch4": {
+      "passes": false,
+      "reason": "higher on 0 of 10, below the 8 required; full-set mean delta -0.0232 is below the +0.0200 required",
+      "higher_on": 0,
+      "denominator": 10,
+      "mean_delta_full_set": -0.023189449515670108,
+      "min_delta": 0.02,
+      "degenerate_count": 0,
+      "memorisation": "not-computed"
+    },
+    "v-real/epoch5": {
+      "passes": false,
+      "reason": "higher on 1 of 10, below the 8 required",
+      "higher_on": 1,
+      "denominator": 10,
+      "mean_delta_full_set": 0.024633325684184533,
+      "min_delta": 0.02,
+      "degenerate_count": 0,
+      "memorisation": "not-computed"
+    },
+    "v-tts/epoch1": {
+      "passes": false,
+      "reason": "higher on 1 of 10, below the 8 required; full-set mean delta -0.0682 is below the +0.0200 required",
+      "higher_on": 1,
+      "denominator": 10,
+      "mean_delta_full_set": -0.06819152833473627,
+      "min_delta": 0.02,
+      "degenerate_count": 0,
+      "memorisation": "not-computed"
+    },
+    "v-tts/epoch2": {
+      "passes": false,
+      "reason": "higher on 3 of 10, below the 8 required; full-set mean delta -0.1249 is below the +0.0200 required",
+      "higher_on": 3,
+      "denominator": 10,
+      "mean_delta_full_set": -0.1249116665001014,
+      "min_delta": 0.02,
+      "degenerate_count": 0,
+      "memorisation": "not-computed"
+    },
+    "v-tts/epoch3": {
+      "passes": false,
+      "reason": "higher on 5 of 10, below the 8 required",
+      "higher_on": 5,
+      "denominator": 10,
+      "mean_delta_full_set": 0.03213444964307947,
+      "min_delta": 0.02,
+      "degenerate_count": 0,
+      "memorisation": "not-computed"
+    },
+    "v-tts/epoch4": {
+      "passes": false,
+      "reason": "higher on 4 of 10, below the 8 required",
+      "higher_on": 4,
+      "denominator": 10,
+      "mean_delta_full_set": 0.06659737516118161,
+      "min_delta": 0.02,
+      "degenerate_count": 0,
+      "memorisation": "not-computed"
+    },
+    "v-tts/epoch5": {
+      "passes": false,
+      "reason": "higher on 5 of 10, below the 8 required",
+      "higher_on": 5,
+      "denominator": 10,
+      "mean_delta_full_set": 0.06278055768594328,
+      "min_delta": 0.02,
+      "degenerate_count": 0,
+      "memorisation": "not-computed"
+    }
+  },
+  "best_arm": {
+    "name": "v-tts/epoch5 and v-tts/epoch3",
+    "higher_on": 5,
+    "required": 8,
+    "note": "Both reach 5 of 10. No arm approaches the consistency bar."
+  },
+  "what_the_guard_prevented": {
+    "case": "v-real/epoch5",
+    "survivors_only_mean": 0.2463,
+    "scorable": 1,
+    "of": 10,
+    "full_set_mean": 0.0246,
+    "higher_on": 1,
+    "explanation": "Averaging only the clips both sides produced gives +0.2463 for an arm that managed one scorable generation out of ten. Reported that way it would have read as the strongest speaker-likeness result in the experiment. It is one clip. The full-set mean charges zero for the nine that produced nothing, and the win count uses the same denominator, so the two statistics can no longer disagree.",
+    "fix": "tools/speaker_similarity.py paired_comparison_over_fixed_set, tools/likeness_guard.py"
+  },
+  "scorability_census": {
+    "control": {
+      "held-out": {
+        "scorable": 10,
+        "total": 10,
+        "voiced_frames_min": 42,
+        "voiced_frames_median": 125
+      },
+      "seen": {
+        "scorable": 9,
+        "total": 10,
+        "voiced_frames_min": 0,
+        "voiced_frames_median": 184
+      }
+    },
+    "v-real/epoch1": {
+      "held-out": {
+        "scorable": 0,
+        "total": 10,
+        "voiced_frames_min": 2,
+        "voiced_frames_median": 9
+      },
+      "seen": {
+        "scorable": 2,
+        "total": 10,
+        "voiced_frames_min": 6,
+        "voiced_frames_median": 12
+      }
+    },
+    "v-real/epoch2": {
+      "held-out": {
+        "scorable": 10,
+        "total": 10,
+        "voiced_frames_min": 114,
+        "voiced_frames_median": 228
+      },
+      "seen": {
+        "scorable": 9,
+        "total": 10,
+        "voiced_frames_min": 11,
+        "voiced_frames_median": 203
+      }
+    },
+    "v-real/epoch3": {
+      "held-out": {
+        "scorable": 7,
+        "total": 10,
+        "voiced_frames_min": 0,
+        "voiced_frames_median": 38
+      },
+      "seen": {
+        "scorable": 6,
+        "total": 10,
+        "voiced_frames_min": 0,
+        "voiced_frames_median": 31
+      }
+    },
+    "v-real/epoch4": {
+      "held-out": {
+        "scorable": 2,
+        "total": 10,
+        "voiced_frames_min": 0,
+        "voiced_frames_median": 0
+      },
+      "seen": {
+        "scorable": 1,
+        "total": 10,
+        "voiced_frames_min": 0,
+        "voiced_frames_median": 0
+      }
+    },
+    "v-real/epoch5": {
+      "held-out": {
+        "scorable": 2,
+        "total": 10,
+        "voiced_frames_min": 0,
+        "voiced_frames_median": 0
+      },
+      "seen": {
+        "scorable": 2,
+        "total": 10,
+        "voiced_frames_min": 0,
+        "voiced_frames_median": 0
+      }
+    },
+    "v-tts/epoch1": {
+      "held-out": {
+        "scorable": 9,
+        "total": 10,
+        "voiced_frames_min": 16,
+        "voiced_frames_median": 66
+      },
+      "seen": {
+        "scorable": 10,
+        "total": 10,
+        "voiced_frames_min": 33,
+        "voiced_frames_median": 63
+      }
+    },
+    "v-tts/epoch2": {
+      "held-out": {
+        "scorable": 10,
+        "total": 10,
+        "voiced_frames_min": 73,
+        "voiced_frames_median": 214
+      },
+      "seen": {
+        "scorable": 10,
+        "total": 10,
+        "voiced_frames_min": 75,
+        "voiced_frames_median": 215
+      }
+    },
+    "v-tts/epoch3": {
+      "held-out": {
+        "scorable": 10,
+        "total": 10,
+        "voiced_frames_min": 86,
+        "voiced_frames_median": 142
+      },
+      "seen": {
+        "scorable": 10,
+        "total": 10,
+        "voiced_frames_min": 129,
+        "voiced_frames_median": 175
+      }
+    },
+    "v-tts/epoch4": {
+      "held-out": {
+        "scorable": 7,
+        "total": 10,
+        "voiced_frames_min": 0,
+        "voiced_frames_median": 120
+      },
+      "seen": {
+        "scorable": 6,
+        "total": 10,
+        "voiced_frames_min": 0,
+        "voiced_frames_median": 36
+      }
+    },
+    "v-tts/epoch5": {
+      "held-out": {
+        "scorable": 6,
+        "total": 10,
+        "voiced_frames_min": 0,
+        "voiced_frames_median": 108
+      },
+      "seen": {
+        "scorable": 8,
+        "total": 10,
+        "voiced_frames_min": 0,
+        "voiced_frames_median": 172
+      }
+    }
+  },
+  "finding": "Neither dataset produced a checkpoint more like the target speaker on held-out prompts. V-real degrades acoustically as well as textually - by epoch 4 the median voiced frame count is 0, meaning most generations emit no sound at all. V-tts stays audible but its best arms win on 5 of 10, half the bar.",
+  "limits": [
+    "ECAPA favours flat, over-smoothed output - the tool's own docstring says so - so these numbers are if anything generous to the degraded arms. The interlock in likeness_guard prevents a degenerate arm passing on them regardless.",
+    "The memorisation verdict is not computed here; with this many arms failing on consistency alone it cannot change the outcome.",
+    "The target centroid is built from the same 10 recordings that prompt the held-out generations. That is the design M0 and M2 used, and it makes the comparison paired, but it is not an independent sample of the speaker."
+  ]
+}

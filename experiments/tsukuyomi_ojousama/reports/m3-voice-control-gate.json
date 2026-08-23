@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "milestone": "M3",
+  "captured_at": "2026-08-23",
+  "condition": "6. 中間 checkpoint を含めた採用理由が残っている",
+  "status": "met as a record",
+  "control_row": {
+    "degenerate_of_50": 2,
+    "responds_in_of_30": 14,
+    "voiced_frames_median_heldout": 125
+  },
+  "rows": 10,
+  "per_epoch": [
+    {
+      "run": "v-real",
+      "epoch": 1,
+      "train_loss_mean": 11.3904,
+      "eval_loss": null,
+      "degenerate_of_50": 50,
+      "silent_of_50": 0,
+      "likeness_higher_on": 0,
+      "likeness_mean_full_set": 0.0,
+      "likeness_scorable": 0,
+      "voiced_frames_median_heldout": 9,
+      "responds_in_of_30": 30,
+      "exported": false
+    },
+    {
+      "run": "v-real",
+      "epoch": 2,
+      "train_loss_mean": 5.8824,
+      "eval_loss": null,
+      "degenerate_of_50": 15,
+      "silent_of_50": 0,
+      "likeness_higher_on": 0,
+      "likeness_mean_full_set": -0.0102,
+      "likeness_scorable": 3,
+      "voiced_frames_median_heldout": 228,
+      "responds_in_of_30": 30,
+      "exported": false
+    },
+    {
+      "run": "v-real",
+      "epoch": 3,
+      "train_loss_mean": 3.94147,
+      "eval_loss": null,
+      "degenerate_of_50": 9,
+      "silent_of_50": 7,
+      "likeness_higher_on": 2,
+      "likeness_mean_full_set": -0.0197,
+      "likeness_scorable": 7,
+      "voiced_frames_median_heldout": 38,
+      "responds_in_of_30": 26,
+      "exported": true
+    },
+    {
+      "run": "v-real",
+      "epoch": 4,
+      "train_loss_mean": 2.41148,
+      "eval_loss": null,
+      "degenerate_of_50": 17,
+      "silent_of_50": 16,
+      "likeness_higher_on": 0,
+      "likeness_mean_full_set": -0.0232,
+      "likeness_scorable": 2,
+      "voiced_frames_median_heldout": 0,
+      "responds_in_of_30": 30,
+      "exported": false
+    },
+    {
+      "run": "v-real",
+      "epoch": 5,
+      "train_loss_mean": 1.72886,
+      "eval_loss": null,
+      "degenerate_of_50": 29,
+      "silent_of_50": 24,
+      "likeness_higher_on": 1,
+      "likeness_mean_full_set": 0.0246,
+      "likeness_scorable": 1,
+      "voiced_frames_median_heldout": 0,
+      "responds_in_of_30": 22,
+      "exported": true
+    },
+    {
+      "run": "v-tts",
+      "epoch": 1,
+      "train_loss_mean": 11.18045,
+      "eval_loss": null,
+      "degenerate_of_50": 18,
+      "silent_of_50": 0,
+      "likeness_higher_on": 1,
+      "likeness_mean_full_set": -0.0682,
+      "likeness_scorable": 5,
+      "voiced_frames_median_heldout": 66,
+      "responds_in_of_30": 30,
+      "exported": false
+    },
+    {
+      "run": "v-tts",
+      "epoch": 2,
+      "train_loss_mean": 5.61735,
+      "eval_loss": null,
+      "degenerate_of_50": 1,
+      "silent_of_50": 0,
+      "likeness_higher_on": 3,
+      "likeness_mean_full_set": -0.1249,
+      "likeness_scorable": 10,
+      "voiced_frames_median_heldout": 214,
+      "responds_in_of_30": 30,
+      "exported": false
+    },
+    {
+      "run": "v-tts",
+      "epoch": 3,
+      "train_loss_mean": 3.92594,
+      "eval_loss": null,
+      "degenerate_of_50": 4,
+      "silent_of_50": 1,
+      "likeness_higher_on": 5,
+      "likeness_mean_full_set": 0.0321,
+      "likeness_scorable": 9,
+      "voiced_frames_median_heldout": 142,
+      "responds_in_of_30": 29,
+      "exported": true
+    },
+    {
+      "run": "v-tts",
+      "epoch": 4,
+      "train_loss_mean": 2.31123,
+      "eval_loss": null,
+      "degenerate_of_50": 15,
+      "silent_of_50": 7,
+      "likeness_higher_on": 4,
+      "likeness_mean_full_set": 0.0666,
+      "likeness_scorable": 5,
+      "voiced_frames_median_heldout": 120,
+      "responds_in_of_30": 30,
+      "exported": false
+    },
+    {
+      "run": "v-tts",
+      "epoch": 5,
+      "train_loss_mean": 1.62284,
+      "eval_loss": null,
+      "degenerate_of_50": 6,
+      "silent_of_50": 6,
+      "likeness_higher_on": 5,
+      "likeness_mean_full_set": 0.0628,
+      "likeness_scorable": 6,
+      "voiced_frames_median_heldout": 108,
+      "responds_in_of_30": 30,
+      "exported": true
+    }
+  ],
+  "eval_loss": {
+    "available": false,
+    "why": "finetune.py emitted evaluation results only through --with_tracking (W&B), which was not used. The dep_q=16 weights and ZeRO states were deleted during conversion, so it cannot be recomputed. finetune.py now logs it unconditionally."
+  },
+  "adoption": {
+    "adopted_checkpoint": null,
+    "reason": "No arm meets condition 3 or condition 4. Adopting one would carry a checkpoint into M4 that the evidence does not support.",
+    "closest_arms": {
+      "v-tts/epoch2": "1 degenerate of 50 against the control's 2, 10/10 scorable, responds in 30/30 - the strongest arm on every behavioural measure. Likeness -0.1249. NOT EXPORTED.",
+      "v-tts/epoch3": "4 degenerate of 50, 9/10 scorable, likeness +0.0321 on 5/10 wins. Exported.",
+      "v-tts/epoch5": "6 degenerate of 50, 6/10 scorable, likeness +0.0628 on 5/10 wins. Exported."
+    },
+    "export_gap": "v-tts/epoch2 is the best arm on collapse and was never exported; only epochs 3 and 5 were, and the instance is destroyed."
+  },
+  "what_the_table_shows": "Train loss falls monotonically from 11.39 to 1.73 in both runs while the model degrades. V-real's median voiced frames on held-out reach 0 by epoch 4: at the lowest loss it recorded it emits no sound on most prompts. This reproduces the failure CLAUDE.md records from the depformer-only run, where audio loss fell 6.88 to 1.02 while the model collapsed.",
+  "limits": [
+    "eval loss is missing for all ten rows.",
+    "Only epochs 3 and 5 have exported checkpoints; the rest exist only as numbers.",
+    "Live dialogue was never tested - it needs a human with a microphone."
+  ]
+}
