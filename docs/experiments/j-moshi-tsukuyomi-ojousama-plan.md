@@ -4,7 +4,7 @@
 
 ステータス: M0、M1、M2は完了。M3（Voice control）は**評価を完了したが不合格**。
 V0/V1のいずれも採用基準を満たさず、M4へ渡すcheckpointがないためM4はBlocked。
-判定と証拠は[マイルストーン文書](./j-moshi-tsukuyomi-ojousama-milestones.md)、
+判定と証拠は[マイルストーン文書](./j-moshi-tsukuyomi-ojousama-milestones.md)、経緯の通読は[M3実施報告](./j-moshi-tsukuyomi-ojousama-m3-report.md)、
 実行順序・ゲート・費用は[M3実行計画](./j-moshi-tsukuyomi-ojousama-m3-plan.md)を正とする。
 
 **GPU予算US$100を超過した（累計US$102.70）。** 追加のGPU作業は新しい上限の承認を要する。
