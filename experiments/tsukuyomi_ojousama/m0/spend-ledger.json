@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "currency": "USD",
-  "experiment_cap": 100.0,
+  "experiment_cap": 125.0,
   "warning_threshold": 75.0,
   "new_run_prediction_limit": 90.0,
   "active_stop_threshold": 95.0,
@@ -301,5 +301,30 @@
     "what_the_money_bought": "The run itself completed: both training runs, all ten checkpoints converted, 550 generations, and condition 3 met. Nothing was lost. But the milestone's own rule is that spend is capped at US$100, and it was not.",
     "immediate_action": "The instance is destroyed and this experiment now burns US$0.00/day.",
     "before_any_further_gpu_work": "The cap is the user's decision, not mine to re-authorise. M4 cannot start without an explicit new cap or an explicit exception recorded here."
+  },
+  "cap_history": [
+    {
+      "cap": 100.0,
+      "approved": "2026-08-18",
+      "superseded_on": "2026-08-24",
+      "why_superseded": "breached at US$102.697; the user raised the cap after the M3 verification retracted the cause diagnosis"
+    }
+  ],
+  "cap_raise": {
+    "recorded_at": "2026-08-24",
+    "previous_cap": 100.0,
+    "new_cap": 125.0,
+    "increment": 25.0,
+    "approved_by": "user",
+    "accrued_at_approval": 102.697,
+    "headroom": 22.302999999999997,
+    "what_it_buys": "M3-R phase 4: one forward-only pass for the base loss breakdown (US$0.40) and a single V-real re-run (bootstrap + 45 steps + all-epoch export + generation, estimated US$18).",
+    "why_v_real_only": "The V-tts teacher audio scores 0.7213 against a real-speaker leave-one-out calibration band of 0.8166 (min 0.7405), inside the band in 35 of 80 turns, at comparable durations (7.10s vs 6.77s). That arm's ceiling never reaches the target speaker, so GPU spent on it buys a known null.",
+    "preconditions": "Phases 0-3 of docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-plan.md are all zero-cost and must pass their gates first. No GPU may be rented before then.",
+    "overrun_controls": [
+      "Fix the stop line as a UTC timestamp, not an elapsed-hours estimate, and read the instance start_date at every check.",
+      "Include export time in the estimate; M3 measured roughly 30 minutes per 15.4 GB file.",
+      "Invoke tools/experiment_budget.py during the run, not only before renting."
+    ]
   }
 }

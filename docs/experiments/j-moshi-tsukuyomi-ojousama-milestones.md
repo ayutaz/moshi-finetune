@@ -416,6 +416,7 @@ V-realまたはV-ttsの少なくとも一方で、J-Moshi-extより対象話者�
 - 状態: **完了（不合格）**（2026-08-23）。全6条件を評価し、**V0/V1のいずれも採用基準を満たさなかった**
 - **通読用の報告**: [M3 Voice control 実施報告](./j-moshi-tsukuyomi-ojousama-m3-report.md)（何をして何が起きたか、原因の読み、やり直しの選択肢）
 - **査読記録**: [M3 検証記録](./j-moshi-tsukuyomi-ojousama-m3-verification.md)（**上記報告の原因診断は撤回された。**判定「不合格」は維持。計器 3 件の欠陥と、次にすべき課金ゼロの作業 9 件）
+- **次の計画**: [M3-R 実行計画](./j-moshi-tsukuyomi-ojousama-m3r-plan.md)（第0〜3段は課金ゼロ、第4段のみGPU。上限US$125承認済み、V-real 1腕）
 - 判定: マイルストーンのゴールは「V-realまたはV-ttsの少なくとも一方で、J-Moshi-extより
   対象話者らしさを改善し、独話loop・反復collapse・重大な明瞭度低下を起こさない」。**どちらも満たさない。**
 
