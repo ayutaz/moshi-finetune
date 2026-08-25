@@ -1,0 +1,284 @@
+{
+  "schema_version": 1,
+  "milestone": "M3-R",
+  "step": "2-2 comma-split rebuild of the dialogue scripts",
+  "captured_at": "2026-08-25",
+  "artifact": {
+    "path": "experiments/tsukuyomi_ojousama/m3r/scripts/dialogues-v2.jsonl",
+    "rows": 80,
+    "byte_size": 62868,
+    "sha256": "6098c4eb3dc6ab3d211dd81012dddaf2474f54ca3d5f5882c2c8ddcee6ae6ec9"
+  },
+  "derived_from": {
+    "path": "experiments/tsukuyomi_ojousama/m3/scripts/dialogues-v1.jsonl",
+    "rows": 80,
+    "sha256": "4e22d04f2d33f98172684beeb08187d8c8002cf256782281e2b4971894ece6c0",
+    "structure": {
+      "dialogues": 80,
+      "turns_total": 240,
+      "turns_per_dialogue": 3.0,
+      "a_turns_total": 80,
+      "a_turns_per_dialogue": 1.0,
+      "a_turns_histogram": {
+        "1": 80
+      },
+      "speaker_shapes": {
+        "B-A-B": 80
+      },
+      "a_characters": 3149,
+      "b_characters": 6462
+    }
+  },
+  "split_rule": {
+    "function": "tools.dialogue_scripts.split_at_central_comma",
+    "punctuation": "、",
+    "min_fragment_chars": 6,
+    "tie_break": "earlier comma",
+    "split_dialogues": 78,
+    "unsplit_dialogues": 2,
+    "unsplit": [
+      {
+        "dialogue_id": "v-011",
+        "reason": "no-comma",
+        "text": "クィーンズアベニューアルファに所属している。",
+        "characters": 22
+      },
+      {
+        "dialogue_id": "v-042",
+        "reason": "no-comma",
+        "text": "ウォリアーズミックスマーシャルアーツアカデミー所属。",
+        "characters": 26
+      }
+    ],
+    "fragment_characters": {
+      "count": 156,
+      "mean": 19.878205128205128,
+      "min": 7,
+      "max": 38
+    },
+    "why": "A speaks twice per dialogue without the dialogue count falling, so the 72 train dialogues stay 72 and the run stays 45 steps. Pairing sentences instead would have halved both.",
+    "split_points": {
+      "splits": 78,
+      "preceding_character": {
+        "は": 13,
+        "が": 6,
+        "た": 6,
+        "て": 6,
+        "に": 6,
+        "る": 5,
+        "で": 4,
+        "の": 4,
+        "と": 3,
+        "も": 2,
+        "や": 2,
+        "ら": 2,
+        "妃": 2,
+        "い": 1,
+        "う": 1,
+        "か": 1,
+        "し": 1,
+        "す": 1,
+        "つ": 1,
+        "び": 1,
+        "べ": 1,
+        "め": 1,
+        "を": 1,
+        "ン": 1,
+        "人": 1,
+        "公": 1,
+        "外": 1,
+        "州": 1,
+        "常": 1,
+        "県": 1
+      },
+      "mid_coordination": {
+        "particles": [
+          "と",
+          "や"
+        ],
+        "count": 5,
+        "dialogue_ids": [
+          "v-003",
+          "v-007",
+          "v-020",
+          "v-053",
+          "v-054"
+        ]
+      }
+    }
+  },
+  "backchannels": {
+    "pool": [
+      "ええ。",
+      "はい。",
+      "なるほど。",
+      "そうですか。",
+      "ええ、ええ。",
+      "はい、はい。",
+      "ええ、なるほど。",
+      "はい、なるほど。",
+      "なるほど、ええ。",
+      "そうなのですね。",
+      "ええ、そうなのですね。",
+      "なるほど、そうなのですね。"
+    ],
+    "pool_size": 12,
+    "seed": 20260825,
+    "seams": 78,
+    "counts": {
+      "ええ。": 7,
+      "はい。": 7,
+      "なるほど。": 7,
+      "そうですか。": 7,
+      "ええ、ええ。": 7,
+      "はい、はい。": 7,
+      "ええ、なるほど。": 6,
+      "はい、なるほど。": 6,
+      "なるほど、ええ。": 6,
+      "そうなのですね。": 6,
+      "ええ、そうなのですね。": 6,
+      "なるほど、そうなのですね。": 6
+    },
+    "clash_seams": [],
+    "clash_rule": "A backchannel never opens with the same clause as the turn it precedes."
+  },
+  "structure": {
+    "m3_v1": {
+      "turns_per_dialogue": 3.0,
+      "a_turns_per_dialogue": 1.0
+    },
+    "m3r_v2": {
+      "turns_per_dialogue": 4.95,
+      "a_turns_per_dialogue": 1.975
+    },
+    "target": {
+      "turns_per_dialogue": 5.0,
+      "a_turns_per_dialogue": 2.0
+    },
+    "speaker_shapes": {
+      "B-A-B": 2,
+      "B-A-B-A-B": 78
+    },
+    "a_turns_histogram": {
+      "1": 2,
+      "2": 78
+    },
+    "by_split": {
+      "dev": {
+        "dialogues": 8,
+        "turns_total": 40,
+        "turns_per_dialogue": 5.0,
+        "a_turns_total": 16,
+        "a_turns_per_dialogue": 2.0,
+        "a_turns_histogram": {
+          "2": 8
+        },
+        "speaker_shapes": {
+          "B-A-B-A-B": 8
+        },
+        "a_characters": 313,
+        "b_characters": 677
+      },
+      "train": {
+        "dialogues": 72,
+        "turns_total": 356,
+        "turns_per_dialogue": 4.944444444444445,
+        "a_turns_total": 142,
+        "a_turns_per_dialogue": 1.9722222222222223,
+        "a_turns_histogram": {
+          "1": 2,
+          "2": 70
+        },
+        "speaker_shapes": {
+          "B-A-B": 2,
+          "B-A-B-A-B": 70
+        },
+        "a_characters": 2836,
+        "b_characters": 6324
+      }
+    },
+    "train_dialogues": 72,
+    "projected_steps": {
+      "value": 45,
+      "how": "train dialogues // batch 8, times 5 epochs",
+      "m3_value": 45
+    }
+  },
+  "invariants": {
+    "a_characters_v1": 3149,
+    "a_characters_v2": 3149,
+    "a_characters_unchanged": true,
+    "why": "Splitting moves characters between turns; it must not add or lose one. If this total moved, the scripts were rewritten rather than reshaped and the M3-R/M3 comparison would no longer isolate structure.",
+    "b_characters_v1": 6462,
+    "b_characters_v2": 7001,
+    "b_characters_added_by_backchannels": 539
+  },
+  "checks": {
+    "status": "pass",
+    "rows": 80,
+    "a_texts_match_corpus": true,
+    "corpus_sentences": 80,
+    "eval_overlap_count": 0,
+    "held_out_overlap_count": 0,
+    "held_out_texts_compared": 20,
+    "duplicate_dialogue_ids": [],
+    "bad_turn_structure": [],
+    "altered_a_turns": [],
+    "empty_turns": [],
+    "eval_overlaps": [],
+    "held_out_overlaps": [],
+    "short_a_turns": [],
+    "eval_texts_compared": 256,
+    "why_held_out_is_checked_joined": "A held-out sentence cut in two would pass a per-turn check. The joined A text is compared as well."
+  },
+  "length": {
+    "floor_frames": 200,
+    "floor_seconds": 16.0,
+    "projection": "mora / mora_per_second at the FAST end of the measured rate, frames floored",
+    "mora_per_second_used": 7.5,
+    "timeline": {
+      "lead_in_seconds": 0.5,
+      "gap_seconds": 0.4,
+      "frame_rate_hz": 12.5
+    },
+    "min_frames": 201,
+    "max_frames": 296,
+    "mean_frames": 248.625,
+    "median_seconds": 19.84,
+    "below_floor": 0,
+    "turn_mora": {
+      "floor": 2,
+      "min": 2,
+      "shortest_turn": {
+        "dialogue_id": "v-015",
+        "turn": 2
+      },
+      "turns_under_floor": 0
+    },
+    "v1_same_toolchain": {
+      "min_frames": 181,
+      "max_frames": 277,
+      "mean_frames": 230.175,
+      "committed_field_delta_mean": 11.2875,
+      "committed_field_delta_max": 47,
+      "rows_reproduced": 5,
+      "note": "The projected_frames_fast committed with v1 cannot be reproduced by today's pyopenjtalk dictionary. Both columns above are recomputed here, so the v1/v2 comparison is like for like; the committed v1 field is not."
+    },
+    "v1_realised": {
+      "min_frames": 213,
+      "mean_frames": 261.4,
+      "source": "reports/m3-dataset-agreement.json (v-real, 80 rendered dialogues)",
+      "realised_over_projected_mean": 1.1356576517866839,
+      "note": "v1 rendered LONGER than it projected, so the projection is the conservative side of the floor. It is still a projection."
+    },
+    "floor_margin_frames": 1
+  },
+  "limits": [
+    "Projection is mora over a measured rate, not synthesis. Realised durations are gated again after rendering.",
+    "The smallest projection clears the 200-frame floor by 1 frame(s). Step 2-5 (overlap) removes length and step 2-6 may concatenate dialogues; whichever happens has to re-measure against the floor rather than inherit this number.",
+    "Each backchannel phrase is used 6-7 times across the 78 seams. Rendering one WAV per phrase and reusing it would put an identical waveform in that many dialogues, which is the repetition this pool exists to avoid - step 2-3 renders per dialogue.",
+    "A five-turn dialogue projects to about 20 seconds, so the M3-R plan's 60-second sequence-length target is not met by one dialogue. That target belongs to step 2-6 (concatenation), not to this file.",
+    "Split points were read one by one. They all land on a comma, which is a pause the reader already takes, but a comma is not always a syntactic boundary; see split_rule.split_points.mid_coordination for the ones a listener would find least natural.",
+    "The 2 dialogues that keep the B-A-B shape have no comma at all. They stay in training because dropping them would cost 2 of the 72 train dialogues, and holding the step count at 45 is the reason this rebuild splits rather than pairs."
+  ]
+}

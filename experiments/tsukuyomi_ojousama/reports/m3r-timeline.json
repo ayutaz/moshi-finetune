@@ -1,0 +1,3307 @@
+{
+ "schema_version": 1,
+ "milestone": "M3-R",
+ "step": "2-3, 2-5, 2-6",
+ "captured_at": "2026-08-25",
+ "builder": "tools/assemble_dialogue.py",
+ "commands": [
+  "PYTHONPATH=. uv run --python 3.12 --with numpy --with soundfile --with torch==2.4.1 --with torchaudio==2.4.1 --with pyopenjtalk --no-project python -m tools.assemble_dialogue --scripts experiments/tsukuyomi_ojousama/m3r/scripts/dialogues-v2.jsonl --split-map experiments/tsukuyomi_ojousama/m3r/scripts/split-map-v2.json --m3-audio-dir data/experiments/tsukuyomi_ojousama/m3/v-real/audio --m3-text-dir data/experiments/tsukuyomi_ojousama/m3/v-real/text --backchannel-dir data/experiments/tsukuyomi_ojousama/m3r/turns-B-backchannel --roomtone-dir data/experiments/tsukuyomi_ojousama/m3r/roomtone --out-dir data/experiments/tsukuyomi_ojousama/m3r/v-real --report experiments/tsukuyomi_ojousama/reports/m3r-timeline.json --seed 20260825 --lead-in 0.3 --group-size 4 --sequence-gap 0.4 --global-batch 2 --epochs 5 --compare-m3 --captured-at 2026-08-25",
+  "PYTHONPATH=experiments/tsukuyomi_ojousama/m3/nowatermark:.:../Irodori-TTS ../Irodori-TTS/.venv/bin/python -m tools.synthesize_turns --scripts experiments/tsukuyomi_ojousama/m3r/scripts/dialogues-v2.jsonl --speaker B --roles backchannel --seed-per-turn --seed 20260825 --manual-duration --out-dir data/experiments/tsukuyomi_ojousama/m3r/turns-B-backchannel --sidecar data/experiments/tsukuyomi_ojousama/m3r/turns-B-backchannel/synthesis-log.jsonl --ref-wav data/experiments/tsukuyomi_ojousama/m3/ref/speakerB.wav --caption '落ち着いた成人男性の声。標準的な話し方で、感情を抑えて自然に読み上げてください。' --device mps"
+ ],
+ "timeline": {
+  "lead_in_seconds": 0.3,
+  "sample_rate": 24000,
+  "frame_rate_hz": 12.5,
+  "channel_0": "speaker A",
+  "channel_1": "speaker B",
+  "seed": 20260825,
+  "offset_sets": {
+   "open_to_body": [
+    -0.45,
+    -0.35,
+    -0.25,
+    -0.15,
+    -0.05,
+    0.05
+   ],
+   "body_to_backchannel": [
+    -0.55,
+    -0.45,
+    -0.35,
+    -0.25
+   ],
+   "body_to_close": [
+    -0.45,
+    -0.35,
+    -0.25,
+    -0.15,
+    -0.05,
+    0.05
+   ]
+  },
+  "a1_to_a2": "butt joint - the recording's own pause, nothing added or removed",
+  "room_tone": "/Users/inamotoyuuta/Desktop/moshi-finetune/data/experiments/tsukuyomi_ojousama/m3r/roomtone",
+  "speech_threshold_rms": 0.01
+ },
+ "m3_recomputed": {
+  "dialogues": 80,
+  "turns_per_dialogue": 3.0,
+  "a_turns_per_dialogue": 1.0,
+  "seconds": {
+   "n": 80,
+   "min": 17.028208333333332,
+   "median": 20.848520833333332,
+   "mean": 20.874096354166667,
+   "max": 25.629583333333333
+  },
+  "frames": {
+   "n": 80,
+   "min": 213.0,
+   "median": 261.0,
+   "mean": 261.45,
+   "max": 321.0
+  },
+  "total_seconds": 1669.9277083333334,
+  "a_silence_share_clip": 0.6883177452916187,
+  "a_silence_share_speech": 0.6965138086691127,
+  "a_silence_share_acoustic": 0.8271261278556344,
+  "simultaneous_frames": 0,
+  "simultaneous_share": 0.0,
+  "dialogues_without_overlap": 80,
+  "acoustic_simultaneous_frames": 0
+ },
+ "all": {
+  "dialogues": 80,
+  "turns_per_dialogue": 4.95,
+  "a_turns_per_dialogue": 1.975,
+  "seconds": {
+   "n": 80,
+   "min": 15.590000000000002,
+   "median": 19.235,
+   "mean": 19.2048125,
+   "max": 23.9
+  },
+  "frames": {
+   "n": 80,
+   "min": 195.0,
+   "median": 241.0,
+   "mean": 240.525,
+   "max": 299.0
+  },
+  "total_seconds": 1536.385,
+  "a_silence_share_clip": 0.6612262985297739,
+  "a_silence_share_speech": 0.6974716623762924,
+  "a_silence_share_acoustic": 0.8121152040070959,
+  "simultaneous_frames": 1291,
+  "simultaneous_share": 0.06709281779440807,
+  "dialogues_without_overlap": 0,
+  "acoustic_simultaneous_frames": 706
+ },
+ "train": {
+  "dialogues": 72,
+  "turns_per_dialogue": 4.944444444444445,
+  "a_turns_per_dialogue": 1.9722222222222223,
+  "seconds": {
+   "n": 72,
+   "min": 15.590000000000002,
+   "median": 19.235,
+   "mean": 19.22965277777778,
+   "max": 23.9
+  },
+  "frames": {
+   "n": 72,
+   "min": 195.0,
+   "median": 241.0,
+   "mean": 240.83333333333334,
+   "max": 299.0
+  },
+  "total_seconds": 1384.535,
+  "a_silence_share_clip": 0.6616365482514587,
+  "a_silence_share_speech": 0.697508549801919,
+  "a_silence_share_acoustic": 0.8129342288096341,
+  "simultaneous_frames": 1166,
+  "simultaneous_share": 0.06724336793540946,
+  "dialogues_without_overlap": 0,
+  "acoustic_simultaneous_frames": 643
+ },
+ "dev": {
+  "dialogues": 8,
+  "turns_per_dialogue": 5.0,
+  "a_turns_per_dialogue": 2.0,
+  "seconds": {
+   "n": 8,
+   "min": 15.940000000000001,
+   "median": 18.96,
+   "mean": 18.98125,
+   "max": 22.59
+  },
+  "frames": {
+   "n": 8,
+   "min": 200.0,
+   "median": 237.5,
+   "mean": 237.75,
+   "max": 283.0
+  },
+  "total_seconds": 151.85,
+  "a_silence_share_clip": 0.6574857315333114,
+  "a_silence_share_speech": 0.6971353309186696,
+  "a_silence_share_acoustic": 0.8046462513199577,
+  "simultaneous_frames": 125,
+  "simultaneous_share": 0.06572029442691903,
+  "dialogues_without_overlap": 0,
+  "acoustic_simultaneous_frames": 63
+ },
+ "sequences": {
+  "group_size": 4,
+  "gap_seconds": 0.4,
+  "splits": {
+   "train": {
+    "rows": 18,
+    "dialogues": 72,
+    "seconds": {
+     "n": 18,
+     "min": 69.70008333333334,
+     "median": 77.14508333333333,
+     "mean": 78.11865277777777,
+     "max": 91.40008333333333
+    },
+    "frames": {
+     "n": 18,
+     "min": 872.0,
+     "median": 964.5,
+     "mean": 976.9444444444445,
+     "max": 1143.0
+    },
+    "entries": [
+     {
+      "name": "train-seq-001",
+      "dialogues": [
+       "v-001",
+       "v-002",
+       "v-003",
+       "v-004"
+      ],
+      "seconds": 80.17004166666666,
+      "frames": 1003
+     },
+     {
+      "name": "train-seq-002",
+      "dialogues": [
+       "v-005",
+       "v-006",
+       "v-007",
+       "v-008"
+      ],
+      "seconds": 82.79,
+      "frames": 1035
+     },
+     {
+      "name": "train-seq-003",
+      "dialogues": [
+       "v-009",
+       "v-010",
+       "v-011",
+       "v-012"
+      ],
+      "seconds": 79.75004166666666,
+      "frames": 997
+     },
+     {
+      "name": "train-seq-004",
+      "dialogues": [
+       "v-013",
+       "v-014",
+       "v-015",
+       "v-017"
+      ],
+      "seconds": 77.05004166666667,
+      "frames": 964
+     },
+     {
+      "name": "train-seq-005",
+      "dialogues": [
+       "v-018",
+       "v-019",
+       "v-020",
+       "v-021"
+      ],
+      "seconds": 84.7,
+      "frames": 1059
+     },
+     {
+      "name": "train-seq-006",
+      "dialogues": [
+       "v-022",
+       "v-023",
+       "v-025",
+       "v-026"
+      ],
+      "seconds": 80.38,
+      "frames": 1005
+     },
+     {
+      "name": "train-seq-007",
+      "dialogues": [
+       "v-027",
+       "v-028",
+       "v-029",
+       "v-030"
+      ],
+      "seconds": 83.805,
+      "frames": 1048
+     },
+     {
+      "name": "train-seq-008",
+      "dialogues": [
+       "v-031",
+       "v-033",
+       "v-034",
+       "v-035"
+      ],
+      "seconds": 78.80004166666667,
+      "frames": 986
+     },
+     {
+      "name": "train-seq-009",
+      "dialogues": [
+       "v-036",
+       "v-037",
+       "v-039",
+       "v-040"
+      ],
+      "seconds": 73.71,
+      "frames": 922
+     },
+     {
+      "name": "train-seq-010",
+      "dialogues": [
+       "v-041",
+       "v-042",
+       "v-043",
+       "v-044"
+      ],
+      "seconds": 76.35008333333333,
+      "frames": 955
+     },
+     {
+      "name": "train-seq-011",
+      "dialogues": [
+       "v-045",
+       "v-046",
+       "v-047",
+       "v-048"
+      ],
+      "seconds": 72.31,
+      "frames": 904
+     },
+     {
+      "name": "train-seq-012",
+      "dialogues": [
+       "v-049",
+       "v-052",
+       "v-053",
+       "v-054"
+      ],
+      "seconds": 72.64,
+      "frames": 908
+     },
+     {
+      "name": "train-seq-013",
+      "dialogues": [
+       "v-056",
+       "v-057",
+       "v-058",
+       "v-059"
+      ],
+      "seconds": 72.660125,
+      "frames": 909
+     },
+     {
+      "name": "train-seq-014",
+      "dialogues": [
+       "v-060",
+       "v-062",
+       "v-063",
+       "v-064"
+      ],
+      "seconds": 77.19008333333333,
+      "frames": 965
+     },
+     {
+      "name": "train-seq-015",
+      "dialogues": [
+       "v-065",
+       "v-066",
+       "v-067",
+       "v-068"
+      ],
+      "seconds": 69.70008333333334,
+      "frames": 872
+     },
+     {
+      "name": "train-seq-016",
+      "dialogues": [
+       "v-069",
+       "v-070",
+       "v-071",
+       "v-072"
+      ],
+      "seconds": 77.10008333333333,
+      "frames": 964
+     },
+     {
+      "name": "train-seq-017",
+      "dialogues": [
+       "v-073",
+       "v-074",
+       "v-075",
+       "v-076"
+      ],
+      "seconds": 91.40008333333333,
+      "frames": 1143
+     },
+     {
+      "name": "train-seq-018",
+      "dialogues": [
+       "v-077",
+       "v-078",
+       "v-079",
+       "v-080"
+      ],
+      "seconds": 75.63004166666667,
+      "frames": 946
+     }
+    ]
+   },
+   "dev": {
+    "rows": 2,
+    "dialogues": 8,
+    "seconds": {
+     "n": 2,
+     "min": 72.56008333333334,
+     "median": 77.12506250000001,
+     "mean": 77.12506250000001,
+     "max": 81.69004166666667
+    },
+    "frames": {
+     "n": 2,
+     "min": 908.0,
+     "median": 965.0,
+     "mean": 965.0,
+     "max": 1022.0
+    },
+    "entries": [
+     {
+      "name": "dev-seq-001",
+      "dialogues": [
+       "v-016",
+       "v-024",
+       "v-032",
+       "v-038"
+      ],
+      "seconds": 72.56008333333334,
+      "frames": 908
+     },
+     {
+      "name": "dev-seq-002",
+      "dialogues": [
+       "v-050",
+       "v-051",
+       "v-055",
+       "v-061"
+      ],
+      "seconds": 81.69004166666667,
+      "frames": 1022
+     }
+    ]
+   }
+  }
+ },
+ "schedule": {
+  "rows": 18,
+  "group_size": 4,
+  "global_batch": 2,
+  "steps_per_epoch": 9,
+  "total_steps": 45,
+  "dialogues_per_step": 8
+ },
+ "schedule_options": [
+  {
+   "group_size": 1,
+   "global_batch": 8,
+   "rows": 72,
+   "sequence_seconds": 19.22965277777778,
+   "sequence_frames": 241,
+   "dialogues_per_step": 8,
+   "meets_60s": false
+  },
+  {
+   "group_size": 2,
+   "global_batch": 4,
+   "rows": 36,
+   "sequence_seconds": 38.85930555555556,
+   "sequence_frames": 486,
+   "dialogues_per_step": 8,
+   "meets_60s": false
+  },
+  {
+   "group_size": 4,
+   "global_batch": 2,
+   "rows": 18,
+   "sequence_seconds": 78.11861111111112,
+   "sequence_frames": 977,
+   "dialogues_per_step": 8,
+   "meets_60s": true
+  },
+  {
+   "group_size": 8,
+   "global_batch": 1,
+   "rows": 9,
+   "sequence_seconds": 156.63722222222225,
+   "sequence_frames": 1958,
+   "dialogues_per_step": 8,
+   "meets_60s": true
+  }
+ ],
+ "min_frames_floor": {
+  "floor": 200,
+  "why": "m3/DATASET_SPEC.md sets 200 frames as the shortest dialogue that may enter the dataset, and says not to lower it.",
+  "dialogues_below": [
+   [
+    "v-026",
+    198
+   ],
+   [
+    "v-039",
+    199
+   ],
+   [
+    "v-047",
+    196
+   ],
+   [
+    "v-057",
+    195
+   ],
+   [
+    "v-079",
+    199
+   ]
+  ],
+  "sequences_below": [],
+  "note": "The floor was written when one dialogue was one training row. It is now the sequence, which is four dialogues; the per-dialogue files are the auditable unit, not the trained one. Where a dialogue falls under 200 it is because dead time was removed, not because content was."
+ },
+ "splits": {
+  "found": 78,
+  "pause_seconds": {
+   "n": 78,
+   "min": 0.12,
+   "median": 0.55,
+   "mean": 0.5412820512820513,
+   "max": 0.81
+  },
+  "distance_to_mora_target_seconds": {
+   "n": 78,
+   "min": 0.010769230769230642,
+   "median": 0.18293023255813967,
+   "mean": 0.208732734614023,
+   "max": 0.7920930232558132
+  }
+ },
+ "per_dialogue": [
+  {
+   "dialogue_id": "v-001",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 22.030000000000005,
+   "frames": 276,
+   "a_silence_share_clip": 0.6863405961567559,
+   "a_silence_share_speech": 0.7135724012709941,
+   "b_silence_share_clip": 0.2546527462551067,
+   "simultaneous_frames": 14,
+   "simultaneous_share": 0.050724637681159424,
+   "offsets": {
+    "open_to_body": 0.05,
+    "body_to_close": -0.35,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.48,
+   "pause_distance_seconds": 0.5902173913043476,
+   "acoustic": {
+    "frames": 275,
+    "a_quiet_frames": 217,
+    "b_quiet_frames": 120,
+    "both_loud_frames": 8
+   },
+   "acoustic_a_silence_share": 0.7890909090909091,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-002",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 19.3,
+   "frames": 242,
+   "a_silence_share_clip": 0.6113687392055268,
+   "a_silence_share_speech": 0.6409326424870467,
+   "b_silence_share_clip": 0.2901554404145078,
+   "simultaneous_frames": 21,
+   "simultaneous_share": 0.08677685950413223,
+   "offsets": {
+    "open_to_body": -0.45,
+    "body_to_close": -0.35,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.41000000000000003,
+   "pause_distance_seconds": 0.12038461538461487,
+   "acoustic": {
+    "frames": 241,
+    "a_quiet_frames": 176,
+    "b_quiet_frames": 100,
+    "both_loud_frames": 12
+   },
+   "acoustic_a_silence_share": 0.7302904564315352,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-003",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 19.07,
+   "frames": 239,
+   "a_silence_share_clip": 0.7477910330361824,
+   "a_silence_share_speech": 0.7703198741478762,
+   "b_silence_share_clip": 0.168327215521762,
+   "simultaneous_frames": 21,
+   "simultaneous_share": 0.08786610878661087,
+   "offsets": {
+    "open_to_body": -0.35,
+    "body_to_close": -0.25,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.36,
+   "pause_distance_seconds": 0.14100000000000001,
+   "acoustic": {
+    "frames": 238,
+    "a_quiet_frames": 196,
+    "b_quiet_frames": 71,
+    "both_loud_frames": 8
+   },
+   "acoustic_a_silence_share": 0.8235294117647058,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-004",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 18.57,
+   "frames": 233,
+   "a_silence_share_clip": 0.706583198707593,
+   "a_silence_share_speech": 0.7425955842757135,
+   "b_silence_share_clip": 0.19359181475498122,
+   "simultaneous_frames": 20,
+   "simultaneous_share": 0.08583690987124463,
+   "offsets": {
+    "open_to_body": -0.15,
+    "body_to_close": -0.25,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.41000000000000003,
+   "pause_distance_seconds": 0.148421052631579,
+   "acoustic": {
+    "frames": 232,
+    "a_quiet_frames": 189,
+    "b_quiet_frames": 73,
+    "both_loud_frames": 13
+   },
+   "acoustic_a_silence_share": 0.8146551724137931,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-005",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 20.029999999999998,
+   "frames": 251,
+   "a_silence_share_clip": 0.814110084872691,
+   "a_silence_share_speech": 0.8527209186220669,
+   "b_silence_share_clip": 0.08761857214178725,
+   "simultaneous_frames": 17,
+   "simultaneous_share": 0.06772908366533864,
+   "offsets": {
+    "open_to_body": 0.05,
+    "body_to_close": -0.05,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.44,
+   "pause_distance_seconds": 0.0644444444444443,
+   "acoustic": {
+    "frames": 250,
+    "a_quiet_frames": 218,
+    "b_quiet_frames": 61,
+    "both_loud_frames": 13
+   },
+   "acoustic_a_silence_share": 0.872,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-006",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 22.48,
+   "frames": 281,
+   "a_silence_share_clip": 0.6586447212336892,
+   "a_silence_share_speech": 0.6926156583629894,
+   "b_silence_share_clip": 0.26912811387900337,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.05338078291814947,
+   "offsets": {
+    "open_to_body": -0.05,
+    "body_to_close": -0.25,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.63,
+   "pause_distance_seconds": 0.08566037735849097,
+   "acoustic": {
+    "frames": 281,
+    "a_quiet_frames": 224,
+    "b_quiet_frames": 117,
+    "both_loud_frames": 7
+   },
+   "acoustic_a_silence_share": 0.797153024911032,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-007",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 21.119999999999997,
+   "frames": 264,
+   "a_silence_share_clip": 0.6556009311868687,
+   "a_silence_share_speech": 0.6884469696969695,
+   "b_silence_share_clip": 0.2694128787878787,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.056818181818181816,
+   "offsets": {
+    "open_to_body": -0.25,
+    "body_to_close": -0.05,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.52,
+   "pause_distance_seconds": 0.025652173913043086,
+   "acoustic": {
+    "frames": 264,
+    "a_quiet_frames": 216,
+    "b_quiet_frames": 100,
+    "both_loud_frames": 6
+   },
+   "acoustic_a_silence_share": 0.8181818181818182,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-008",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 17.96,
+   "frames": 225,
+   "a_silence_share_clip": 0.6807164068299927,
+   "a_silence_share_speech": 0.7210467706013362,
+   "b_silence_share_clip": 0.1834632516703787,
+   "simultaneous_frames": 26,
+   "simultaneous_share": 0.11555555555555555,
+   "offsets": {
+    "open_to_body": -0.45,
+    "body_to_close": 0.05,
+    "body_to_backchannel": -0.35
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.53,
+   "pause_distance_seconds": 0.408461538461538,
+   "acoustic": {
+    "frames": 224,
+    "a_quiet_frames": 179,
+    "b_quiet_frames": 61,
+    "both_loud_frames": 20
+   },
+   "acoustic_a_silence_share": 0.7991071428571429,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-009",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 20.950000000000003,
+   "frames": 262,
+   "a_silence_share_clip": 0.7528659506762132,
+   "a_silence_share_speech": 0.7880668257756563,
+   "b_silence_share_clip": 0.166109785202864,
+   "simultaneous_frames": 16,
+   "simultaneous_share": 0.061068702290076333,
+   "offsets": {
+    "open_to_body": 0.05,
+    "body_to_close": -0.45,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.58,
+   "pause_distance_seconds": 0.22677419354838735,
+   "acoustic": {
+    "frames": 261,
+    "a_quiet_frames": 223,
+    "b_quiet_frames": 89,
+    "both_loud_frames": 8
+   },
+   "acoustic_a_silence_share": 0.8544061302681992,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-010",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 18.95,
+   "frames": 237,
+   "a_silence_share_clip": 0.7419635004397538,
+   "a_silence_share_speech": 0.7825857519788918,
+   "b_silence_share_clip": 0.14749340369393127,
+   "simultaneous_frames": 21,
+   "simultaneous_share": 0.08860759493670886,
+   "offsets": {
+    "open_to_body": -0.25,
+    "body_to_close": -0.05,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.54,
+   "pause_distance_seconds": 0.18400000000000016,
+   "acoustic": {
+    "frames": 236,
+    "a_quiet_frames": 209,
+    "b_quiet_frames": 73,
+    "both_loud_frames": 6
+   },
+   "acoustic_a_silence_share": 0.885593220338983,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-011",
+   "split": "train",
+   "turns": 3,
+   "a_turns": 1,
+   "seconds": 20.369999999999997,
+   "frames": 255,
+   "a_silence_share_clip": 0.8898666339387988,
+   "a_silence_share_speech": 0.8964162984781542,
+   "b_silence_share_clip": 0.10652920962199308,
+   "simultaneous_frames": 3,
+   "simultaneous_share": 0.011764705882352941,
+   "offsets": {
+    "open_to_body": 0.05,
+    "body_to_close": -0.15
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": null,
+   "pause_distance_seconds": null,
+   "acoustic": {
+    "frames": 254,
+    "a_quiet_frames": 233,
+    "b_quiet_frames": 81,
+    "both_loud_frames": 1
+   },
+   "acoustic_a_silence_share": 0.9173228346456693,
+   "roles": [
+    "open",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-012",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 18.28,
+   "frames": 229,
+   "a_silence_share_clip": 0.7688935995623633,
+   "a_silence_share_speech": 0.799781181619256,
+   "b_silence_share_clip": 0.1433260393873086,
+   "simultaneous_frames": 18,
+   "simultaneous_share": 0.07860262008733625,
+   "offsets": {
+    "open_to_body": -0.25,
+    "body_to_close": -0.25,
+    "body_to_backchannel": -0.35
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.42,
+   "pause_distance_seconds": 0.29000000000000004,
+   "acoustic": {
+    "frames": 228,
+    "a_quiet_frames": 197,
+    "b_quiet_frames": 67,
+    "both_loud_frames": 10
+   },
+   "acoustic_a_silence_share": 0.8640350877192983,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-013",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 16.630000000000003,
+   "frames": 208,
+   "a_silence_share_clip": 0.7047379234315494,
+   "a_silence_share_speech": 0.741431148526759,
+   "b_silence_share_clip": 0.1834034876728804,
+   "simultaneous_frames": 19,
+   "simultaneous_share": 0.09134615384615384,
+   "offsets": {
+    "open_to_body": -0.35,
+    "body_to_close": -0.45,
+    "body_to_backchannel": -0.35
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.48,
+   "pause_distance_seconds": 0.24057142857142866,
+   "acoustic": {
+    "frames": 207,
+    "a_quiet_frames": 166,
+    "b_quiet_frames": 63,
+    "both_loud_frames": 13
+   },
+   "acoustic_a_silence_share": 0.8019323671497585,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-014",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 19.509999999999998,
+   "frames": 244,
+   "a_silence_share_clip": 0.7437126260037588,
+   "a_silence_share_speech": 0.7652485904664275,
+   "b_silence_share_clip": 0.19118400820092263,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.06147540983606557,
+   "offsets": {
+    "open_to_body": -0.15,
+    "body_to_close": -0.05,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.31,
+   "pause_distance_seconds": 0.057027027027027444,
+   "acoustic": {
+    "frames": 243,
+    "a_quiet_frames": 197,
+    "b_quiet_frames": 81,
+    "both_loud_frames": 10
+   },
+   "acoustic_a_silence_share": 0.8106995884773662,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-015",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 19.75,
+   "frames": 247,
+   "a_silence_share_clip": 0.6891919831223629,
+   "a_silence_share_speech": 0.7250632911392405,
+   "b_silence_share_clip": 0.24151898734177213,
+   "simultaneous_frames": 12,
+   "simultaneous_share": 0.048582995951417005,
+   "offsets": {
+    "open_to_body": -0.25,
+    "body_to_close": 0.05,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.48,
+   "pause_distance_seconds": 0.01399999999999979,
+   "acoustic": {
+    "frames": 246,
+    "a_quiet_frames": 192,
+    "b_quiet_frames": 91,
+    "both_loud_frames": 6
+   },
+   "acoustic_a_silence_share": 0.7804878048780488,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-016",
+   "split": "dev",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 19.32,
+   "frames": 242,
+   "a_silence_share_clip": 0.6184480676328502,
+   "a_silence_share_speech": 0.6718426501035196,
+   "b_silence_share_clip": 0.2846790890269151,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.06198347107438017,
+   "offsets": {
+    "open_to_body": -0.35,
+    "body_to_close": -0.25,
+    "body_to_backchannel": -0.35
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.76,
+   "pause_distance_seconds": 0.44705882352941195,
+   "acoustic": {
+    "frames": 241,
+    "a_quiet_frames": 180,
+    "b_quiet_frames": 90,
+    "both_loud_frames": 9
+   },
+   "acoustic_a_silence_share": 0.7468879668049793,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-017",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 19.96,
+   "frames": 250,
+   "a_silence_share_clip": 0.6876670006680028,
+   "a_silence_share_speech": 0.720440881763527,
+   "b_silence_share_clip": 0.23947895791583151,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.06,
+   "offsets": {
+    "open_to_body": -0.45,
+    "body_to_close": 0.05,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.52,
+   "pause_distance_seconds": 0.03659574468085092,
+   "acoustic": {
+    "frames": 249,
+    "a_quiet_frames": 193,
+    "b_quiet_frames": 92,
+    "both_loud_frames": 12
+   },
+   "acoustic_a_silence_share": 0.7751004016064257,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-018",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 18.39,
+   "frames": 230,
+   "a_silence_share_clip": 0.6703462026463658,
+   "a_silence_share_speech": 0.7041870581837955,
+   "b_silence_share_clip": 0.24850462207721602,
+   "simultaneous_frames": 16,
+   "simultaneous_share": 0.06956521739130435,
+   "offsets": {
+    "open_to_body": -0.25,
+    "body_to_close": -0.15,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.46,
+   "pause_distance_seconds": 0.20052631578947322,
+   "acoustic": {
+    "frames": 229,
+    "a_quiet_frames": 179,
+    "b_quiet_frames": 87,
+    "both_loud_frames": 12
+   },
+   "acoustic_a_silence_share": 0.7816593886462883,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-019",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 23.71,
+   "frames": 297,
+   "a_silence_share_clip": 0.47431112048362145,
+   "a_silence_share_speech": 0.5099114297764655,
+   "b_silence_share_clip": 0.4795444959932518,
+   "simultaneous_frames": 10,
+   "simultaneous_share": 0.03367003367003367,
+   "offsets": {
+    "open_to_body": 0.05,
+    "body_to_close": -0.05,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.67,
+   "pause_distance_seconds": 0.3265217391304338,
+   "acoustic": {
+    "frames": 296,
+    "a_quiet_frames": 224,
+    "b_quiet_frames": 170,
+    "both_loud_frames": 6
+   },
+   "acoustic_a_silence_share": 0.7567567567567568,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-020",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 19.32,
+   "frames": 242,
+   "a_silence_share_clip": 0.6549171842650103,
+   "a_silence_share_speech": 0.6972049689440993,
+   "b_silence_share_clip": 0.261904761904762,
+   "simultaneous_frames": 17,
+   "simultaneous_share": 0.07024793388429752,
+   "offsets": {
+    "open_to_body": -0.25,
+    "body_to_close": -0.35,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.65,
+   "pause_distance_seconds": 0.010769230769230642,
+   "acoustic": {
+    "frames": 241,
+    "a_quiet_frames": 201,
+    "b_quiet_frames": 100,
+    "both_loud_frames": 5
+   },
+   "acoustic_a_silence_share": 0.8340248962655602,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-021",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 22.08,
+   "frames": 276,
+   "a_silence_share_clip": 0.6451973882850242,
+   "a_silence_share_speech": 0.6721014492753623,
+   "b_silence_share_clip": 0.2907608695652173,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.05434782608695652,
+   "offsets": {
+    "open_to_body": -0.15,
+    "body_to_close": -0.15,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.43,
+   "pause_distance_seconds": 0.5386000000000002,
+   "acoustic": {
+    "frames": 276,
+    "a_quiet_frames": 221,
+    "b_quiet_frames": 112,
+    "both_loud_frames": 8
+   },
+   "acoustic_a_silence_share": 0.8007246376811594,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-022",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 22.849999999999998,
+   "frames": 286,
+   "a_silence_share_clip": 0.8327826404084611,
+   "a_silence_share_speech": 0.8560175054704595,
+   "b_silence_share_clip": 0.11334792122538273,
+   "simultaneous_frames": 13,
+   "simultaneous_share": 0.045454545454545456,
+   "offsets": {
+    "open_to_body": 0.05,
+    "body_to_close": -0.15,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.39,
+   "pause_distance_seconds": 0.10862068965517246,
+   "acoustic": {
+    "frames": 285,
+    "a_quiet_frames": 255,
+    "b_quiet_frames": 79,
+    "both_loud_frames": 10
+   },
+   "acoustic_a_silence_share": 0.8947368421052632,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-023",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 18.08,
+   "frames": 226,
+   "a_silence_share_clip": 0.6418786873156341,
+   "a_silence_share_speech": 0.6847345132743362,
+   "b_silence_share_clip": 0.2215154867256638,
+   "simultaneous_frames": 26,
+   "simultaneous_share": 0.11504424778761062,
+   "offsets": {
+    "open_to_body": -0.45,
+    "body_to_close": -0.35,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.61,
+   "pause_distance_seconds": 0.16146341463414648,
+   "acoustic": {
+    "frames": 226,
+    "a_quiet_frames": 180,
+    "b_quiet_frames": 83,
+    "both_loud_frames": 17
+   },
+   "acoustic_a_silence_share": 0.7964601769911505,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-024",
+   "split": "dev",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 18.6,
+   "frames": 233,
+   "a_silence_share_clip": 0.5250179211469534,
+   "a_silence_share_speech": 0.5564516129032258,
+   "b_silence_share_clip": 0.37903225806451624,
+   "simultaneous_frames": 20,
+   "simultaneous_share": 0.08583690987124463,
+   "offsets": {
+    "open_to_body": -0.05,
+    "body_to_close": -0.45,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.49,
+   "pause_distance_seconds": 0.0843636363636362,
+   "acoustic": {
+    "frames": 232,
+    "a_quiet_frames": 174,
+    "b_quiet_frames": 112,
+    "both_loud_frames": 11
+   },
+   "acoustic_a_silence_share": 0.75,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-025",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 22.43,
+   "frames": 281,
+   "a_silence_share_clip": 0.6483151285480755,
+   "a_silence_share_speech": 0.6825679893000446,
+   "b_silence_share_clip": 0.2982612572447615,
+   "simultaneous_frames": 11,
+   "simultaneous_share": 0.03914590747330961,
+   "offsets": {
+    "open_to_body": -0.05,
+    "body_to_close": -0.05,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.64,
+   "pause_distance_seconds": 0.06846153846153813,
+   "acoustic": {
+    "frames": 280,
+    "a_quiet_frames": 229,
+    "b_quiet_frames": 112,
+    "both_loud_frames": 5
+   },
+   "acoustic_a_silence_share": 0.8178571428571428,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-026",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 15.82,
+   "frames": 198,
+   "a_silence_share_clip": 0.6846897387273494,
+   "a_silence_share_speech": 0.7237673830594185,
+   "b_silence_share_clip": 0.22756005056890016,
+   "simultaneous_frames": 14,
+   "simultaneous_share": 0.0707070707070707,
+   "offsets": {
+    "open_to_body": -0.05,
+    "body_to_close": -0.25,
+    "body_to_backchannel": -0.35
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.46,
+   "pause_distance_seconds": 0.27764705882352914,
+   "acoustic": {
+    "frames": 197,
+    "a_quiet_frames": 157,
+    "b_quiet_frames": 69,
+    "both_loud_frames": 8
+   },
+   "acoustic_a_silence_share": 0.7969543147208121,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-027",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 22.555,
+   "frames": 282,
+   "a_silence_share_clip": 0.8188576073302298,
+   "a_silence_share_speech": 0.8470405675016626,
+   "b_silence_share_clip": 0.08734205275992013,
+   "simultaneous_frames": 23,
+   "simultaneous_share": 0.08156028368794327,
+   "offsets": {
+    "open_to_body": -0.25,
+    "body_to_close": -0.05,
+    "body_to_backchannel": -0.35
+   },
+   "deferred_seconds": 0.29499999999999993,
+   "pause_seconds": 0.38,
+   "pause_distance_seconds": 0.1387999999999998,
+   "acoustic": {
+    "frames": 281,
+    "a_quiet_frames": 255,
+    "b_quiet_frames": 66,
+    "both_loud_frames": 15
+   },
+   "acoustic_a_silence_share": 0.9074733096085409,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-028",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 20.66,
+   "frames": 259,
+   "a_silence_share_clip": 0.8578009035172636,
+   "a_silence_share_speech": 0.8852855759922555,
+   "b_silence_share_clip": 0.0614714424007744,
+   "simultaneous_frames": 20,
+   "simultaneous_share": 0.07722007722007722,
+   "offsets": {
+    "open_to_body": -0.25,
+    "body_to_close": -0.15,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.44,
+   "pause_distance_seconds": 0.027272727272727337,
+   "acoustic": {
+    "frames": 258,
+    "a_quiet_frames": 235,
+    "b_quiet_frames": 61,
+    "both_loud_frames": 13
+   },
+   "acoustic_a_silence_share": 0.9108527131782945,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-029",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 18.549999999999997,
+   "frames": 232,
+   "a_silence_share_clip": 0.8136433063791554,
+   "a_silence_share_speech": 0.8463611859838275,
+   "b_silence_share_clip": 0.09541778975741222,
+   "simultaneous_frames": 19,
+   "simultaneous_share": 0.08189655172413793,
+   "offsets": {
+    "open_to_body": -0.45,
+    "body_to_close": -0.15,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.45,
+   "pause_distance_seconds": 0.07079999999999975,
+   "acoustic": {
+    "frames": 231,
+    "a_quiet_frames": 207,
+    "b_quiet_frames": 62,
+    "both_loud_frames": 7
+   },
+   "acoustic_a_silence_share": 0.8961038961038961,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-030",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 20.84,
+   "frames": 261,
+   "a_silence_share_clip": 0.6462611964171465,
+   "a_silence_share_speech": 0.682341650671785,
+   "b_silence_share_clip": 0.30038387715930914,
+   "simultaneous_frames": 9,
+   "simultaneous_share": 0.034482758620689655,
+   "offsets": {
+    "open_to_body": -0.05,
+    "body_to_close": -0.05,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.61,
+   "pause_distance_seconds": 0.25687499999999996,
+   "acoustic": {
+    "frames": 260,
+    "a_quiet_frames": 205,
+    "b_quiet_frames": 114,
+    "both_loud_frames": 7
+   },
+   "acoustic_a_silence_share": 0.7884615384615384,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-031",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 19.17,
+   "frames": 240,
+   "a_silence_share_clip": 0.6369370544253173,
+   "a_silence_share_speech": 0.6692749087115284,
+   "b_silence_share_clip": 0.30620761606677105,
+   "simultaneous_frames": 10,
+   "simultaneous_share": 0.041666666666666664,
+   "offsets": {
+    "open_to_body": -0.05,
+    "body_to_close": 0.05,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.48,
+   "pause_distance_seconds": 0.21326086956521717,
+   "acoustic": {
+    "frames": 239,
+    "a_quiet_frames": 198,
+    "b_quiet_frames": 103,
+    "both_loud_frames": 4
+   },
+   "acoustic_a_silence_share": 0.8284518828451883,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-032",
+   "split": "dev",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 17.5,
+   "frames": 219,
+   "a_silence_share_clip": 0.6341214285714285,
+   "a_silence_share_speech": 0.6697142857142857,
+   "b_silence_share_clip": 0.2857142857142857,
+   "simultaneous_frames": 14,
+   "simultaneous_share": 0.0639269406392694,
+   "offsets": {
+    "open_to_body": 0.05,
+    "body_to_close": -0.45,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.56,
+   "pause_distance_seconds": 0.2012195121951219,
+   "acoustic": {
+    "frames": 218,
+    "a_quiet_frames": 166,
+    "b_quiet_frames": 85,
+    "both_loud_frames": 9
+   },
+   "acoustic_a_silence_share": 0.7614678899082569,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-033",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 16.82,
+   "frames": 211,
+   "a_silence_share_clip": 0.6342845818470075,
+   "a_silence_share_speech": 0.6866825208085612,
+   "b_silence_share_clip": 0.26189060642092754,
+   "simultaneous_frames": 16,
+   "simultaneous_share": 0.07582938388625593,
+   "offsets": {
+    "open_to_body": -0.05,
+    "body_to_close": -0.35,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.67,
+   "pause_distance_seconds": 0.01972972972972986,
+   "acoustic": {
+    "frames": 210,
+    "a_quiet_frames": 165,
+    "b_quiet_frames": 76,
+    "both_loud_frames": 10
+   },
+   "acoustic_a_silence_share": 0.7857142857142857,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-034",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 23.9,
+   "frames": 299,
+   "a_silence_share_clip": 0.8231851464435147,
+   "a_silence_share_speech": 0.8489539748953975,
+   "b_silence_share_clip": 0.12008368200836805,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.05016722408026756,
+   "offsets": {
+    "open_to_body": 0.05,
+    "body_to_close": -0.05,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.37,
+   "pause_distance_seconds": 0.24120000000000008,
+   "acoustic": {
+    "frames": 298,
+    "a_quiet_frames": 267,
+    "b_quiet_frames": 93,
+    "both_loud_frames": 5
+   },
+   "acoustic_a_silence_share": 0.8959731543624161,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-035",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 17.71,
+   "frames": 222,
+   "a_silence_share_clip": 0.6077875023527198,
+   "a_silence_share_speech": 0.6617730095990967,
+   "b_silence_share_clip": 0.23913043478260865,
+   "simultaneous_frames": 27,
+   "simultaneous_share": 0.12162162162162163,
+   "offsets": {
+    "open_to_body": -0.35,
+    "body_to_close": -0.45,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.64,
+   "pause_distance_seconds": 0.050731707317073216,
+   "acoustic": {
+    "frames": 221,
+    "a_quiet_frames": 182,
+    "b_quiet_frames": 79,
+    "both_loud_frames": 12
+   },
+   "acoustic_a_silence_share": 0.8235294117647058,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-036",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 20.28,
+   "frames": 254,
+   "a_silence_share_clip": 0.5450279421433268,
+   "a_silence_share_speech": 0.581854043392505,
+   "b_silence_share_clip": 0.383629191321499,
+   "simultaneous_frames": 13,
+   "simultaneous_share": 0.051181102362204724,
+   "offsets": {
+    "open_to_body": 0.05,
+    "body_to_close": -0.35,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.5700000000000001,
+   "pause_distance_seconds": 0.035849056603773466,
+   "acoustic": {
+    "frames": 253,
+    "a_quiet_frames": 199,
+    "b_quiet_frames": 121,
+    "both_loud_frames": 4
+   },
+   "acoustic_a_silence_share": 0.7865612648221344,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-037",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 20.14,
+   "frames": 252,
+   "a_silence_share_clip": 0.5797211188348228,
+   "a_silence_share_speech": 0.6181727904667328,
+   "b_silence_share_clip": 0.3291956305858986,
+   "simultaneous_frames": 17,
+   "simultaneous_share": 0.06746031746031746,
+   "offsets": {
+    "open_to_body": -0.25,
+    "body_to_close": -0.25,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.58,
+   "pause_distance_seconds": 0.38061224489795853,
+   "acoustic": {
+    "frames": 251,
+    "a_quiet_frames": 206,
+    "b_quiet_frames": 126,
+    "both_loud_frames": 4
+   },
+   "acoustic_a_silence_share": 0.8207171314741036,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-038",
+   "split": "dev",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 15.940000000000001,
+   "frames": 200,
+   "a_silence_share_clip": 0.6413059389376831,
+   "a_silence_share_speech": 0.697616060225847,
+   "b_silence_share_clip": 0.2553324968632371,
+   "simultaneous_frames": 11,
+   "simultaneous_share": 0.055,
+   "offsets": {
+    "open_to_body": -0.05,
+    "body_to_close": -0.15,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.59,
+   "pause_distance_seconds": 0.3838709677419352,
+   "acoustic": {
+    "frames": 199,
+    "a_quiet_frames": 165,
+    "b_quiet_frames": 83,
+    "both_loud_frames": 6
+   },
+   "acoustic_a_silence_share": 0.8291457286432161,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-039",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 15.86,
+   "frames": 199,
+   "a_silence_share_clip": 0.6476697141656158,
+   "a_silence_share_speech": 0.6923076923076923,
+   "b_silence_share_clip": 0.2622950819672131,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.07537688442211055,
+   "offsets": {
+    "open_to_body": -0.15,
+    "body_to_close": -0.15,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.5,
+   "pause_distance_seconds": 0.2821621621621624,
+   "acoustic": {
+    "frames": 198,
+    "a_quiet_frames": 157,
+    "b_quiet_frames": 73,
+    "both_loud_frames": 8
+   },
+   "acoustic_a_silence_share": 0.7929292929292929,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-040",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 16.23,
+   "frames": 203,
+   "a_silence_share_clip": 0.7119634421852538,
+   "a_silence_share_speech": 0.7529266789895255,
+   "b_silence_share_clip": 0.22489217498459635,
+   "simultaneous_frames": 7,
+   "simultaneous_share": 0.034482758620689655,
+   "offsets": {
+    "open_to_body": -0.05,
+    "body_to_close": 0.05,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.59,
+   "pause_distance_seconds": 0.08000000000000007,
+   "acoustic": {
+    "frames": 202,
+    "a_quiet_frames": 167,
+    "b_quiet_frames": 70,
+    "both_loud_frames": 5
+   },
+   "acoustic_a_silence_share": 0.8267326732673267,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-041",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 16.259999999999998,
+   "frames": 204,
+   "a_silence_share_clip": 0.6869823698236983,
+   "a_silence_share_speech": 0.7226322263222632,
+   "b_silence_share_clip": 0.18665436654366552,
+   "simultaneous_frames": 23,
+   "simultaneous_share": 0.11274509803921569,
+   "offsets": {
+    "open_to_body": -0.15,
+    "body_to_close": 0.05,
+    "body_to_backchannel": -0.35
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.43,
+   "pause_distance_seconds": 0.021428571428571352,
+   "acoustic": {
+    "frames": 203,
+    "a_quiet_frames": 163,
+    "b_quiet_frames": 63,
+    "both_loud_frames": 17
+   },
+   "acoustic_a_silence_share": 0.8029556650246306,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-042",
+   "split": "train",
+   "turns": 3,
+   "a_turns": 1,
+   "seconds": 18.46,
+   "frames": 231,
+   "a_silence_share_clip": 0.8473794691224269,
+   "a_silence_share_speech": 0.8586132177681474,
+   "b_silence_share_clip": 0.1462621885157096,
+   "simultaneous_frames": 3,
+   "simultaneous_share": 0.012987012987012988,
+   "offsets": {
+    "open_to_body": -0.15,
+    "body_to_close": 0.05
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": null,
+   "pause_distance_seconds": null,
+   "acoustic": {
+    "frames": 230,
+    "a_quiet_frames": 208,
+    "b_quiet_frames": 71,
+    "both_loud_frames": 2
+   },
+   "acoustic_a_silence_share": 0.9043478260869565,
+   "roles": [
+    "open",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-043",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 18.310000000000002,
+   "frames": 229,
+   "a_silence_share_clip": 0.5808142180957583,
+   "a_silence_share_speech": 0.624795193883124,
+   "b_silence_share_clip": 0.332605133806663,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.06550218340611354,
+   "offsets": {
+    "open_to_body": -0.15,
+    "body_to_close": -0.35,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.58,
+   "pause_distance_seconds": 0.06744186046511569,
+   "acoustic": {
+    "frames": 228,
+    "a_quiet_frames": 186,
+    "b_quiet_frames": 102,
+    "both_loud_frames": 4
+   },
+   "acoustic_a_silence_share": 0.8157894736842105,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-044",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 22.120000000000005,
+   "frames": 277,
+   "a_silence_share_clip": 0.802697408077155,
+   "a_silence_share_speech": 0.8345388788426763,
+   "b_silence_share_clip": 0.14014466546112114,
+   "simultaneous_frames": 12,
+   "simultaneous_share": 0.04332129963898917,
+   "offsets": {
+    "open_to_body": 0.05,
+    "body_to_close": -0.25,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.5700000000000001,
+   "pause_distance_seconds": 0.12545454545454526,
+   "acoustic": {
+    "frames": 276,
+    "a_quiet_frames": 240,
+    "b_quiet_frames": 89,
+    "both_loud_frames": 6
+   },
+   "acoustic_a_silence_share": 0.8695652173913043,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-045",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 22.21,
+   "frames": 278,
+   "a_silence_share_clip": 0.7439422932612938,
+   "a_silence_share_speech": 0.7820801440792435,
+   "b_silence_share_clip": 0.20126069338135966,
+   "simultaneous_frames": 10,
+   "simultaneous_share": 0.03597122302158273,
+   "offsets": {
+    "open_to_body": -0.15,
+    "body_to_close": -0.05,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.71,
+   "pause_distance_seconds": 0.19289473684210545,
+   "acoustic": {
+    "frames": 277,
+    "a_quiet_frames": 236,
+    "b_quiet_frames": 102,
+    "both_loud_frames": 4
+   },
+   "acoustic_a_silence_share": 0.851985559566787,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-046",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 16.34,
+   "frames": 205,
+   "a_silence_share_clip": 0.630609955120359,
+   "a_silence_share_speech": 0.675642594859241,
+   "b_silence_share_clip": 0.2766217870257036,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.07317073170731707,
+   "offsets": {
+    "open_to_body": -0.45,
+    "body_to_close": 0.05,
+    "body_to_backchannel": -0.35
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.59,
+   "pause_distance_seconds": 0.121,
+   "acoustic": {
+    "frames": 204,
+    "a_quiet_frames": 164,
+    "b_quiet_frames": 82,
+    "both_loud_frames": 9
+   },
+   "acoustic_a_silence_share": 0.803921568627451,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-047",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 15.629999999999999,
+   "frames": 196,
+   "a_silence_share_clip": 0.6094263169119214,
+   "a_silence_share_speech": 0.6628278950735764,
+   "b_silence_share_clip": 0.2872680742162508,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.07653061224489796,
+   "offsets": {
+    "open_to_body": -0.35,
+    "body_to_close": -0.05,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.54,
+   "pause_distance_seconds": 0.11333333333333329,
+   "acoustic": {
+    "frames": 195,
+    "a_quiet_frames": 147,
+    "b_quiet_frames": 73,
+    "both_loud_frames": 6
+   },
+   "acoustic_a_silence_share": 0.7538461538461538,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-048",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 16.93,
+   "frames": 212,
+   "a_silence_share_clip": 0.6153770427249459,
+   "a_silence_share_speech": 0.6556408741878322,
+   "b_silence_share_clip": 0.25723567631423516,
+   "simultaneous_frames": 22,
+   "simultaneous_share": 0.10377358490566038,
+   "offsets": {
+    "open_to_body": -0.35,
+    "body_to_close": -0.45,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.46,
+   "pause_distance_seconds": 0.35191489361702155,
+   "acoustic": {
+    "frames": 211,
+    "a_quiet_frames": 159,
+    "b_quiet_frames": 82,
+    "both_loud_frames": 15
+   },
+   "acoustic_a_silence_share": 0.7535545023696683,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-049",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 16.11,
+   "frames": 202,
+   "a_silence_share_clip": 0.5632009104076143,
+   "a_silence_share_speech": 0.6083178150217257,
+   "b_silence_share_clip": 0.3358162631905649,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.07425742574257425,
+   "offsets": {
+    "open_to_body": -0.25,
+    "body_to_close": -0.35,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.63,
+   "pause_distance_seconds": 0.7920930232558132,
+   "acoustic": {
+    "frames": 201,
+    "a_quiet_frames": 152,
+    "b_quiet_frames": 85,
+    "both_loud_frames": 7
+   },
+   "acoustic_a_silence_share": 0.7562189054726368,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-050",
+   "split": "dev",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 22.59,
+   "frames": 283,
+   "a_silence_share_clip": 0.8270067876641581,
+   "a_silence_share_speech": 0.8579017264276229,
+   "b_silence_share_clip": 0.1027003098716246,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.053003533568904596,
+   "offsets": {
+    "open_to_body": -0.15,
+    "body_to_close": -0.05,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.5,
+   "pause_distance_seconds": 0.13035714285714262,
+   "acoustic": {
+    "frames": 282,
+    "a_quiet_frames": 258,
+    "b_quiet_frames": 78,
+    "both_loud_frames": 10
+   },
+   "acoustic_a_silence_share": 0.9148936170212766,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-051",
+   "split": "dev",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 21.59,
+   "frames": 270,
+   "a_silence_share_clip": 0.7872047244094489,
+   "a_silence_share_speech": 0.8170449282075035,
+   "b_silence_share_clip": 0.1560907827698007,
+   "simultaneous_frames": 12,
+   "simultaneous_share": 0.044444444444444446,
+   "offsets": {
+    "open_to_body": 0.05,
+    "body_to_close": -0.15,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.46,
+   "pause_distance_seconds": 0.19323529411764673,
+   "acoustic": {
+    "frames": 269,
+    "a_quiet_frames": 225,
+    "b_quiet_frames": 88,
+    "both_loud_frames": 5
+   },
+   "acoustic_a_silence_share": 0.8364312267657993,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-052",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 19.3,
+   "frames": 242,
+   "a_silence_share_clip": 0.586614853195164,
+   "a_silence_share_speech": 0.633160621761658,
+   "b_silence_share_clip": 0.31865284974093266,
+   "simultaneous_frames": 16,
+   "simultaneous_share": 0.06611570247933884,
+   "offsets": {
+    "open_to_body": -0.25,
+    "body_to_close": -0.25,
+    "body_to_backchannel": -0.35
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.67,
+   "pause_distance_seconds": 0.18999999999999995,
+   "acoustic": {
+    "frames": 241,
+    "a_quiet_frames": 183,
+    "b_quiet_frames": 106,
+    "both_loud_frames": 8
+   },
+   "acoustic_a_silence_share": 0.7593360995850622,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-053",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 16.65,
+   "frames": 209,
+   "a_silence_share_clip": 0.555593093093093,
+   "a_silence_share_speech": 0.6012012012012011,
+   "b_silence_share_clip": 0.29399399399399406,
+   "simultaneous_frames": 26,
+   "simultaneous_share": 0.12440191387559808,
+   "offsets": {
+    "open_to_body": -0.45,
+    "body_to_close": -0.35,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.6,
+   "pause_distance_seconds": 0.31133333333333324,
+   "acoustic": {
+    "frames": 208,
+    "a_quiet_frames": 164,
+    "b_quiet_frames": 86,
+    "both_loud_frames": 12
+   },
+   "acoustic_a_silence_share": 0.7884615384615384,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-054",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 19.38,
+   "frames": 243,
+   "a_silence_share_clip": 0.6406819745442036,
+   "a_silence_share_speech": 0.6811145510835913,
+   "b_silence_share_clip": 0.2554179566563467,
+   "simultaneous_frames": 20,
+   "simultaneous_share": 0.0823045267489712,
+   "offsets": {
+    "open_to_body": -0.35,
+    "body_to_close": -0.35,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.61,
+   "pause_distance_seconds": 0.3566666666666669,
+   "acoustic": {
+    "frames": 242,
+    "a_quiet_frames": 198,
+    "b_quiet_frames": 100,
+    "both_loud_frames": 11
+   },
+   "acoustic_a_silence_share": 0.8181818181818182,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-055",
+   "split": "dev",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 16.3,
+   "frames": 204,
+   "a_silence_share_clip": 0.6473057259713701,
+   "a_silence_share_speech": 0.6877300613496933,
+   "b_silence_share_clip": 0.23834355828220866,
+   "simultaneous_frames": 20,
+   "simultaneous_share": 0.09803921568627451,
+   "offsets": {
+    "open_to_body": -0.35,
+    "body_to_close": -0.25,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.47000000000000003,
+   "pause_distance_seconds": 0.31842105263157894,
+   "acoustic": {
+    "frames": 203,
+    "a_quiet_frames": 165,
+    "b_quiet_frames": 68,
+    "both_loud_frames": 8
+   },
+   "acoustic_a_silence_share": 0.812807881773399,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-056",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 17.740000000000002,
+   "frames": 222,
+   "a_silence_share_clip": 0.584021514468245,
+   "a_silence_share_speech": 0.637542277339346,
+   "b_silence_share_clip": 0.32694475760992114,
+   "simultaneous_frames": 13,
+   "simultaneous_share": 0.05855855855855856,
+   "offsets": {
+    "open_to_body": -0.15,
+    "body_to_close": -0.25,
+    "body_to_backchannel": -0.35
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.7000000000000001,
+   "pause_distance_seconds": 0.36893617021276537,
+   "acoustic": {
+    "frames": 221,
+    "a_quiet_frames": 185,
+    "b_quiet_frames": 93,
+    "both_loud_frames": 6
+   },
+   "acoustic_a_silence_share": 0.8371040723981901,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-057",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 15.590000000000002,
+   "frames": 195,
+   "a_silence_share_clip": 0.6325716271113963,
+   "a_silence_share_speech": 0.6779987171263631,
+   "b_silence_share_clip": 0.2745349583066069,
+   "simultaneous_frames": 14,
+   "simultaneous_share": 0.07179487179487179,
+   "offsets": {
+    "open_to_body": -0.25,
+    "body_to_close": 0.05,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.59,
+   "pause_distance_seconds": 0.2749999999999999,
+   "acoustic": {
+    "frames": 194,
+    "a_quiet_frames": 151,
+    "b_quiet_frames": 77,
+    "both_loud_frames": 10
+   },
+   "acoustic_a_silence_share": 0.7783505154639175,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-058",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 21.939999999999998,
+   "frames": 275,
+   "a_silence_share_clip": 0.7047041172895776,
+   "a_silence_share_speech": 0.7324521422060164,
+   "b_silence_share_clip": 0.20783956244302637,
+   "simultaneous_frames": 20,
+   "simultaneous_share": 0.07272727272727272,
+   "offsets": {
+    "open_to_body": -0.35,
+    "body_to_close": -0.45,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.48,
+   "pause_distance_seconds": 0.3485365853658533,
+   "acoustic": {
+    "frames": 274,
+    "a_quiet_frames": 233,
+    "b_quiet_frames": 94,
+    "both_loud_frames": 12
+   },
+   "acoustic_a_silence_share": 0.8503649635036497,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-059",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 16.19,
+   "frames": 203,
+   "a_silence_share_clip": 0.5833513485690756,
+   "a_silence_share_speech": 0.6312538604076591,
+   "b_silence_share_clip": 0.32921556516368133,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.07389162561576355,
+   "offsets": {
+    "open_to_body": -0.45,
+    "body_to_close": 0.05,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.6,
+   "pause_distance_seconds": 0.2746153846153847,
+   "acoustic": {
+    "frames": 202,
+    "a_quiet_frames": 156,
+    "b_quiet_frames": 91,
+    "both_loud_frames": 9
+   },
+   "acoustic_a_silence_share": 0.7722772277227723,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-060",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 21.22,
+   "frames": 266,
+   "a_silence_share_clip": 0.4912975180647189,
+   "a_silence_share_speech": 0.5348727615457116,
+   "b_silence_share_clip": 0.42813383600377,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.05639097744360902,
+   "offsets": {
+    "open_to_body": -0.35,
+    "body_to_close": -0.05,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.76,
+   "pause_distance_seconds": 0.3344444444444452,
+   "acoustic": {
+    "frames": 265,
+    "a_quiet_frames": 201,
+    "b_quiet_frames": 139,
+    "both_loud_frames": 9
+   },
+   "acoustic_a_silence_share": 0.7584905660377359,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-061",
+   "split": "dev",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 20.01,
+   "frames": 251,
+   "a_silence_share_clip": 0.5285857071464268,
+   "a_silence_share_speech": 0.5727136431784108,
+   "b_silence_share_clip": 0.3873063468265867,
+   "simultaneous_frames": 18,
+   "simultaneous_share": 0.07171314741035857,
+   "offsets": {
+    "open_to_body": -0.15,
+    "body_to_close": -0.45,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.71,
+   "pause_distance_seconds": 0.1259016393442618,
+   "acoustic": {
+    "frames": 250,
+    "a_quiet_frames": 191,
+    "b_quiet_frames": 121,
+    "both_loud_frames": 5
+   },
+   "acoustic_a_silence_share": 0.764,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-062",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 18.370000000000005,
+   "frames": 230,
+   "a_silence_share_clip": 0.5560538014879333,
+   "a_silence_share_speech": 0.6096897114861187,
+   "b_silence_share_clip": 0.3413173652694612,
+   "simultaneous_frames": 16,
+   "simultaneous_share": 0.06956521739130435,
+   "offsets": {
+    "open_to_body": -0.45,
+    "body_to_close": -0.35,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.81,
+   "pause_distance_seconds": 0.02470588235294091,
+   "acoustic": {
+    "frames": 229,
+    "a_quiet_frames": 170,
+    "b_quiet_frames": 103,
+    "both_loud_frames": 10
+   },
+   "acoustic_a_silence_share": 0.74235807860262,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-063",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 17.490000000000002,
+   "frames": 219,
+   "a_silence_share_clip": 0.6707737754907567,
+   "a_silence_share_speech": 0.7072612921669525,
+   "b_silence_share_clip": 0.19582618639222416,
+   "simultaneous_frames": 24,
+   "simultaneous_share": 0.1095890410958904,
+   "offsets": {
+    "open_to_body": -0.15,
+    "body_to_close": -0.15,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.49,
+   "pause_distance_seconds": 0.18511111111111145,
+   "acoustic": {
+    "frames": 218,
+    "a_quiet_frames": 180,
+    "b_quiet_frames": 68,
+    "both_loud_frames": 15
+   },
+   "acoustic_a_silence_share": 0.8256880733944955,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-064",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 18.91,
+   "frames": 237,
+   "a_silence_share_clip": 0.5861779481755685,
+   "a_silence_share_speech": 0.6261237440507668,
+   "b_silence_share_clip": 0.3558963511369646,
+   "simultaneous_frames": 10,
+   "simultaneous_share": 0.04219409282700422,
+   "offsets": {
+    "open_to_body": 0.05,
+    "body_to_close": 0.05,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.56,
+   "pause_distance_seconds": 0.033333333333333215,
+   "acoustic": {
+    "frames": 236,
+    "a_quiet_frames": 172,
+    "b_quiet_frames": 111,
+    "both_loud_frames": 4
+   },
+   "acoustic_a_silence_share": 0.7288135593220338,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-065",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 16.759999999999998,
+   "frames": 210,
+   "a_silence_share_clip": 0.6404957239459029,
+   "a_silence_share_speech": 0.6843675417661097,
+   "b_silence_share_clip": 0.2852028639618138,
+   "simultaneous_frames": 9,
+   "simultaneous_share": 0.04285714285714286,
+   "offsets": {
+    "open_to_body": -0.15,
+    "body_to_close": -0.05,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.62,
+   "pause_distance_seconds": 0.1869767441860466,
+   "acoustic": {
+    "frames": 209,
+    "a_quiet_frames": 168,
+    "b_quiet_frames": 90,
+    "both_loud_frames": 3
+   },
+   "acoustic_a_silence_share": 0.8038277511961722,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-066",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 16.42,
+   "frames": 206,
+   "a_silence_share_clip": 0.6576177425903371,
+   "a_silence_share_speech": 0.6961023142509135,
+   "b_silence_share_clip": 0.24056029232643106,
+   "simultaneous_frames": 18,
+   "simultaneous_share": 0.08737864077669903,
+   "offsets": {
+    "open_to_body": -0.15,
+    "body_to_close": -0.25,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.51,
+   "pause_distance_seconds": 0.14142857142857146,
+   "acoustic": {
+    "frames": 205,
+    "a_quiet_frames": 162,
+    "b_quiet_frames": 77,
+    "both_loud_frames": 13
+   },
+   "acoustic_a_silence_share": 0.7902439024390244,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-067",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 18.220000000000002,
+   "frames": 228,
+   "a_silence_share_clip": 0.5600576289791439,
+   "a_silence_share_speech": 0.6042810098792536,
+   "b_silence_share_clip": 0.36443468715697047,
+   "simultaneous_frames": 11,
+   "simultaneous_share": 0.04824561403508772,
+   "offsets": {
+    "open_to_body": 0.05,
+    "body_to_close": -0.25,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.61,
+   "pause_distance_seconds": 0.6129166666666666,
+   "acoustic": {
+    "frames": 227,
+    "a_quiet_frames": 178,
+    "b_quiet_frames": 105,
+    "both_loud_frames": 6
+   },
+   "acoustic_a_silence_share": 0.7841409691629956,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-068",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 17.099999999999998,
+   "frames": 214,
+   "a_silence_share_clip": 0.4320808966861598,
+   "a_silence_share_speech": 0.4695906432748538,
+   "b_silence_share_clip": 0.44853801169590635,
+   "simultaneous_frames": 21,
+   "simultaneous_share": 0.09813084112149532,
+   "offsets": {
+    "open_to_body": -0.35,
+    "body_to_close": -0.45,
+    "body_to_backchannel": -0.35
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.58,
+   "pause_distance_seconds": 0.24666666666666703,
+   "acoustic": {
+    "frames": 213,
+    "a_quiet_frames": 144,
+    "b_quiet_frames": 114,
+    "both_loud_frames": 15
+   },
+   "acoustic_a_silence_share": 0.676056338028169,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-069",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 17.15,
+   "frames": 215,
+   "a_silence_share_clip": 0.6025777453838677,
+   "a_silence_share_speech": 0.6169096209912537,
+   "b_silence_share_clip": 0.3032069970845481,
+   "simultaneous_frames": 20,
+   "simultaneous_share": 0.09302325581395349,
+   "offsets": {
+    "open_to_body": -0.25,
+    "body_to_close": -0.05,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.12,
+   "pause_distance_seconds": 0.18186046511627918,
+   "acoustic": {
+    "frames": 214,
+    "a_quiet_frames": 167,
+    "b_quiet_frames": 91,
+    "both_loud_frames": 8
+   },
+   "acoustic_a_silence_share": 0.780373831775701,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-070",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 19.89,
+   "frames": 249,
+   "a_silence_share_clip": 0.5743547846489023,
+   "a_silence_share_speech": 0.6088486676721971,
+   "b_silence_share_clip": 0.3494218200100553,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.060240963855421686,
+   "offsets": {
+    "open_to_body": -0.15,
+    "body_to_close": -0.25,
+    "body_to_backchannel": -0.35
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.52,
+   "pause_distance_seconds": 0.012372881355933174,
+   "acoustic": {
+    "frames": 248,
+    "a_quiet_frames": 188,
+    "b_quiet_frames": 111,
+    "both_loud_frames": 6
+   },
+   "acoustic_a_silence_share": 0.7580645161290323,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-071",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 20.92,
+   "frames": 262,
+   "a_silence_share_clip": 0.7143742033142129,
+   "a_silence_share_speech": 0.745697896749522,
+   "b_silence_share_clip": 0.22084130019120463,
+   "simultaneous_frames": 13,
+   "simultaneous_share": 0.04961832061068702,
+   "offsets": {
+    "open_to_body": -0.05,
+    "body_to_close": -0.15,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.43,
+   "pause_distance_seconds": 0.5099999999999998,
+   "acoustic": {
+    "frames": 261,
+    "a_quiet_frames": 225,
+    "b_quiet_frames": 103,
+    "both_loud_frames": 8
+   },
+   "acoustic_a_silence_share": 0.8620689655172413,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-072",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 17.94,
+   "frames": 225,
+   "a_silence_share_clip": 0.6425956893348198,
+   "a_silence_share_speech": 0.6806020066889632,
+   "b_silence_share_clip": 0.23829431438127102,
+   "simultaneous_frames": 23,
+   "simultaneous_share": 0.10222222222222223,
+   "offsets": {
+    "open_to_body": -0.25,
+    "body_to_close": 0.05,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.54,
+   "pause_distance_seconds": 0.2519999999999998,
+   "acoustic": {
+    "frames": 224,
+    "a_quiet_frames": 189,
+    "b_quiet_frames": 78,
+    "both_loud_frames": 16
+   },
+   "acoustic_a_silence_share": 0.84375,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-073",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 23.21,
+   "frames": 291,
+   "a_silence_share_clip": 0.738833835990234,
+   "a_silence_share_speech": 0.7707884532529081,
+   "b_silence_share_clip": 0.20292977165015103,
+   "simultaneous_frames": 14,
+   "simultaneous_share": 0.048109965635738834,
+   "offsets": {
+    "open_to_body": -0.35,
+    "body_to_close": 0.05,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.58,
+   "pause_distance_seconds": 0.5416666666666665,
+   "acoustic": {
+    "frames": 290,
+    "a_quiet_frames": 252,
+    "b_quiet_frames": 106,
+    "both_loud_frames": 6
+   },
+   "acoustic_a_silence_share": 0.8689655172413793,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-074",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 22.169999999999998,
+   "frames": 278,
+   "a_silence_share_clip": 0.8348782138024358,
+   "a_silence_share_speech": 0.8606224627875507,
+   "b_silence_share_clip": 0.10058637798827241,
+   "simultaneous_frames": 16,
+   "simultaneous_share": 0.05755395683453238,
+   "offsets": {
+    "open_to_body": -0.05,
+    "body_to_close": -0.35,
+    "body_to_backchannel": -0.35
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.49,
+   "pause_distance_seconds": 0.11181818181818182,
+   "acoustic": {
+    "frames": 277,
+    "a_quiet_frames": 249,
+    "b_quiet_frames": 78,
+    "both_loud_frames": 11
+   },
+   "acoustic_a_silence_share": 0.8989169675090253,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-075",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 21.1,
+   "frames": 264,
+   "a_silence_share_clip": 0.5343009478672985,
+   "a_silence_share_speech": 0.5753554502369669,
+   "b_silence_share_clip": 0.3888625592417062,
+   "simultaneous_frames": 15,
+   "simultaneous_share": 0.056818181818181816,
+   "offsets": {
+    "open_to_body": 0.05,
+    "body_to_close": -0.45,
+    "body_to_backchannel": -0.35
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.78,
+   "pause_distance_seconds": 0.46885245901639383,
+   "acoustic": {
+    "frames": 263,
+    "a_quiet_frames": 209,
+    "b_quiet_frames": 123,
+    "both_loud_frames": 8
+   },
+   "acoustic_a_silence_share": 0.7946768060836502,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-076",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 23.720000000000006,
+   "frames": 297,
+   "a_silence_share_clip": 0.43298552557616654,
+   "a_silence_share_speech": 0.46711635750421576,
+   "b_silence_share_clip": 0.48608768971332217,
+   "simultaneous_frames": 18,
+   "simultaneous_share": 0.06060606060606061,
+   "offsets": {
+    "open_to_body": -0.45,
+    "body_to_close": -0.15,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.56,
+   "pause_distance_seconds": 0.04512195121951201,
+   "acoustic": {
+    "frames": 296,
+    "a_quiet_frames": 221,
+    "b_quiet_frames": 163,
+    "both_loud_frames": 9
+   },
+   "acoustic_a_silence_share": 0.7466216216216216,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-077",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 19.61,
+   "frames": 246,
+   "a_silence_share_clip": 0.5662799592044875,
+   "a_silence_share_speech": 0.6022437531871494,
+   "b_silence_share_clip": 0.35186129525752174,
+   "simultaneous_frames": 17,
+   "simultaneous_share": 0.06910569105691057,
+   "offsets": {
+    "open_to_body": 0.05,
+    "body_to_close": -0.45,
+    "body_to_backchannel": -0.25
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.6,
+   "pause_distance_seconds": 0.10222222222222221,
+   "acoustic": {
+    "frames": 245,
+    "a_quiet_frames": 190,
+    "b_quiet_frames": 120,
+    "both_loud_frames": 7
+   },
+   "acoustic_a_silence_share": 0.7755102040816326,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-078",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 19.67,
+   "frames": 246,
+   "a_silence_share_clip": 0.5616548042704625,
+   "a_silence_share_speech": 0.5953228266395526,
+   "b_silence_share_clip": 0.3235892221657346,
+   "simultaneous_frames": 23,
+   "simultaneous_share": 0.09349593495934959,
+   "offsets": {
+    "open_to_body": 0.05,
+    "body_to_close": -0.35,
+    "body_to_backchannel": -0.35
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.5700000000000001,
+   "pause_distance_seconds": 0.13186440677966083,
+   "acoustic": {
+    "frames": 245,
+    "a_quiet_frames": 183,
+    "b_quiet_frames": 107,
+    "both_loud_frames": 15
+   },
+   "acoustic_a_silence_share": 0.746938775510204,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-079",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 15.849999999999998,
+   "frames": 199,
+   "a_silence_share_clip": 0.6423685594111461,
+   "a_silence_share_speech": 0.6851735015772871,
+   "b_silence_share_clip": 0.24069400630914828,
+   "simultaneous_frames": 19,
+   "simultaneous_share": 0.09547738693467336,
+   "offsets": {
+    "open_to_body": -0.05,
+    "body_to_close": -0.15,
+    "body_to_backchannel": -0.55
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.56,
+   "pause_distance_seconds": 0.11000000000000032,
+   "acoustic": {
+    "frames": 198,
+    "a_quiet_frames": 165,
+    "b_quiet_frames": 68,
+    "both_loud_frames": 9
+   },
+   "acoustic_a_silence_share": 0.8333333333333334,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  },
+  {
+   "dialogue_id": "v-080",
+   "split": "train",
+   "turns": 5,
+   "a_turns": 2,
+   "seconds": 19.3,
+   "frames": 242,
+   "a_silence_share_clip": 0.5374395509499137,
+   "a_silence_share_speech": 0.5746113989637305,
+   "b_silence_share_clip": 0.382901554404145,
+   "simultaneous_frames": 14,
+   "simultaneous_share": 0.05785123966942149,
+   "offsets": {
+    "open_to_body": -0.25,
+    "body_to_close": 0.05,
+    "body_to_backchannel": -0.45
+   },
+   "deferred_seconds": 0.0,
+   "pause_seconds": 0.53,
+   "pause_distance_seconds": 0.12959999999999994,
+   "acoustic": {
+    "frames": 241,
+    "a_quiet_frames": 189,
+    "b_quiet_frames": 116,
+    "both_loud_frames": 9
+   },
+   "acoustic_a_silence_share": 0.7842323651452282,
+   "roles": [
+    "open",
+    "body",
+    "backchannel",
+    "body",
+    "close"
+   ]
+  }
+ ]
+}

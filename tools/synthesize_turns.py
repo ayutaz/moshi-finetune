@@ -19,13 +19,27 @@ was intended.
 
 Watermarking must be off before this runs. Put `m3/nowatermark/` first on PYTHONPATH; the
 sidecar records whether the runtime agreed.
+
+M3-R adds two options, both off by default so the M3 render stays reproducible.
+
+- `--roles` renders only the turns carrying one of the named `role` values. M3-R re-uses
+  M3's open and close turns byte for byte and needs the twelve backchannel texts alone.
+- `--seed-per-turn` derives each turn's seed from the base seed and the turn's identity.
+  One seed for the whole run is right when every text is different; M3-R's backchannel pool
+  is twelve texts spread over 78 dialogues, so a single seed would put the *same waveform*
+  into six or seven dialogues - which is the repeating pattern this rebuild exists to
+  remove. The derivation is a hash of the id, not `hash()`, because Python salts that per
+  process and the seed has to survive a resume.
 """
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import time
+from collections.abc import Sequence
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -58,8 +72,72 @@ def recorded_filenames(sidecar: Path) -> set[str]:
     return names
 
 
+def turn_seed(base: int, dialogue_id: str, index: int) -> int:
+    """A per-turn seed that depends only on the base seed and the turn's identity.
+
+    Deterministic across processes and across a resume, which `hash()` is not: PYTHONHASHSEED
+    is random by default, so a run killed halfway would re-render the remaining turns from a
+    different voice draw than the ones already on disk.
+    """
+    digest = hashlib.blake2b(f"{base}:{dialogue_id}:{index}".encode(), digest_size=4).digest()
+    return int.from_bytes(digest, "big")
+
+
+@dataclass(frozen=True)
+class DurationModel:
+    """How long a turn should be, when the model's own duration predictor cannot say.
+
+    Irodori predicts the length of a turn from its text and then generates exactly that
+    much audio. On the 44-character turns M3 rendered it is right - 0.151 s per mora, which
+    is 6.8 mora per second. On a three-character aizuchi it is not: it asked for 5.12 s of
+    「はい、はい。」 and the model filled the excess with invented speech. Whisper reads that
+    file back as ハイゾシティイリアシマスHUR大吐き…; nothing in a duration log or a loss curve
+    would have shown it, and it would have gone into 78 dialogues.
+
+    So a short turn gets a length instead of a prediction, and the length has to be close to
+    how long the words actually take. Asking for *more* than that fails the same way the
+    predictor did. Measured on 「ええ。」 and 「はい。」, two mora each, two seeds apiece and
+    Whisper reading the result back:
+
+    | asked for | 0.55 s | 0.70 s | 0.90 s | 1.1 s | 1.4 s | 1.7 s |
+    | correct   |  4/4   |  3/4   |  1/4   |  0/6  |  0/6  |  0/6  |
+
+    A first pass used a 1.1 s floor and all seven 「ええ。」 backchannels came back as
+    invented speech - 説自は, インチステイ, ギズティー, Aスイーツ道場 - while four of the seven
+    「はい。」 had junk after the はい. Four mora and up were unaffected, which is why the
+    defect was invisible until every clip was transcribed. The floor is now the runtime's own
+    `min_seconds`, and the slope is the 6.8 mora per second the 160 shipped speaker B turns
+    were rendered at.
+
+    A clip can still come out wrong at a plausible length - 「はい。」 at 0.70 s did, on one
+    seed of two - so this sets the odds, not the outcome. What settles it is transcribing
+    every rendered clip and re-drawing the seed for the ones that do not read back.
+    """
+
+    floor: float = 0.5
+    base: float = 0.30
+    per_mora: float = 0.135
+    per_comma: float = 0.15
+
+    def seconds(self, *, mora: int, commas: int) -> float:
+        return max(self.floor, self.base + self.per_mora * mora + self.per_comma * commas)
+
+
+def text_shape(text: str) -> tuple[int, int]:
+    """Mora count and reading-comma count, the two things length depends on."""
+    import pyopenjtalk
+
+    mora = sum(int(entry.get("mora_size") or 0) for entry in pyopenjtalk.run_frontend(text))
+    return mora, text.count("、")
+
+
 def turns_to_render(
-    dialogues: list[dict[str, Any]], *, speaker: str, out_dir: Path, recorded: set[str]
+    dialogues: list[dict[str, Any]],
+    *,
+    speaker: str,
+    out_dir: Path,
+    recorded: set[str],
+    roles: Sequence[str] | None = None,
 ) -> list[dict[str, Any]]:
     """Every turn for `speaker` still to render, in dialogue order.
 
@@ -68,11 +146,18 @@ def turns_to_render(
     the sidecar is what the manifest is built from, so an unrecorded wav would simply
     vanish from the dataset while sitting on disk. Re-rendering it is cheap; a dialogue
     silently missing a turn is not.
+
+    `roles` narrows the selection to turns whose script row carries one of those `role`
+    values. A turn with no `role` never matches, so asking for a role on a script that has
+    none renders nothing rather than everything.
     """
+    wanted = None if roles is None else set(roles)
     pending = []
     for dialogue in dialogues:
         for index, turn in enumerate(dialogue["turns"]):
             if turn["speaker"] != speaker:
+                continue
+            if wanted is not None and turn.get("role") not in wanted:
                 continue
             name = turn_filename(dialogue["dialogue_id"], index, speaker)
             if (out_dir / name).exists() and name in recorded:
@@ -125,11 +210,40 @@ def main() -> int:
     parser.add_argument("--ref-embed", default=None, help="speaker-inversion embedding for A")
     parser.add_argument("--caption", default=None)
     parser.add_argument("--seed", type=int, default=20260822)
+    parser.add_argument(
+        "--roles",
+        nargs="+",
+        default=None,
+        help="render only turns whose script role is one of these (default: every turn)",
+    )
+    parser.add_argument(
+        "--seed-per-turn",
+        action="store_true",
+        help="derive each turn's seed from --seed and the turn id, so a text that repeats "
+        "across dialogues does not become the same waveform in every one of them",
+    )
+    parser.add_argument(
+        "--manual-duration",
+        action="store_true",
+        help="set each turn's length from its mora count instead of trusting the model's "
+        "duration predictor, which over-predicts short texts and fills the excess with "
+        "invented speech",
+    )
+    parser.add_argument("--duration-floor", type=float, default=DurationModel.floor)
+    parser.add_argument("--duration-base", type=float, default=DurationModel.base)
+    parser.add_argument("--duration-per-mora", type=float, default=DurationModel.per_mora)
+    parser.add_argument("--duration-per-comma", type=float, default=DurationModel.per_comma)
     parser.add_argument("--device", default="mps")
     parser.add_argument("--limit", type=int, default=None, help="render at most N turns")
     args = parser.parse_args()
 
     checkpoint = args.checkpoint or (VOICEDESIGN if args.speaker == "B" else BASE_500M)
+    duration_model = DurationModel(
+        floor=args.duration_floor,
+        base=args.duration_base,
+        per_mora=args.duration_per_mora,
+        per_comma=args.duration_per_comma,
+    )
     dialogues = [
         json.loads(line)
         for line in args.scripts.read_text(encoding="utf-8").splitlines()
@@ -140,7 +254,11 @@ def main() -> int:
 
     recorded = recorded_filenames(args.sidecar)
     pending = turns_to_render(
-        dialogues, speaker=args.speaker, out_dir=args.out_dir, recorded=recorded
+        dialogues,
+        speaker=args.speaker,
+        out_dir=args.out_dir,
+        recorded=recorded,
+        roles=args.roles,
     )
     if args.limit is not None:
         pending = pending[: args.limit]
@@ -162,13 +280,23 @@ def main() -> int:
     started = time.perf_counter()
     with args.sidecar.open("a", encoding="utf-8") as log:
         for position, turn in enumerate(pending, start=1):
+            seed = (
+                turn_seed(args.seed, turn["dialogue_id"], turn["turn_index"])
+                if args.seed_per_turn
+                else args.seed
+            )
+            seconds = None
+            if args.manual_duration:
+                mora, commas = text_shape(turn["text"])
+                seconds = duration_model.seconds(mora=mora, commas=commas)
             request = SamplingRequest(
+                seconds=seconds,
                 text=turn["text"],
                 caption=args.caption,
                 ref_wav=args.ref_wav,
                 ref_embed=args.ref_embed,
                 no_ref=not (args.ref_wav or args.ref_embed),
-                seed=args.seed,
+                seed=seed,
             )
             result = runtime.synthesize(request)
             # save_wav, not soundfile.write: result.audio is a torch tensor and the
@@ -185,7 +313,10 @@ def main() -> int:
                         "ref_wav": args.ref_wav,
                         "ref_embed": args.ref_embed,
                         "caption": args.caption,
-                        "seed": args.seed,
+                        "seed": seed,
+                        "requested_seconds": seconds,
+                        "base_seed": args.seed,
+                        "seed_per_turn": bool(args.seed_per_turn),
                         "watermarked": watermarked,
                     },
                     ensure_ascii=False,

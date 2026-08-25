@@ -1,0 +1,1083 @@
+{
+ "schema_version": 1,
+ "report_id": "m3r-roomtone",
+ "step": "M3-R 2-4 ルームトーンの収集と検証",
+ "generated_at": "2026-08-25",
+ "branch": "experiment-j-moshi-character-voice-overfit",
+ "tool": "tools/room_tone.py",
+ "tests": "tests/test_room_tone.py (46 件)",
+ "pool_path": "data/experiments/tsukuyomi_ojousama/m3r/roomtone/ (gitignore 配下。再配布禁止コーパスの派生物)",
+ "verdict": {
+  "gate_as_written": "不合格",
+  "gate_as_written_definition": "生成したルームトーンを 30〜60 秒分 tokenize し distinct >= 35 かつ最頻占有率 <= 0.35",
+  "gate_as_written_result": "60 秒で distinct 41-45（合格）、最頻占有率 0.361-0.399（不合格）。3 seed とも不合格",
+  "gate_under_the_calibration_protocol": "合格 6/6",
+  "gate_under_the_calibration_protocol_definition": "較正値（自然な無音 distinct 37-42 / 最頻 0.29-0.31）は「発話を含む録音の内側の無音フレーム」で測られている。同じ手続き（実対話チャンネルの無音区間を敷き詰め、チャンネル全体を tokenize し、無音フレームだけを集計）では distinct 71-81 / 最頻 0.279-0.325 / token 1316 は 0.56% 以下",
+  "gap_length_sweep": "gap 2/10/15/20 秒で 3/3、gap 5 秒で 2/3（合計 14/15）",
+  "honest_summary": "孤立した 30〜60 秒のベッドとして測る限り、可聴でないレベルでは目標に届かない。届かせるには 発話比 -17 dB（測定値: 3/3 合格）まで上げる必要があり、これは学習データに聞こえるヒスを入れることを意味する。実際の使われ方（発話の隙間）では目標を大きく上回る。"
+ },
+ "premise_check": {
+  "claim_in_brief": "100 ファイルから収集した無音区間のランダム標本抽出が要る",
+  "verdict": "前半は成立しない。コーパスにルームトーンは存在しない",
+  "measurements": {
+   "exact_zero_sample_fraction_raw_96k": 0.1579,
+   "quiet_frames_that_are_digital_zero": {
+    "median_per_file": 0.394,
+    "min": 0.079,
+    "max": 0.58
+   },
+   "nonzero_quiet_floor_rms": {
+    "median_per_file": 8.94e-05,
+    "min": 1.3e-05,
+    "max": 0.000244
+   },
+   "pcm16_least_significant_bit_rms": 3.052e-05,
+   "native_level_pool": {
+    "segments": 277,
+    "seconds": 141.03,
+    "median_segment_rms": 0.000326
+   },
+   "native_level_bed_30s": {
+    "frames": 375,
+    "distinct": 17,
+    "top_token": 1316,
+    "top_share": 0.416,
+    "silence_token_share": 0.416,
+    "entropy_bits": 2.4024
+   },
+   "calibration_reproduced": {
+    "frames": 222,
+    "distinct": 37,
+    "top_token": 84,
+    "top_share": 0.3108,
+    "silence_token_share": 0.0,
+    "entropy_bits": 3.7156
+   },
+   "calibration_reference_from_brief": {
+    "frames": 237,
+    "distinct": 42,
+    "top_share": 0.29,
+    "top_token": 84
+   },
+   "calibration_decomposed_by_level": {
+    "below 1e-5 (effectively digital zero)": {
+     "frames": 128,
+     "distinct": 9,
+     "top_token": 84,
+     "top_share": 0.531
+    },
+    "1e-5..1e-4": {
+     "frames": 42,
+     "distinct": 11,
+     "top_token": 769,
+     "top_share": 0.429
+    },
+    "1e-4..5e-4": {
+     "frames": 16,
+     "distinct": 6,
+     "top_token": 769,
+     "top_share": 0.438
+    },
+    "5e-4..2e-3 (tails and breath)": {
+     "frames": 36,
+     "distinct": 23,
+     "top_token": 502,
+     "top_share": 0.139
+    }
+   },
+   "calibration_first_frame_after_speech": {
+    "frames": 58,
+    "distinct": 21,
+    "top_share": 0.379
+   }
+  },
+  "reading": [
+   "コーパスは編集済みで、96 kHz 原音の 15.8% が厳密な 0.0。無音フレームの 39%（ファイル中央値）がデジタルゼロで、ゼロでない部分も RMS 8.9e-5（約 -98 dBFS）。PCM_16 の 1 LSB は 3.05e-5 なので、書き出し後に残るのは実質 3 値の信号である。",
+   "その素材 141 秒を自分自身のレベルで貼り合わせても、30 秒ベッドの 41.6% が token 1316 のまま。つまり「無音区間を集める」だけではデジタル無音と区別がつかない。",
+   "較正値（自然な無音 distinct 37 / 最頻 0.311 / 1316 が 0.0%）はこちらでも再現した。ただし内訳を取ると、その 222 フレームのうち 128（58%）は RMS < 1e-5 の実質デジタルゼロで、単独では distinct 9 / token 84 が 53%。多様性は発話直後の 1 フレーム（58 フレームで distinct 21）と 5e-4〜2e-3 の減衰尾・呼気（36 フレームで distinct 23 / 最頻 0.139）から来ている。",
+   "したがって較正値は in-situ の値であり、どんな素材の孤立ベッドでも再現できない。"
+  ]
+ },
+ "collection": {
+  "source": "tsukuyomi_corpus_v1_original 100 件（96 kHz float、24 kHz へリサンプル）",
+  "sources_scanned": 90,
+  "held_out_excluded": [
+   "VOICEACTRESS100_026",
+   "VOICEACTRESS100_032",
+   "VOICEACTRESS100_047",
+   "VOICEACTRESS100_048",
+   "VOICEACTRESS100_052",
+   "VOICEACTRESS100_069",
+   "VOICEACTRESS100_074",
+   "VOICEACTRESS100_092",
+   "VOICEACTRESS100_095",
+   "VOICEACTRESS100_099"
+  ],
+  "what_is_collected": "無音そのものではなく、その 1 段上の帯（RMS 2e-3〜1e-2、100 ms 以上）。減衰尾・呼気・口腔雑音で、同じ録音系から来た実際の音響である",
+  "spec": {
+   "band_low": 0.002,
+   "band_high": 0.01,
+   "hop_seconds": 0.01,
+   "min_seconds": 0.1,
+   "guard_seconds": 0.0,
+   "max_voicing": 0.5,
+   "sample_rate": 24000
+  },
+  "voicing_filter": {
+   "measure": "40 ms 窓の正規化自己相関ピーク最大値（70-400 Hz）",
+   "reject_at_or_above": 0.5,
+   "reference_real_speech": 0.936,
+   "rejected": 84,
+   "kept_max": 0.4839,
+   "why": "発話していないことになっているチャンネルに語が乗るのを防ぐ。最大値で判定するのは、1 窓でも有声なら不可だからである"
+  },
+  "segments": 117,
+  "total_seconds": 13.25,
+  "distinct_source_recordings": 66,
+  "segment_seconds": {
+   "min": 0.1,
+   "median": 0.11,
+   "max": 0.18
+  },
+  "segment_rms": {
+   "min": 0.003342,
+   "median": 0.005765,
+   "max": 0.008274
+  }
+ },
+ "generation": {
+  "module": "tools.room_tone.render_room_tone",
+  "determinism": "プール＋seed でサンプル列が再現する。plan_units が音に触れる前に全抽選を確定させる",
+  "no_loop": "シャッフルデッキ。117 セグメント全部を使い切るまで同じセグメントは再登場しない",
+  "per_unit": [
+   "確率 0.5 で時間反転",
+   "[0.85, 1.15] の係数で再標本化",
+   "8 帯ランダム EQ ±28 dB（60/150/350/800/1800/4000/8000/12000 Hz）",
+   "RenderSpec.levels から重み付きで引いた RMS へ正規化",
+   "直前ユニットへ 20 ms 等パワークロスフェード"
+  ],
+  "presets": {
+   "FLOOR_WITH_EVENTS (既定)": {
+    "levels_rms": [
+     0.0001,
+     0.0002,
+     0.0004,
+     0.0032,
+     0.0064
+    ],
+    "weights": [
+     9,
+     9,
+     9,
+     1,
+     1
+    ],
+    "event_fraction": 0.069,
+    "rms_db_re_speech": -26.2,
+    "median_frame_db_re_speech": -41.7,
+    "why": "静かな床にまれな事象を混ぜる。長い gap でベッドが 1 コードに収束するのを止める唯一効いた手段"
+   },
+   "QUIET_FLOOR": {
+    "levels_rms": [
+     0.0001,
+     0.0002,
+     0.0004
+    ],
+    "weights": [
+     1,
+     1,
+     1
+    ],
+    "rms_db_re_speech": -40.6,
+    "when": "gap が 10 秒を超えないタイムラインならこちらでもよい。20 秒 gap では最頻 0.417-0.446 で不合格"
+   }
+  },
+  "speech_reference_rms": 0.0258,
+  "seed_recorded": "検証は seed 1..6。プールの sample-60s-seed1.wav は seed 1",
+  "level_to_token_map": {
+   "1e-4": "top 1316",
+   "2e-4": "top 318",
+   "4e-4": "top 537",
+   "8e-4": "top 537",
+   "1.5e-3": "top 537",
+   "3e-3": "top 1306",
+   "6e-3": "top 1306",
+   "1.2e-2": "top 1769",
+   "note": "静かな定常ベッドの Mimi コードはほぼレベルだけで決まる。レベルを 1 点にすればコードも 1 点になる"
+  }
+ },
+ "verification": {
+  "tokenizer": "kyutai/moshiko-pytorch-bf16 tokenizer-e351c8d8-checkpoint125.safetensors / MPS / codebook 0",
+  "pcm16_round_trip": "全測定の前に適用。データセットは PCM_16 で、RMS 3e-5 以下のベッドは書き出しで消える",
+  "gate": {
+   "min_distinct": 35,
+   "max_top_share": 0.35
+  },
+  "protocols": {
+   "isolated": "ルームトーン単体を 30 秒・60 秒 tokenize（課題文の字義どおり）",
+   "in_situ": "出荷済み v-real 12 対話のチャンネル 0（話者 A）。デジタル無音区間を敷き詰め、チャンネル全体を tokenize し、無音フレームだけを集計（較正値と同じ手続き）",
+   "gap_length_sweep": "1 ターンを左右から gap で挟んだ合成チャンネル 6 本。gap は 2/5/10/15/20 秒"
+  },
+  "v_real_gap_seconds": {
+   "runs": 49,
+   "median": 0.32,
+   "max": 10.96
+  },
+  "three_way_isolated": {
+   "digital silence / 30s": {
+    "distinct": [
+     10,
+     10
+    ],
+    "top_share": [
+     0.936,
+     0.936
+    ],
+    "silence_token_share_max": 0.936,
+    "entropy_bits": [
+     0.52,
+     0.52
+    ],
+    "seeds": 1,
+    "gate_passes": "0/1",
+    "rms_db": null,
+    "median_frame_db": null
+   },
+   "digital silence / 60s": {
+    "distinct": [
+     10,
+     10
+    ],
+    "top_share": [
+     0.968,
+     0.968
+    ],
+    "silence_token_share_max": 0.968,
+    "entropy_bits": [
+     0.29,
+     0.29
+    ],
+    "seeds": 1,
+    "gate_passes": "0/1",
+    "rms_db": null,
+    "median_frame_db": null
+   },
+   "1.9 s loop of the same pool / 30s": {
+    "distinct": [
+     14,
+     14
+    ],
+    "top_share": [
+     0.88,
+     0.88
+    ],
+    "silence_token_share_max": 0.0,
+    "entropy_bits": [
+     0.89,
+     0.89
+    ],
+    "seeds": 1,
+    "gate_passes": "0/1",
+    "rms_db": -42.2,
+    "median_frame_db": -42.2
+   },
+   "1.9 s loop of the same pool / 60s": {
+    "distinct": [
+     14,
+     14
+    ],
+    "top_share": [
+     0.931,
+     0.931
+    ],
+    "silence_token_share_max": 0.0,
+    "entropy_bits": [
+     0.55,
+     0.55
+    ],
+    "seeds": 1,
+    "gate_passes": "0/1",
+    "rms_db": -42.2,
+    "median_frame_db": -42.2
+   },
+   "room tone QUIET_FLOOR / 30s": {
+    "distinct": [
+     22,
+     24
+    ],
+    "top_share": [
+     0.427,
+     0.539
+    ],
+    "silence_token_share_max": 0.0613,
+    "entropy_bits": [
+     2.26,
+     2.55
+    ],
+    "seeds": 3,
+    "gate_passes": "0/3",
+    "rms_db": -40.7,
+    "median_frame_db": -42.7
+   },
+   "room tone QUIET_FLOOR / 60s": {
+    "distinct": [
+     23,
+     25
+    ],
+    "top_share": [
+     0.56,
+     0.607
+    ],
+    "silence_token_share_max": 0.0187,
+    "entropy_bits": [
+     1.98,
+     2.02
+    ],
+    "seeds": 3,
+    "gate_passes": "0/3",
+    "rms_db": -40.6,
+    "median_frame_db": -42.8
+   },
+   "room tone FLOOR_WITH_EVENTS (default) / 30s": {
+    "distinct": [
+     30,
+     40
+    ],
+    "top_share": [
+     0.384,
+     0.397
+    ],
+    "silence_token_share_max": 0.008,
+    "entropy_bits": [
+     2.75,
+     3.06
+    ],
+    "seeds": 3,
+    "gate_passes": "0/3",
+    "rms_db": -25.5,
+    "median_frame_db": -41.8
+   },
+   "room tone FLOOR_WITH_EVENTS (default) / 60s": {
+    "distinct": [
+     41,
+     45
+    ],
+    "top_share": [
+     0.361,
+     0.399
+    ],
+    "silence_token_share_max": 0.004,
+    "entropy_bits": [
+     2.62,
+     2.81
+    ],
+    "seeds": 3,
+    "gate_passes": "0/3",
+    "rms_db": -26.2,
+    "median_frame_db": -41.7
+   }
+  },
+  "three_way_in_situ": {
+   "digital silence": {
+    "distinct": [
+     18,
+     18
+    ],
+    "top_share": [
+     0.432,
+     0.432
+    ],
+    "silence_token_share_max": 0.4265,
+    "entropy_bits": [
+     1.94,
+     1.94
+    ],
+    "seeds": 1,
+    "gate_passes": "0/1"
+   },
+   "1.9 s loop of the same pool": {
+    "distinct": [
+     25,
+     25
+    ],
+    "top_share": [
+     0.351,
+     0.351
+    ],
+    "silence_token_share_max": 0.0032,
+    "entropy_bits": [
+     2.57,
+     2.57
+    ],
+    "seeds": 1,
+    "gate_passes": "0/1"
+   },
+   "room tone QUIET_FLOOR": {
+    "distinct": [
+     46,
+     53
+    ],
+    "top_share": [
+     0.248,
+     0.29
+    ],
+    "silence_token_share_max": 0.0125,
+    "entropy_bits": [
+     3.37,
+     3.47
+    ],
+    "seeds": 6,
+    "gate_passes": "6/6"
+   },
+   "room tone FLOOR_WITH_EVENTS (default)": {
+    "distinct": [
+     71,
+     81
+    ],
+    "top_share": [
+     0.279,
+     0.325
+    ],
+    "silence_token_share_max": 0.0056,
+    "entropy_bits": [
+     3.76,
+     3.89
+    ],
+    "seeds": 6,
+    "gate_passes": "6/6"
+   }
+  },
+  "gap_length_sweep": {
+   "2s / digital silence": {
+    "distinct": [
+     16,
+     16
+    ],
+    "top_share": [
+     0.249,
+     0.249
+    ],
+    "silence_token_share_max": 0.2485,
+    "entropy_bits": [
+     3.13,
+     3.13
+    ],
+    "seeds": 1,
+    "gate_passes": "0/1"
+   },
+   "2s / room tone QUIET_FLOOR": {
+    "distinct": [
+     29,
+     36
+    ],
+    "top_share": [
+     0.16,
+     0.21
+    ],
+    "silence_token_share_max": 0.0,
+    "entropy_bits": [
+     4.0,
+     4.11
+    ],
+    "seeds": 3,
+    "gate_passes": "1/3"
+   },
+   "2s / room tone FLOOR_WITH_EVENTS (default)": {
+    "distinct": [
+     44,
+     49
+    ],
+    "top_share": [
+     0.166,
+     0.222
+    ],
+    "silence_token_share_max": 0.0,
+    "entropy_bits": [
+     4.37,
+     4.43
+    ],
+    "seeds": 3,
+    "gate_passes": "3/3"
+   },
+   "5s / digital silence": {
+    "distinct": [
+     17,
+     17
+    ],
+    "top_share": [
+     0.393,
+     0.393
+    ],
+    "silence_token_share_max": 0.3931,
+    "entropy_bits": [
+     2.38,
+     2.38
+    ],
+    "seeds": 1,
+    "gate_passes": "0/1"
+   },
+   "5s / room tone QUIET_FLOOR": {
+    "distinct": [
+     34,
+     44
+    ],
+    "top_share": [
+     0.219,
+     0.321
+    ],
+    "silence_token_share_max": 0.0,
+    "entropy_bits": [
+     3.6,
+     3.85
+    ],
+    "seeds": 3,
+    "gate_passes": "2/3"
+   },
+   "5s / room tone FLOOR_WITH_EVENTS (default)": {
+    "distinct": [
+     50,
+     62
+    ],
+    "top_share": [
+     0.205,
+     0.382
+    ],
+    "silence_token_share_max": 0.0,
+    "entropy_bits": [
+     3.88,
+     4.21
+    ],
+    "seeds": 3,
+    "gate_passes": "2/3"
+   },
+   "10s / digital silence": {
+    "distinct": [
+     17,
+     17
+    ],
+    "top_share": [
+     0.503,
+     0.503
+    ],
+    "silence_token_share_max": 0.5026,
+    "entropy_bits": [
+     1.82,
+     1.82
+    ],
+    "seeds": 1,
+    "gate_passes": "0/1"
+   },
+   "10s / room tone QUIET_FLOOR": {
+    "distinct": [
+     39,
+     44
+    ],
+    "top_share": [
+     0.239,
+     0.28
+    ],
+    "silence_token_share_max": 0.0156,
+    "entropy_bits": [
+     3.19,
+     3.35
+    ],
+    "seeds": 3,
+    "gate_passes": "3/3"
+   },
+   "10s / room tone FLOOR_WITH_EVENTS (default)": {
+    "distinct": [
+     60,
+     65
+    ],
+    "top_share": [
+     0.236,
+     0.295
+    ],
+    "silence_token_share_max": 0.0,
+    "entropy_bits": [
+     3.74,
+     3.82
+    ],
+    "seeds": 3,
+    "gate_passes": "3/3"
+   },
+   "15s / digital silence": {
+    "distinct": [
+     20,
+     20
+    ],
+    "top_share": [
+     0.628,
+     0.628
+    ],
+    "silence_token_share_max": 0.6277,
+    "entropy_bits": [
+     1.66,
+     1.66
+    ],
+    "seeds": 1,
+    "gate_passes": "0/1"
+   },
+   "15s / room tone QUIET_FLOOR": {
+    "distinct": [
+     41,
+     47
+    ],
+    "top_share": [
+     0.339,
+     0.375
+    ],
+    "silence_token_share_max": 0.0162,
+    "entropy_bits": [
+     3.07,
+     3.21
+    ],
+    "seeds": 3,
+    "gate_passes": "1/3"
+   },
+   "15s / room tone FLOOR_WITH_EVENTS (default)": {
+    "distinct": [
+     67,
+     73
+    ],
+    "top_share": [
+     0.242,
+     0.266
+    ],
+    "silence_token_share_max": 0.0,
+    "entropy_bits": [
+     3.69,
+     3.75
+    ],
+    "seeds": 3,
+    "gate_passes": "3/3"
+   },
+   "20s / digital silence": {
+    "distinct": [
+     19,
+     19
+    ],
+    "top_share": [
+     0.718,
+     0.718
+    ],
+    "silence_token_share_max": 0.7179,
+    "entropy_bits": [
+     1.41,
+     1.41
+    ],
+    "seeds": 1,
+    "gate_passes": "0/1"
+   },
+   "20s / room tone QUIET_FLOOR": {
+    "distinct": [
+     46,
+     47
+    ],
+    "top_share": [
+     0.417,
+     0.446
+    ],
+    "silence_token_share_max": 0.0306,
+    "entropy_bits": [
+     2.92,
+     2.98
+    ],
+    "seeds": 3,
+    "gate_passes": "0/3"
+   },
+   "20s / room tone FLOOR_WITH_EVENTS (default)": {
+    "distinct": [
+     71,
+     77
+    ],
+    "top_share": [
+     0.289,
+     0.315
+    ],
+    "silence_token_share_max": 0.0142,
+    "entropy_bits": [
+     3.47,
+     3.54
+    ],
+    "seeds": 3,
+    "gate_passes": "3/3"
+   }
+  },
+  "isolated_level_sweep_of_the_quiet_preset": {
+   "isolated/level x1": {
+    "distinct": [
+     20,
+     23
+    ],
+    "top_share": [
+     0.491,
+     0.6
+    ],
+    "silence_token": [
+     0.0027,
+     0.0293
+    ],
+    "entropy": [
+     2.05,
+     2.2
+    ],
+    "passes": "0/3",
+    "level_db": -40.8
+   },
+   "isolated/level x2": {
+    "distinct": [
+     19,
+     25
+    ],
+    "top_share": [
+     0.443,
+     0.493
+    ],
+    "silence_token": [
+     0.0,
+     0.0
+    ],
+    "entropy": [
+     2.31,
+     2.52
+    ],
+    "passes": "0/3",
+    "level_db": -34.8
+   },
+   "isolated/level x4": {
+    "distinct": [
+     25,
+     30
+    ],
+    "top_share": [
+     0.405,
+     0.459
+    ],
+    "silence_token": [
+     0.0,
+     0.0
+    ],
+    "entropy": [
+     2.81,
+     3.02
+    ],
+    "passes": "0/3",
+    "level_db": -28.8
+   },
+   "isolated/level x8": {
+    "distinct": [
+     32,
+     40
+    ],
+    "top_share": [
+     0.165,
+     0.211
+    ],
+    "silence_token": [
+     0.0,
+     0.0
+    ],
+    "entropy": [
+     3.71,
+     3.75
+    ],
+    "passes": "2/3",
+    "level_db": -22.8
+   },
+   "isolated/level x16": {
+    "distinct": [
+     42,
+     49
+    ],
+    "top_share": [
+     0.187,
+     0.24
+    ],
+    "silence_token": [
+     0.0,
+     0.0
+    ],
+    "entropy": [
+     4.1,
+     4.29
+    ],
+    "passes": "3/3",
+    "level_db": -16.8
+   },
+   "isolated/level x32": {
+    "distinct": [
+     50,
+     54
+    ],
+    "top_share": [
+     0.165,
+     0.2
+    ],
+    "silence_token": [
+     0.0,
+     0.0
+    ],
+    "entropy": [
+     4.54,
+     4.69
+    ],
+    "passes": "3/3",
+    "level_db": -10.7
+   }
+  },
+  "in_situ_level_sweep": {
+   "insitu/level x4": {
+    "distinct": [
+     64,
+     73
+    ],
+    "top_share": [
+     0.458,
+     0.484
+    ],
+    "silence_token": [
+     0.0,
+     0.0
+    ],
+    "entropy": [
+     3.4,
+     3.55
+    ],
+    "passes": "0/3"
+   },
+   "insitu/level x16": {
+    "distinct": [
+     86,
+     95
+    ],
+    "top_share": [
+     0.145,
+     0.172
+    ],
+    "silence_token": [
+     0.0,
+     0.0
+    ],
+    "entropy": [
+     4.83,
+     4.91
+    ],
+    "passes": "3/3"
+   }
+  },
+  "six_seed_preset_comparison": {
+   "A quiet only": {
+    "insitu_distinct": [
+     48,
+     55
+    ],
+    "insitu_top": [
+     0.261,
+     0.28
+    ],
+    "insitu_silence_token": 0.0093,
+    "insitu_pass": "6/6",
+    "stress_distinct": [
+     29,
+     36
+    ],
+    "stress_top": [
+     0.379,
+     0.477
+    ],
+    "stress_pass": "0/6"
+   },
+   "B 10% x8": {
+    "insitu_distinct": [
+     62,
+     73
+    ],
+    "insitu_top": [
+     0.266,
+     0.364
+    ],
+    "insitu_silence_token": 0.0008,
+    "insitu_pass": "5/6",
+    "stress_distinct": [
+     32,
+     46
+    ],
+    "stress_top": [
+     0.281,
+     0.344
+    ],
+    "stress_pass": "5/6"
+   },
+   "C 10% x16": {
+    "insitu_distinct": [
+     71,
+     83
+    ],
+    "insitu_top": [
+     0.251,
+     0.368
+    ],
+    "insitu_silence_token": 0.0008,
+    "insitu_pass": "5/6",
+    "stress_distinct": [
+     42,
+     50
+    ],
+    "stress_top": [
+     0.265,
+     0.32
+    ],
+    "stress_pass": "6/6"
+   }
+  },
+  "attempts_to_close_the_isolated_gate": {
+   "default 7% x2lv": {
+    "rms_db": -25.5,
+    "floor_db": -41.8,
+    "iso30": "d 30-40 top 0.384-0.397 0/3",
+    "iso60": "d 41-45 top 0.361-0.399 0/3",
+    "situ": "d 74-81 top 0.279-0.325 3/3",
+    "gap20": "d 48-56 top 0.271-0.346 3/3"
+   },
+   "D 10% x3lv": {
+    "rms_db": -25.6,
+    "floor_db": -41.0,
+    "iso30": "d 29-39 top 0.392-0.416 0/3",
+    "iso60": "d 41-44 top 0.344-0.419 1/3",
+    "situ": "d 74-80 top 0.316-0.365 1/3",
+    "gap20": "d 48-58 top 0.253-0.371 2/3"
+   },
+   "F 14% x3lv": {
+    "rms_db": -24.5,
+    "floor_db": -40.1,
+    "iso30": "d 30-41 top 0.384-0.459 0/3",
+    "iso60": "d 45-48 top 0.371-0.431 0/3",
+    "situ": "d 75-85 top 0.342-0.390 1/3",
+    "gap20": "d 54-59 top 0.253-0.385 2/3"
+   },
+   "G 20% x3lv": {
+    "rms_db": -23.2,
+    "floor_db": -38.6,
+    "iso30": "d 36-48 top 0.368-0.483 0/3",
+    "iso60": "d 48-52 top 0.395-0.431 0/3",
+    "situ": "d 78-86 top 0.351-0.402 0/3",
+    "gap20": "d 58-59 top 0.289-0.373 2/3"
+   },
+   "H 14% x4lv": {
+    "rms_db": -25.2,
+    "floor_db": -40.4,
+    "iso30": "d 28-42 top 0.400-0.448 0/3",
+    "iso60": "d 43-44 top 0.357-0.431 0/3",
+    "situ": "d 75-83 top 0.350-0.389 1/3",
+    "gap20": "d 51-59 top 0.244-0.393 2/3"
+   }
+  },
+  "listening_sample": "data/experiments/tsukuyomi_ojousama/m3r/roomtone/sample-60s-seed1.wav (60 s, seed 1, default spec)"
+ },
+ "what_was_tried": [
+  {
+   "attempt": "無音区間（RMS < 2e-3）をそのままのレベルで貼り合わせる",
+   "result": "効かない",
+   "number": "30 秒ベッドで token 1316 が 41.6-85.9%。デジタル無音とほぼ同じ"
+  },
+  {
+   "attempt": "標本単位を 0.24 / 0.5 / 1.0 / 1.5 / 2.0 秒と変える",
+   "result": "効かない",
+   "number": "distinct 20-24 で変化なし。プールのセグメント中央値が 0.11 秒なので単位長は事実上効かない"
+  },
+  {
+   "attempt": "単位ごとの音量を微変動（±1.5〜6 dB ジッタ）",
+   "result": "ほぼ効かない",
+   "number": "distinct 19→22。最頻占有率は動かない"
+  },
+  {
+   "attempt": "正弦 AM（3 dB / 6 dB）",
+   "result": "効かない",
+   "number": "distinct 20-22"
+  },
+  {
+   "attempt": "複数流の混合（2 流・3 流）",
+   "result": "逆効果",
+   "number": "最頻占有率が 0.29 → 0.46（2 流）→ 0.60（3 流）。独立雑音の和はより定常になる"
+  },
+  {
+   "attempt": "単調スペクトル傾斜 ±6/12/18 dB",
+   "result": "小さく効く",
+   "number": "distinct 19 → 21"
+  },
+  {
+   "attempt": "8 帯ランダム EQ ±12/18/28 dB",
+   "result": "効く",
+   "number": "実チャンネル in-situ で distinct 52→61、最頻 0.289→0.265（eq12 → eq28）"
+  },
+  {
+   "attempt": "時間反転（p=0.5）と再標本化 ±15%",
+   "result": "効く",
+   "number": "孤立 distinct 21 → 26"
+  },
+  {
+   "attempt": "TTS 出力（turns-A-tts / turns-B）の低レベル部を素材に足す",
+   "result": "効かない",
+   "number": "単独で distinct 20-21。コーパスと混ぜても distinct 21"
+  },
+  {
+   "attempt": "SpokenWOZ サンプル（実録音の本物のルームトーン）を素材に足す",
+   "result": "強く効くが採用せず",
+   "number": "単独で distinct 35-41 / 最頻 0.176-0.36。CC BY-NC 4.0 の別データセットで registry 登録が要り、電話帯域の異なる録音条件を学習データに持ち込む"
+  },
+  {
+   "attempt": "有声セグメントを自己相関で除去",
+   "result": "必須",
+   "number": "201 → 117 セグメント（84 件除去）。実発話の voicing 0.94 に対し残存最大 0.484"
+  },
+  {
+   "attempt": "1 段上の帯（RMS 2e-3〜1e-2、減衰尾・呼気）を素材にする",
+   "result": "決定的",
+   "number": "無音帯 distinct 21 → この帯 distinct 42（単一 seed）"
+  },
+  {
+   "attempt": "レベルを 1 点に固定",
+   "result": "不可",
+   "number": "コードが 1 点に張り付く（最頻 0.58-0.60）"
+  },
+  {
+   "attempt": "レベルを log 一様で連続に引く",
+   "result": "中途半端",
+   "number": "537 の吸引域が広く、最頻 0.40 に張り付く"
+  },
+  {
+   "attempt": "離散レベル集合（1e-4 / 2e-4 / 4e-4）を一様に引く",
+   "result": "効く",
+   "number": "in-situ で distinct 46-53 / 最頻 0.248-0.290、6/6 合格"
+  },
+  {
+   "attempt": "そこへ 7% のまれな大きい事象（3.2e-3 / 6.4e-3）を混ぜる",
+   "result": "採用",
+   "number": "in-situ 6/6 のまま distinct 71-81、gap 20 秒で 0/3 → 3/3。可聴床は -41.7 dB のまま"
+  },
+  {
+   "attempt": "事象を 10/14/20%、事象レベルを 3 段・4 段に増やす",
+   "result": "逆効果",
+   "number": "孤立ベッドは通らないまま、in-situ が 3/3 → 0-1/3 に悪化"
+  },
+  {
+   "attempt": "ベッド全体のレベルを上げて孤立ゲートを通す",
+   "result": "通るが不採用",
+   "number": "発話比 -16.8 dB で孤立 3/3。学習データに聞こえるヒスが入る"
+  }
+ ],
+ "decisions_for_the_parent": [
+  "既定は FLOOR_WITH_EVENTS。gap 2〜20 秒で 14/15、実対話チャンネルで 6/6。可聴床は発話比 -41.7 dB",
+  "2-5 のタイムラインが gap 10 秒を超えないなら QUIET_FLOOR でもよいが、既定を変える理由はない",
+  "孤立ベッドのゲートを通す必要があるなら levels を 16 倍（発話比 -16.8 dB）にすれば通る。学習データに聞こえるヒスが入るので、この判断は親が明示的に行うこと",
+  "SpokenWOZ を素材に加えるなら registry 登録（CC BY-NC 4.0、rationale、reopen 条件）が先。本作業では追加していない",
+  "話者 B チャンネル用に turns-B から同手続きで採った無声素材は 4.9 秒しかない。両チャンネルに同じコーパス由来プールを敷くのが現状の推奨"
+ ],
+ "limits": [
+  "プールは 13.25 秒・117 セグメント・66 録音。60 秒のベッドはプールを約 5 周する。デッキ順・反転・速度・EQ・レベルで周期構造は出ないが、素材そのものは繰り返している",
+  "「聞いて確認」はしていない。sample-60s-seed1.wav を置いたので人が聴ける",
+  "pad ⟺ A 無音 の一致率（2-4 の計画上のゲート、98% → 60% 未満）は、タイムラインが 2-5 で出来てからでないと測れない。ここで測れるのは token 側の代理指標だけである",
+  "gap 5 秒で 1 seed が最頻 0.382 と落ちた。非単調で、原因は特定していない"
+ ]
+}

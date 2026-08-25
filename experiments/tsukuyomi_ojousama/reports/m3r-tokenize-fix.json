@@ -1,0 +1,458 @@
+{
+  "schema_version": 1,
+  "milestone": "M3-R",
+  "step": "第2段 2-1 — tokenize の欠陥を実証し、修正手順を確定する",
+  "captured_at": "2026-08-25",
+  "condition": "既存 parquet を --no_whitespace_before_word 付きで作り直し、行単位で diff する。audio 行（1-16）がバイト単位で不変であること、text 行の裸 U+2581 が消えること、token 総数が減ることを実際に比較して確認する。",
+  "status": "pass",
+  "verdict": "audio 行は 1,280 行すべてがバイト単位で不変。したがって M3 の audio 側の崩壊軌跡（held-out codebook0 distinct 81 → 5）は text の欠陥では説明できない。text 行は 160 行すべてが変化し、裸 U+2581 は 44.64%〜46.64% から 0.00% へ、text token は 12,154 から 4,754 へ 60.9% 減った。",
+  "commands_recorded_at": "experiments/tsukuyomi_ojousama/m3r/TOKENIZE_COMMANDS.md",
+  "method": {
+    "why_the_control_matters": "フラグを立てた parquet だけを作っても、差が『フラグのせい』か『再構築のせい』かは分けられない。そこでまず フラグなしで作り直し、出荷済み parquet と sha256 が一致することを確かめてから、フラグだけを変えた。",
+    "audio_was_not_recomputed": "既存の tok-audio .npz（M3 が --device cpu で作ったもの）をそのまま両方の parquet に使った。Mimi は回していない。これにより audio 行の不変性は『同じ入力から同じ出力が出た』のではなく『同じ配列が両方に入った』ことになり、比較は prepare_dataset.merge_text_audio が audio 行に触れないことの検査になる。",
+    "row_layout": "1 対話 1 行、列は dialogue_id / A / B。A・B とも (9, T) で row 0 が text、row 1-8 が audio codebook。1 対話あたりの audio 行は A の 8 行 + B の 8 行 = 16 行（計画の言う『row 1-16』）。"
+  },
+  "reproduction_control": {
+    "claim": "フラグなしで作り直した parquet は、出荷済み parquet と sha256 まで一致する。",
+    "train": {
+      "shipped": {
+        "path": "data/experiments/tsukuyomi_ojousama/m3/v-real/parquet/train-001-of-001.parquet",
+        "sha256": "28da029e472fdcbe75b124e60fc097a0e9fd2c234440bdf70867cff85120b571",
+        "byte_size": 305978
+      },
+      "rebuilt_without_flag": {
+        "sha256": "28da029e472fdcbe75b124e60fc097a0e9fd2c234440bdf70867cff85120b571",
+        "byte_size": 305978
+      },
+      "identical": true
+    },
+    "dev": {
+      "shipped": {
+        "path": "data/experiments/tsukuyomi_ojousama/m3/v-real/parquet/dev-001-of-001.parquet",
+        "sha256": "b1b6e25836d66db118441f0af9cf9ddd9ea0e778f270f09f1f811a2ec7b746d3",
+        "byte_size": 49742
+      },
+      "rebuilt_without_flag": {
+        "sha256": "b1b6e25836d66db118441f0af9cf9ddd9ea0e778f270f09f1f811a2ec7b746d3",
+        "byte_size": 49742
+      },
+      "identical": true
+    },
+    "tok_text_npz": {
+      "stems": 72,
+      "identical_to_shipped_without_flag": 72,
+      "identical_to_shipped_with_flag": 0,
+      "note": "M3 が --no_whitespace_before_word を落としていたことの、出荷物そのものからの再確認。第1段-4 が 160 件で出した結果と一致する。"
+    }
+  },
+  "gate_1_audio_rows_unchanged": {
+    "claim": "row 1-16（audio codebook）はフラグの有無で 1 バイトも変わらない。",
+    "comparison": "各行を int32 の tobytes() にして sha256 を取り、出荷済みと突き合わせた。推測ではなく実比較である。",
+    "train": {
+      "dialogues": 72,
+      "audio_rows_compared": 1152,
+      "audio_rows_identical": 1152,
+      "audio_rows_differing": [],
+      "shape_mismatch": []
+    },
+    "dev": {
+      "dialogues": 8,
+      "audio_rows_compared": 128,
+      "audio_rows_identical": 128,
+      "audio_rows_differing": [],
+      "shape_mismatch": []
+    },
+    "total_audio_rows_compared": 1280,
+    "total_audio_rows_identical": 1280,
+    "passed": true,
+    "what_this_settles": "M3 の audio 側の崩壊（held-out codebook0 distinct 81 → 5）は text stream の欠陥では説明できない。text を直すことは崩壊の説明にならず、崩壊の原因は別に探す必要がある。第2段の残りの作業（読点分割・ルームトーン・重なり・系列長）はその探索であって、text 修正の付録ではない。",
+    "what_this_does_not_settle": "audio 行が不変であることは『text 欠陥が学習に影響しなかった』ことを意味しない。text stream は loss の 2 項のうち 1 項であり、その 45% がゴミだったことは loss/text_total の解釈を変える。ここで確定したのは『audio 側の観測結果を text 欠陥で説明できない』という一点だけである。"
+  },
+  "gate_2_text_rows_changed": {
+    "claim": "row 0（text）は全行が変わり、裸 U+2581（id 9）が消える。",
+    "vocabulary": {
+      "pad": {
+        "id": 3,
+        "piece": "[PAD]"
+      },
+      "bare_whitespace": {
+        "id": 9,
+        "piece": "▁"
+      },
+      "end_of_text_padding": {
+        "id": 0,
+        "piece": "<unk>"
+      }
+    },
+    "train": {
+      "text_rows_compared": 144,
+      "text_rows_identical": 0,
+      "A": {
+        "before": {
+          "frames": 18841,
+          "pad": 14433,
+          "end_of_text_padding": 1236,
+          "non_pad": 4408,
+          "bare_whitespace": 1416,
+          "words": 1756,
+          "text_tokens": 3172,
+          "bare_whitespace_share_of_text_tokens": 0.44640605296343,
+          "bare_whitespace_share_of_non_pad": 0.32123411978221417,
+          "pad_share_of_frames": 0.7660421421368293
+        },
+        "after": {
+          "frames": 18841,
+          "pad": 16362,
+          "end_of_text_padding": 1123,
+          "non_pad": 2479,
+          "bare_whitespace": 0,
+          "words": 1356,
+          "text_tokens": 1356,
+          "bare_whitespace_share_of_text_tokens": 0.0,
+          "bare_whitespace_share_of_non_pad": 0.0,
+          "pad_share_of_frames": 0.8684252428215062
+        }
+      },
+      "B": {
+        "before": {
+          "frames": 18841,
+          "pad": 8669,
+          "end_of_text_padding": 2403,
+          "non_pad": 10172,
+          "bare_whitespace": 3621,
+          "words": 4148,
+          "text_tokens": 7769,
+          "bare_whitespace_share_of_text_tokens": 0.4660831509846827,
+          "bare_whitespace_share_of_non_pad": 0.35597719229256786,
+          "pad_share_of_frames": 0.4601135820816305
+        },
+        "after": {
+          "frames": 18841,
+          "pad": 13436,
+          "end_of_text_padding": 2495,
+          "non_pad": 5405,
+          "bare_whitespace": 0,
+          "words": 2910,
+          "text_tokens": 2910,
+          "bare_whitespace_share_of_text_tokens": 0.0,
+          "bare_whitespace_share_of_non_pad": 0.0,
+          "pad_share_of_frames": 0.7131256302744016
+        }
+      }
+    },
+    "dev": {
+      "text_rows_compared": 16,
+      "text_rows_identical": 0,
+      "A": {
+        "before": {
+          "frames": 2075,
+          "pad": 1555,
+          "end_of_text_padding": 141,
+          "non_pad": 520,
+          "bare_whitespace": 172,
+          "words": 207,
+          "text_tokens": 379,
+          "bare_whitespace_share_of_text_tokens": 0.45382585751978893,
+          "bare_whitespace_share_of_non_pad": 0.33076923076923076,
+          "pad_share_of_frames": 0.7493975903614458
+        },
+        "after": {
+          "frames": 2075,
+          "pad": 1777,
+          "end_of_text_padding": 136,
+          "non_pad": 298,
+          "bare_whitespace": 0,
+          "words": 162,
+          "text_tokens": 162,
+          "bare_whitespace_share_of_text_tokens": 0.0,
+          "bare_whitespace_share_of_non_pad": 0.0,
+          "pad_share_of_frames": 0.8563855421686747
+        }
+      },
+      "B": {
+        "before": {
+          "frames": 2075,
+          "pad": 968,
+          "end_of_text_padding": 273,
+          "non_pad": 1107,
+          "bare_whitespace": 389,
+          "words": 445,
+          "text_tokens": 834,
+          "bare_whitespace_share_of_text_tokens": 0.46642685851318944,
+          "bare_whitespace_share_of_non_pad": 0.35140018066847334,
+          "pad_share_of_frames": 0.46650602409638553
+        },
+        "after": {
+          "frames": 2075,
+          "pad": 1463,
+          "end_of_text_padding": 286,
+          "non_pad": 612,
+          "bare_whitespace": 0,
+          "words": 326,
+          "text_tokens": 326,
+          "bare_whitespace_share_of_text_tokens": 0.0,
+          "bare_whitespace_share_of_non_pad": 0.0,
+          "pad_share_of_frames": 0.7050602409638554
+        }
+      }
+    },
+    "passed": true
+  },
+  "gate_3_token_count_falls": {
+    "claim": "text token 総数が減る。",
+    "measured": {
+      "train": {
+        "A": {
+          "before": 3172,
+          "after": 1356,
+          "ratio": 2.3392330383480826
+        },
+        "B": {
+          "before": 7769,
+          "after": 2910,
+          "ratio": 2.669759450171821
+        }
+      },
+      "dev": {
+        "A": {
+          "before": 379,
+          "after": 162,
+          "ratio": 2.3395061728395063
+        },
+        "B": {
+          "before": 834,
+          "after": 326,
+          "ratio": 2.558282208588957
+        }
+      },
+      "all": {
+        "before": 12154,
+        "after": 4754,
+        "reduction": 0.6088530524930065
+      }
+    },
+    "reconciliation_with_the_parent_measurement": {
+      "parent_figure": "3,226 → 1,408 token、裸 U+2581 45.5% → 3.6%",
+      "this_measurement": "3,172 → 1,356 token（話者 A・train）、裸 U+2581 44.64% → 0.00%",
+      "why_they_differ": "親の数値は検証記録 §3.1 が台本の生文字列を pyopenjtalk で切り直した独立経路のもの。こちらは dataset が実際に出荷した word transcript を再 tokenize した本番経路である。倍率はほぼ一致する（2.29x 対 2.34x）。0.0% になるのは、出荷済み word transcript の語にラテン文字・数字・空白が 1 つも含まれず、フラグを立てると空白起源の U+2581 が 1 つも残らないため。§3.1 の 3.6%（51 個）は再分割で生じた空白由来である。",
+      "consistency_check": "第1段-4 の reports/m3-text-stream-audit.json が counterfactual として記録した『v-real train speaker A, re-tokenized with the flag: share 0.0, bare 0, text_tokens 1356』と、本セッションが CLI を実際に走らせて得た値が完全に一致する。別経路・別セッションの独立確認である。"
+    },
+    "passed": true
+  },
+  "worked_example": {
+    "dialogue_id": "train/v-001",
+    "speaker": "A",
+    "legend": "_ は U+2581、<unk> は end_of_text_padding (id 0)。pad (id 3) は省いた。",
+    "before": "<unk>_また<unk>_、_東<unk>寺<unk>_の_よう<unk>_に_、_五大<unk>_<unk>明<unk>王<unk>_と_呼ば_れる<unk>_、_主要<unk>_な_<unk>明<unk>王<unk>_の_中央<unk>_に_<unk>配<unk>さ_<unk>れる<unk>_こと<unk>_も_多い<unk>_。",
+    "after": "<unk>_また<unk>、東<unk>寺<unk>のように<unk>、五<unk>大<unk>明<unk>王<unk>と呼ばれる<unk>、主要な<unk>明<unk>王の<unk>中央に<unk>配<unk>される<unk>ことも多い<unk>。",
+    "non_pad_frames": {
+      "before": 74,
+      "after": 37
+    },
+    "reading": "『呼ば_れる』が『と呼ばれる』に戻る。SentencePiece の語結合が空白マーカーで断ち切られていた。"
+  },
+  "explicit_flags_equivalence": {
+    "claim": "TOKENIZE_COMMANDS.md が書く全フラグ明示形は、既定に任せた形と同じ出力を出す。",
+    "compared": "tok-text .npz を 72 stem × {A,B} で np.array_equal",
+    "identical": "72/72",
+    "note": "明示しても挙動は変わらない。変わるのは記録に残るかどうかである。"
+  },
+  "supplementary_finding_mps_is_not_bit_identical": {
+    "why_measured": "TOKENIZE_COMMANDS.md に『--device mps が使える』と書く以上、mps で作った dataset が cpu で作った dataset と同じかを確かめずには書けない。",
+    "method": "同じ 5 対話を --device mps と --device cpu で tokenize_audio に通し、M3 出荷の tok-audio（cpu 製）と比較した。",
+    "result": {
+      "cpu_here_vs_shipped_cpu": {
+        "files_byte_identical": "5/5",
+        "token_agreement": 1.0,
+        "tokens": "21600/21600"
+      },
+      "mps_vs_shipped_cpu": {
+        "files_byte_identical": "4/5",
+        "token_agreement": 0.999907,
+        "tokens": "21598/21600",
+        "differing_positions": [
+          {
+            "dialogue": "v-001",
+            "speaker": "B",
+            "codebook": 4,
+            "frame": 245,
+            "frames_total": 295,
+            "cpu": 1335,
+            "mps": 267
+          },
+          {
+            "dialogue": "v-001",
+            "speaker": "B",
+            "codebook": 6,
+            "frame": 245,
+            "frames_total": 295,
+            "cpu": 666,
+            "mps": 825
+          }
+        ]
+      }
+    },
+    "reading": "食い違うのは残差 codebook 4・6 の 1 フレームのみで、codebook 0（semantic）はこの標本では一致した。RVQ の量子化境界での丸めの分岐であり、バグではない。だが checksum は合わなくなる。",
+    "speed": {
+      "mps": "21 秒対話 5 本で約 3.2 秒 (tqdm 1.56 it/s)",
+      "cpu": "同 約 5.9 秒 (tqdm 1.17 s/it)",
+      "extrapolated_80_dialogues": {
+        "mps": "約 51 秒",
+        "cpu": "約 94 秒"
+      }
+    },
+    "decision": "学習に投入する dataset は --device cpu で作る。40 秒の節約に『checksum が合わない』を買う価値はない。mps は探索用とし、使ったら device を記録する。"
+  },
+  "supplementary_finding_the_flag_does_not_weaken_the_pad_silence_shortcut": {
+    "why_measured": "第2段の前提は『loss を下げる最短経路が無音だった』であり、その証拠として pad ⟺ A 無音 の 98% 一致が挙げられている。text を直せばこれが緩むのかを、直した parquet で直接測った。",
+    "definitions": {
+      "transcript_interval": "word transcript の話者 A の語区間に入るフレームを『発話』、それ以外を『無音』とする。音声を読まない。",
+      "rms": "A チャンネルを 12.5 Hz のフレームに切り、RMS が閾値未満のフレームを『無音』とする。"
+    },
+    "measured": {
+      "transcript_interval": {
+        "shipped": {
+          "agreement": 0.907011305132424,
+          "p_pad_given_silent": 0.9910928665479048,
+          "p_silent_given_pad": 0.8865793667290237,
+          "confusion": {
+            "both": 12796,
+            "pad_only": 1637,
+            "sil_only": 115,
+            "neither": 4293
+          },
+          "frames": 18841
+        },
+        "rebuilt": {
+          "agreement": 0.8091927180085983,
+          "p_pad_given_silent": 0.9944233599256448,
+          "p_silent_given_pad": 0.7846840239579513,
+          "confusion": {
+            "both": 12839,
+            "pad_only": 3523,
+            "sil_only": 72,
+            "neither": 2407
+          },
+          "frames": 18841
+        }
+      },
+      "rms_0.002": {
+        "shipped": {
+          "agreement": 0.8507510217079772,
+          "p_pad_given_silent": 0.9023613323177065,
+          "p_silent_given_pad": 0.9028614979560728,
+          "confusion": {
+            "both": 13031,
+            "pad_only": 1402,
+            "sil_only": 1410,
+            "neither": 2998
+          },
+          "frames": 18841
+        },
+        "rebuilt": {
+          "agreement": 0.8026113263627196,
+          "p_pad_given_silent": 0.9377466934422823,
+          "p_silent_given_pad": 0.8276494316098276,
+          "confusion": {
+            "both": 13542,
+            "pad_only": 2820,
+            "sil_only": 899,
+            "neither": 1580
+          },
+          "frames": 18841
+        }
+      },
+      "rms_0.0005": {
+        "shipped": {
+          "agreement": 0.8583939281354492,
+          "p_pad_given_silent": 0.9137070117448485,
+          "p_silent_given_pad": 0.9001593570290307,
+          "confusion": {
+            "both": 12992,
+            "pad_only": 1441,
+            "sil_only": 1227,
+            "neither": 3181
+          },
+          "frames": 18841
+        },
+        "rebuilt": {
+          "agreement": 0.8025051748845603,
+          "p_pad_given_silent": 0.9445108657430199,
+          "p_silent_given_pad": 0.8208043026524875,
+          "confusion": {
+            "both": 13430,
+            "pad_only": 2932,
+            "sil_only": 789,
+            "neither": 1690
+          },
+          "frames": 18841
+        }
+      }
+    },
+    "reading": "どの定義でも P(pad | A 無音) は下がらない。transcript 定義で 0.9911 → 0.9944、RMS 0.002 で 0.9024 → 0.9377 と、むしろ上がる。フラグを立てると text token が 2.3 分の 1 に減るぶん pad フレームが増え（話者 A の pad 率 76.60% → 86.84%）、『無音なら pad』という近道は強くなる。",
+    "consequence": "text の修正は近道を切らない。近道を切るのは 2-4（ルームトーン）・2-2（読点分割）・2-5（重なり）であり、2-1 はその前提条件を整えるだけである。",
+    "caveat_for_2_4": "計画が 2-4 のゲートに書く『pad ⟺ A 無音 の一致率 98% → 60% 未満』は、どの定義でどちらの条件付き確率を測るかで値が大きく動く。本セッションの実測では、出荷済み parquet に対して transcript 定義の素朴な一致率が 0.9070、P(pad|無音) が 0.9911、RMS 0.002 定義の一致率が 0.8508 である。98% に最も近いのは transcript 定義の P(pad|無音) であり、2-4 はゲートを判定する前に定義を 1 つに固定する必要がある。"
+  },
+  "commands": {
+    "note": "すべてリポジトリ root で実行。出力先は scratchpad で、リポジトリの data/ には何も書いていない。",
+    "SCRATCH": "/private/tmp/claude-501/-Users-inamotoyuuta-Desktop-moshi-finetune/04bd4100-e3e0-4fa9-a1f4-8d4b8da36f14/scratchpad",
+    "steps": [
+      {
+        "what": "control: フラグなしで tok-text を作り直す",
+        "cmd": "uv run --python 3.12 --with numpy --with sentencepiece --with huggingface_hub --with tqdm --no-project python -m tools.tokenize_text --word_transcript_dir data/experiments/tsukuyomi_ojousama/m3/v-real/train/text --output_dir $SCRATCH/repro/tok-text-noflag --num_workers 1 --text_tokenizer_repo nu-dialogue/j-moshi-ext --text_tokenizer_name tokenizer_spm_32k_3.model",
+        "out": "72 files, skip 0, dropped-frame warning 0"
+      },
+      {
+        "what": "候補: フラグありで tok-text を作る",
+        "cmd": "（同上に --no_whitespace_before_word を足し、--output_dir を $SCRATCH/repro/tok-text-flag に）",
+        "out": "72 files, skip 0, dropped-frame warning 0"
+      },
+      {
+        "what": "tok-text .npz を出荷済みと突き合わせる",
+        "cmd": "np.array_equal で 72 stem × {A,B}",
+        "out": "identical_to_shipped__noflag=72/72  identical_to_shipped__with_flag=0/72  text-stream frames は両者とも 31817"
+      },
+      {
+        "what": "parquet を 2 本作る（audio は出荷済み tok-audio を再利用）",
+        "cmd": "uv run --python 3.12 --with numpy --with pandas --with pyarrow --with tqdm --no-project python -m tools.prepare_dataset --tokenized_text_dir $SCRATCH/repro/tok-text-{noflag,flag} --tokenized_audio_dir data/experiments/tsukuyomi_ojousama/m3/v-real/train/tok-audio --output_prefix $SCRATCH/repro/parquet-{noflag,flag}/train",
+        "out": "noflag sha256 28da029e472fdcbe75b124e60fc097a0e9fd2c234440bdf70867cff85120b571（出荷済みと一致）/ flag sha256 9f501d6516cbcef71bb9d4cce259b115ff573c47884ade28eac4cfa3989f133d"
+      },
+      {
+        "what": "行単位 diff",
+        "cmd": "各行を int32 tobytes() の sha256 で比較",
+        "out": "train: audio 1152/1152 identical, text 0/144 identical, shape mismatch 0 / dev: audio 128/128 identical, text 0/16 identical"
+      },
+      {
+        "what": "gate 指標を公式ツールで読む",
+        "cmd": "uv run --python 3.12 --with numpy --with pandas --with pyarrow --with sentencepiece --no-project python -m tools.text_stream_audit audit $SCRATCH/repro/parquet-flag/train-001-of-001.parquet --text_tokenizer_path <j-moshi-ext snapshot>/tokenizer_spm_32k_3.model",
+        "out": "A bare_whitespace_share_of_text_tokens=0.0 text_tokens=1356 / B 0.0 2910（ゲート閾値 0.1）"
+      },
+      {
+        "what": "mps と cpu の一致検査",
+        "cmd": "uv run --python 3.12 --with torch==2.4.1 --with torchaudio==2.4.1 --with moshi==0.1.0 --with numpy --with soundfile --with huggingface_hub --with tqdm --no-project python -m tools.tokenize_audio --audio_dir $SCRATCH/repro/mps-in --output_dir $SCRATCH/repro/{mps,cpu}-out --device {mps,cpu} --num_workers 1",
+        "out": "cpu 5/5 byte-identical / mps 4/5, token 一致 0.999907"
+      },
+      {
+        "what": "record-tokenize の smoke",
+        "cmd": "uv run --python 3.12 --no-project python -m tools.text_stream_audit record-tokenize --dataset_id v-real-r1 --manifest ... --out $SCRATCH/repro/sidecar.json --split train --provenance recorded --recorded_at 2026-08-25 -- <tokenize_text argv>",
+        "out": "sidecar に no_whitespace_before_word: true が入り、defaults_used に残らない"
+      },
+      {
+        "what": "テストスイート",
+        "cmd": "uv run --python 3.12 --with pytest --no-sync python -m pytest tests -q",
+        "out": "479 passed, 2 skipped in 0.79s"
+      }
+    ]
+  },
+  "what_this_step_did_not_do": [
+    "コードは 1 行も編集していない。tools/tokenize_text.py の修正は第1段-4 で扱い済みである。",
+    "リポジトリの data/ には何も書いていない。作り直した parquet は scratchpad にあり、M3 の出荷物（quarantine 済み）はそのままである。",
+    "M3-R の dataset そのものは作っていない。2-2 以降が台本を作り直したあとで、TOKENIZE_COMMANDS.md の手順を実行する。",
+    "V-tts は触っていない。M3-R の承認された腕は V-real のみである。"
+  ],
+  "next": {
+    "2-2": "読点分割の台本生成。A のターンを 2 回にし、対話数 72 と step 45 を保つ。",
+    "2-4": "ルームトーン。上の supplementary finding のとおり、pad ⟺ 無音 の近道を実際に切るのはこちらである。ゲート判定の前に一致率の定義を 1 つに固定すること。",
+    "2-7": "TOKENIZE_COMMANDS.md の手順で新 dataset を tokenize し、record-tokenize で sidecar を書く。"
+  }
+}
