@@ -27,6 +27,7 @@
     "Only the corpus TRAIN split is used. The 10 dev and 10 test sentences never enter either dataset, because condition 4 is measured on held-out audio.",
     "The 72/8 split comes from m3/scripts/split-map-v1.json and is shared by both datasets, so the comparison stays paired.",
     "Audio is gitignored. The scripts, split map, manifest and reports are committed.",
-    "Channel A carries 8.67 minutes across 80 sentences - 4.6% of the 189.9 minutes the past amitaro experiment used. A null result on condition 4 is ambiguous between method and quantity; reports/m3-dataset-agreement.json and the M3 plan both say so."
+    "Channel A carries 8.67 minutes across 80 sentences, and these dialogues total 27.83 minutes (reports/m3-dataset-agreement.json).",
+    "Corrected 2026-08-24: an earlier version of the note above called that \"4.6% of the 189.9 minutes the past amitaro experiment used\". That comparison was wrong. The 189.9 minutes is the Irodori-TTS training corpus, not Moshi training data; the past Moshi run was trained on 31.7 minutes of synthesised dialogue. Like for like, this dataset is 87.8% of it, so a null on condition 4 cannot be attributed to quantity. See docs/experiments/j-moshi-tsukuyomi-ojousama-m3-verification.md section 6, and section 4.1 for why 8.67 minutes of speaker audio is not a shortfall in the literature either."
   ]
 }

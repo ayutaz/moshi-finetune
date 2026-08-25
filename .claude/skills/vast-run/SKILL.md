@@ -10,8 +10,18 @@ exists because skipping it cost time or money at least once.
 
 ## Before starting anything
 
-Run the budget preflight and record the decision. The cap is US$100, approved
-2026-08-18; `tools/experiment_budget.py` encodes the thresholds.
+Run the budget preflight and record the decision. **The cap is US$125, approved
+2026-08-24.** It replaced the US$100 cap of 2026-08-18, which the M3 session breached at
+US$102.697. Headroom was US$22.30 when it was raised, and `m0/spend-ledger.json` records
+under `cap_raise` exactly what that headroom is for - one V-real re-run and one
+forward-only measurement. Spending it on anything else needs the user, not you.
+
+**`tools/experiment_budget.py` still hardcodes `HARD_CAP = 100.0`, and the ledger's warning
+(US$75), new-run (US$90) and stop (US$95) thresholds still belong to the old cap.** Until
+both are moved, the preflight refuses every run - accrued spend already exceeds the constant
+it tests against - so its non-zero exit is evidence of nothing either way. Align the tool
+and the thresholds with the ledger's `experiment_cap` before the next rent. Do not route
+around the refusal by skipping the check.
 
 ```bash
 uv run --no-sync python -m tools.experiment_budget \
@@ -125,6 +135,48 @@ not have. `run_baseline.sh` handles this itself, but ad-hoc commands do not.
 Watch the log with a filter that covers **failure as well as progress**. A filter matching
 only success markers stays silent through a crash, and silence looks like "still running".
 Include `Traceback`, `Error`, `assert`, `OOM`, `Killed`.
+
+## The stop line
+
+M3 was authorised to 14.0 hours and ran 25.21. That overrun alone cost US$34.27, and it is
+what carried cumulative spend past the cap - before it, accrued was US$25.638 of US$100.
+Three habits caused it, and each has a replacement.
+
+**Fix the stop line as a UTC timestamp before the run starts, not as an elapsed-hours
+budget.** Every progress check during M3 recomputed a forecast from the plan's per-stage
+estimates. The forecast stayed reassuring while the clock did not. Derive the deadline once
+from the instance's own `start_date` and compare wall clock against it at every check:
+
+```bash
+vastai show instance <id> --raw | python3 -c "
+import datetime as dt, json, sys
+start = dt.datetime.fromtimestamp(json.load(sys.stdin)['start_date'], dt.timezone.utc)
+now = dt.datetime.now(dt.timezone.utc)
+print('start  ', start.isoformat())
+print('now    ', now.isoformat())
+print('elapsed', round((now - start).total_seconds() / 3600, 2), 'h')"
+```
+
+`start_date` is the authority. An elapsed figure carried forward in your head, or recomputed
+from stage estimates, is not - and the two diverge in the direction that costs money.
+
+**Put the export in the estimate.** M3 measured roughly 30 minutes per 15.4 GB checkpoint
+file, and no elapsed-time check ran between the last generation and the export finishing.
+Five checkpoints is a multi-hour tail on a meter that is still running. Budget those hours
+before renting, and treat "training finished" as the middle of the run, not the end.
+
+**Call the preflight during the run, not only before it.** M3 invoked
+`tools/experiment_budget.py` once, before renting. The one instrument that would have said
+"stop" was never asked again. Re-run it at each progress check, with the hours actually
+elapsed plus what is left:
+
+```bash
+uv run --no-sync python -m tools.experiment_budget \
+  --spent <accrued_estimate> --hourly-rate <instance $/h> --planned-hours <elapsed + remaining>
+```
+
+A non-zero exit mid-run means export what exists and stop. It does not mean "finish this
+stage first" - the stage is what the money is going into.
 
 ## Before stopping
 

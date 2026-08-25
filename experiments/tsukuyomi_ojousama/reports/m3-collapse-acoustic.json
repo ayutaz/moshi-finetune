@@ -1,0 +1,1461 @@
+{
+  "schema_version": 1,
+  "milestone": "M3-R",
+  "step": "1-1 / 1-2",
+  "captured_at": "2026-08-25",
+  "condition": "3. 固定30会話で独話loop・反復collapseを起こさない（音響崩壊を含めて再判定）",
+  "does_not_supersede": "m3-collapse.json is left exactly as it was. It records what the text-only detector saw, and that record is what the M3 verdict was actually made on. This file is the same 550 generations re-judged with the audio half switched on.",
+  "detector": "tools/dialogue_collapse.py :: summarise_streams",
+  "reproduce": {
+    "command": "uv run --no-sync --with numpy python -m tools.dialogue_collapse --root data/experiments/tsukuyomi_ojousama/m3/instance-out/gen --text-calibration experiments/tsukuyomi_ojousama/reports/m3-collapse-calibration.json --acoustic-calibration experiments/tsukuyomi_ojousama/reports/m3-collapse-acoustic-calibration.json",
+    "note": "Its `groups` map equals `per_arm_by_prompt_set` below, key for key and field for field - both come from the same group_report(). Everything else in this file is authored around those numbers."
+  },
+  "thresholds": {
+    "text": {
+      "min_n": 3,
+      "max_ngram_repeats": 4,
+      "min_distinct_ratio": 0.4,
+      "max_emitted_ratio": 0.85
+    },
+    "text_frozen": "2026-08-21, before any candidate existed",
+    "audio": {
+      "max_entropy_bits": 1.43,
+      "max_distinct_tokens": 9
+    },
+    "audio_calibration": "reports/m3-collapse-acoustic-calibration.json",
+    "audio_frozen": "2026-08-25, derived from the 20 M0 continuations alone. Not frozen before the candidates existed - the calibration file says so and shows the verdict is flat across the plausible range of lines."
+  },
+  "gate": {
+    "asked": "control's general30 is automatically judged degenerate",
+    "met": true,
+    "control_general30_acoustic_collapse": 17,
+    "of": 30,
+    "what_the_text_only_detector_recorded": {
+      "monologue": 0,
+      "repeat": 2,
+      "silent": 0
+    },
+    "how_it_was_missed": "Those 17 generations emit 2 to 8 text tokens over 124 frames while speaker A's codebook 0 is the silence token 1316 on up to 113 of them. The text-side silent test requires ZERO emitted tokens, so a handful of stray text tokens cleared it and the whole arm was recorded as silent_count 0.",
+    "consequence": "The baseline every M3 arm was compared against is itself degenerate on 17 of its 30 general30 prompts. 'No worse than the control' was measured against a control that had already collapsed on more than half that prompt set, so no relative claim made on general30 survives."
+  },
+  "reconciliation": {
+    "exploratory_rule": "distinct_tokens <= 8 AND top_token_share >= 0.7, the hand-picked line the 2026-08-24 verification session used to establish that the control was degenerate. Reported here so the calibrated rule can be checked against it.",
+    "calibrated_rule": "entropy_bits <= 1.43 OR distinct_tokens <= 9, derived from the 20 M0 continuations in m3-collapse-acoustic-calibration.json",
+    "by_arm_and_prompt_set": {
+      "control/held-out": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 10
+      },
+      "control/seen": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 10
+      },
+      "control/general30": {
+        "calibrated_rule": 17,
+        "exploratory_rule": 16,
+        "of": 30
+      },
+      "v-real/epoch1/held-out": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 10
+      },
+      "v-real/epoch1/seen": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 10
+      },
+      "v-real/epoch1/general30": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 30
+      },
+      "v-real/epoch2/held-out": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 10
+      },
+      "v-real/epoch2/seen": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 10
+      },
+      "v-real/epoch2/general30": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 30
+      },
+      "v-real/epoch3/held-out": {
+        "calibrated_rule": 1,
+        "exploratory_rule": 1,
+        "of": 10
+      },
+      "v-real/epoch3/seen": {
+        "calibrated_rule": 2,
+        "exploratory_rule": 1,
+        "of": 10
+      },
+      "v-real/epoch3/general30": {
+        "calibrated_rule": 6,
+        "exploratory_rule": 4,
+        "of": 30
+      },
+      "v-real/epoch4/held-out": {
+        "calibrated_rule": 8,
+        "exploratory_rule": 5,
+        "of": 10
+      },
+      "v-real/epoch4/seen": {
+        "calibrated_rule": 8,
+        "exploratory_rule": 5,
+        "of": 10
+      },
+      "v-real/epoch4/general30": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 30
+      },
+      "v-real/epoch5/held-out": {
+        "calibrated_rule": 8,
+        "exploratory_rule": 8,
+        "of": 10
+      },
+      "v-real/epoch5/seen": {
+        "calibrated_rule": 8,
+        "exploratory_rule": 8,
+        "of": 10
+      },
+      "v-real/epoch5/general30": {
+        "calibrated_rule": 10,
+        "exploratory_rule": 8,
+        "of": 30
+      },
+      "v-tts/epoch1/held-out": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 10
+      },
+      "v-tts/epoch1/seen": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 10
+      },
+      "v-tts/epoch1/general30": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 30
+      },
+      "v-tts/epoch2/held-out": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 10
+      },
+      "v-tts/epoch2/seen": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 10
+      },
+      "v-tts/epoch2/general30": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 30
+      },
+      "v-tts/epoch3/held-out": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 10
+      },
+      "v-tts/epoch3/seen": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 10
+      },
+      "v-tts/epoch3/general30": {
+        "calibrated_rule": 1,
+        "exploratory_rule": 1,
+        "of": 30
+      },
+      "v-tts/epoch4/held-out": {
+        "calibrated_rule": 3,
+        "exploratory_rule": 2,
+        "of": 10
+      },
+      "v-tts/epoch4/seen": {
+        "calibrated_rule": 4,
+        "exploratory_rule": 1,
+        "of": 10
+      },
+      "v-tts/epoch4/general30": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 30
+      },
+      "v-tts/epoch5/held-out": {
+        "calibrated_rule": 4,
+        "exploratory_rule": 2,
+        "of": 10
+      },
+      "v-tts/epoch5/seen": {
+        "calibrated_rule": 2,
+        "exploratory_rule": 2,
+        "of": 10
+      },
+      "v-tts/epoch5/general30": {
+        "calibrated_rule": 0,
+        "exploratory_rule": 0,
+        "of": 30
+      }
+    },
+    "disagreements": {
+      "control/general30": {
+        "calibrated_rule": 17,
+        "exploratory_rule": 16,
+        "of": 30
+      },
+      "v-real/epoch3/seen": {
+        "calibrated_rule": 2,
+        "exploratory_rule": 1,
+        "of": 10
+      },
+      "v-real/epoch3/general30": {
+        "calibrated_rule": 6,
+        "exploratory_rule": 4,
+        "of": 30
+      },
+      "v-real/epoch4/held-out": {
+        "calibrated_rule": 8,
+        "exploratory_rule": 5,
+        "of": 10
+      },
+      "v-real/epoch4/seen": {
+        "calibrated_rule": 8,
+        "exploratory_rule": 5,
+        "of": 10
+      },
+      "v-real/epoch5/general30": {
+        "calibrated_rule": 10,
+        "exploratory_rule": 8,
+        "of": 30
+      },
+      "v-tts/epoch4/held-out": {
+        "calibrated_rule": 3,
+        "exploratory_rule": 2,
+        "of": 10
+      },
+      "v-tts/epoch4/seen": {
+        "calibrated_rule": 4,
+        "exploratory_rule": 1,
+        "of": 10
+      },
+      "v-tts/epoch5/held-out": {
+        "calibrated_rule": 4,
+        "exploratory_rule": 2,
+        "of": 10
+      }
+    },
+    "reading": "The calibrated rule is strictly more sensitive: it flags everything the exploratory rule flags and 18 generations more, and never fewer on any arm or prompt set. The extra ones fall into two shapes the conjunction could not reach - a dead channel with a long tail of singleton tokens (control/general30/7.npy: 10 distinct, 0.946 bits) and four to six tokens spread evenly enough that no single one owns 70% of the window (v-real/epoch4 held-out). Both are collapses; the AND was the wrong shape.",
+    "validation": "Every number the 2026-08-24 verification session quoted is reproduced exactly by the exploratory rule under this implementation: control general30 16 of 30, control held-out 0 of 10, control seen 0 of 10, v-real/epoch4 held-out 5 of 10, v-real/epoch5 held-out 8 of 10, v-real/epoch2 held-out 0 of 10 and general30 0 of 30, v-tts/epoch2 general30 0 of 30. The metric functions are therefore computing what that session computed; only the line has moved."
+  },
+  "per_arm_all_sets": {
+    "control": {
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 2,
+      "silent_count": 0,
+      "acoustic_scored": true,
+      "acoustic_collapse_count": 17,
+      "acoustic_only_count": 16,
+      "degenerate_count": 18,
+      "passes": false
+    },
+    "v-real/epoch1": {
+      "total": 50,
+      "monologue_loop_count": 20,
+      "exact_repeat_collapse_count": 50,
+      "silent_count": 0,
+      "acoustic_scored": true,
+      "acoustic_collapse_count": 0,
+      "acoustic_only_count": 0,
+      "degenerate_count": 50,
+      "passes": false
+    },
+    "v-real/epoch2": {
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 15,
+      "silent_count": 0,
+      "acoustic_scored": true,
+      "acoustic_collapse_count": 0,
+      "acoustic_only_count": 0,
+      "degenerate_count": 15,
+      "passes": false
+    },
+    "v-real/epoch3": {
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 2,
+      "silent_count": 7,
+      "acoustic_scored": true,
+      "acoustic_collapse_count": 9,
+      "acoustic_only_count": 3,
+      "degenerate_count": 12,
+      "passes": false
+    },
+    "v-real/epoch4": {
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 1,
+      "silent_count": 16,
+      "acoustic_scored": true,
+      "acoustic_collapse_count": 16,
+      "acoustic_only_count": 0,
+      "degenerate_count": 17,
+      "passes": false
+    },
+    "v-real/epoch5": {
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 5,
+      "silent_count": 24,
+      "acoustic_scored": true,
+      "acoustic_collapse_count": 26,
+      "acoustic_only_count": 2,
+      "degenerate_count": 31,
+      "passes": false
+    },
+    "v-tts/epoch1": {
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 18,
+      "silent_count": 0,
+      "acoustic_scored": true,
+      "acoustic_collapse_count": 0,
+      "acoustic_only_count": 0,
+      "degenerate_count": 18,
+      "passes": false
+    },
+    "v-tts/epoch2": {
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 1,
+      "silent_count": 0,
+      "acoustic_scored": true,
+      "acoustic_collapse_count": 0,
+      "acoustic_only_count": 0,
+      "degenerate_count": 1,
+      "passes": false
+    },
+    "v-tts/epoch3": {
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 3,
+      "silent_count": 1,
+      "acoustic_scored": true,
+      "acoustic_collapse_count": 1,
+      "acoustic_only_count": 0,
+      "degenerate_count": 4,
+      "passes": false
+    },
+    "v-tts/epoch4": {
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 8,
+      "silent_count": 7,
+      "acoustic_scored": true,
+      "acoustic_collapse_count": 7,
+      "acoustic_only_count": 0,
+      "degenerate_count": 15,
+      "passes": false
+    },
+    "v-tts/epoch5": {
+      "total": 50,
+      "monologue_loop_count": 0,
+      "exact_repeat_collapse_count": 0,
+      "silent_count": 6,
+      "acoustic_scored": true,
+      "acoustic_collapse_count": 6,
+      "acoustic_only_count": 0,
+      "degenerate_count": 6,
+      "passes": false
+    }
+  },
+  "per_arm_by_prompt_set": {
+    "control": {
+      "held-out": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 0,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 0,
+        "passes": true,
+        "audio_distinct_tokens": {
+          "min": 28,
+          "median": 57.0,
+          "max": 79
+        },
+        "audio_top_token_share": {
+          "min": 0.06451612903225806,
+          "median": 0.22983870967741934,
+          "max": 0.41935483870967744
+        },
+        "audio_entropy_bits": {
+          "min": 3.1135193870849234,
+          "median": 4.7502642437640965,
+          "max": 6.023679552441276
+        },
+        "modal_top_token": 1926,
+        "collapsed_generations": []
+      },
+      "seen": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 0,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 0,
+        "passes": true,
+        "audio_distinct_tokens": {
+          "min": 15,
+          "median": 65.0,
+          "max": 86
+        },
+        "audio_top_token_share": {
+          "min": 0.03225806451612903,
+          "median": 0.15725806451612903,
+          "max": 0.6451612903225806
+        },
+        "audio_entropy_bits": {
+          "min": 1.96578596443395,
+          "median": 5.177221393123315,
+          "max": 6.262466975622218
+        },
+        "modal_top_token": 1926,
+        "collapsed_generations": []
+      },
+      "general30": {
+        "total": 30,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 2,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 17,
+        "acoustic_only_count": 16,
+        "degenerate_count": 18,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 4,
+          "median": 4.0,
+          "max": 76
+        },
+        "audio_top_token_share": {
+          "min": 0.10483870967741936,
+          "median": 0.9032258064516129,
+          "max": 0.9112903225806451
+        },
+        "audio_entropy_bits": {
+          "min": 0.5293558043149703,
+          "median": 0.5737234170593338,
+          "max": 5.828135796103289
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": [
+          "0.npy",
+          "1.npy",
+          "4.npy",
+          "5.npy",
+          "6.npy",
+          "7.npy",
+          "10.npy",
+          "12.npy",
+          "15.npy",
+          "20.npy",
+          "22.npy",
+          "23.npy",
+          "24.npy",
+          "25.npy",
+          "26.npy",
+          "27.npy",
+          "28.npy"
+        ]
+      }
+    },
+    "v-real/epoch1": {
+      "held-out": {
+        "total": 10,
+        "monologue_loop_count": 10,
+        "exact_repeat_collapse_count": 10,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 10,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 40,
+          "median": 48.5,
+          "max": 61
+        },
+        "audio_top_token_share": {
+          "min": 0.31451612903225806,
+          "median": 0.3709677419354839,
+          "max": 0.4596774193548387
+        },
+        "audio_entropy_bits": {
+          "min": 3.602033566779609,
+          "median": 4.270549961206305,
+          "max": 4.643968346705301
+        },
+        "modal_top_token": 716,
+        "collapsed_generations": []
+      },
+      "seen": {
+        "total": 10,
+        "monologue_loop_count": 9,
+        "exact_repeat_collapse_count": 10,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 10,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 43,
+          "median": 49.5,
+          "max": 56
+        },
+        "audio_top_token_share": {
+          "min": 0.3064516129032258,
+          "median": 0.375,
+          "max": 0.41935483870967744
+        },
+        "audio_entropy_bits": {
+          "min": 3.7714572408718894,
+          "median": 4.102461950180613,
+          "max": 4.571156941311377
+        },
+        "modal_top_token": 716,
+        "collapsed_generations": []
+      },
+      "general30": {
+        "total": 30,
+        "monologue_loop_count": 1,
+        "exact_repeat_collapse_count": 30,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 30,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 27,
+          "median": 42.0,
+          "max": 62
+        },
+        "audio_top_token_share": {
+          "min": 0.18548387096774194,
+          "median": 0.3629032258064516,
+          "max": 0.6129032258064516
+        },
+        "audio_entropy_bits": {
+          "min": 2.5450064628477382,
+          "median": 3.58623569165698,
+          "max": 5.015851230806344
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": []
+      }
+    },
+    "v-real/epoch2": {
+      "held-out": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 7,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 7,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 38,
+          "median": 81.5,
+          "max": 92
+        },
+        "audio_top_token_share": {
+          "min": 0.04032258064516129,
+          "median": 0.08870967741935484,
+          "max": 0.47580645161290325
+        },
+        "audio_entropy_bits": {
+          "min": 3.583134722629648,
+          "median": 6.0230546414799,
+          "max": 6.307108963955201
+        },
+        "modal_top_token": 2029,
+        "collapsed_generations": []
+      },
+      "seen": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 6,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 6,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 15,
+          "median": 71.0,
+          "max": 84
+        },
+        "audio_top_token_share": {
+          "min": 0.04838709677419355,
+          "median": 0.22177419354838707,
+          "max": 0.75
+        },
+        "audio_entropy_bits": {
+          "min": 1.6462860728840147,
+          "median": 5.166362899894529,
+          "max": 6.1796874392795536
+        },
+        "modal_top_token": 2029,
+        "collapsed_generations": []
+      },
+      "general30": {
+        "total": 30,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 2,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 2,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 39,
+          "median": 55.5,
+          "max": 75
+        },
+        "audio_top_token_share": {
+          "min": 0.1693548387096774,
+          "median": 0.4314516129032258,
+          "max": 0.5725806451612904
+        },
+        "audio_entropy_bits": {
+          "min": 3.2172049153304565,
+          "median": 4.134550559603196,
+          "max": 5.481274585610568
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": []
+      }
+    },
+    "v-real/epoch3": {
+      "held-out": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 0,
+        "silent_count": 2,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 1,
+        "acoustic_only_count": 0,
+        "degenerate_count": 2,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 5,
+          "median": 52.0,
+          "max": 64
+        },
+        "audio_top_token_share": {
+          "min": 0.12096774193548387,
+          "median": 0.342741935483871,
+          "max": 0.7580645161290323
+        },
+        "audio_entropy_bits": {
+          "min": 1.0913436074039564,
+          "median": 4.497522610748916,
+          "max": 5.482473130176725
+        },
+        "modal_top_token": 2029,
+        "collapsed_generations": [
+          "2.npy"
+        ]
+      },
+      "seen": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 0,
+        "silent_count": 2,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 2,
+        "acoustic_only_count": 0,
+        "degenerate_count": 2,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 4,
+          "median": 47.5,
+          "max": 60
+        },
+        "audio_top_token_share": {
+          "min": 0.22580645161290322,
+          "median": 0.3951612903225806,
+          "max": 0.9112903225806451
+        },
+        "audio_entropy_bits": {
+          "min": 0.5716550986523616,
+          "median": 4.092665691775814,
+          "max": 5.044366171466089
+        },
+        "modal_top_token": 2029,
+        "collapsed_generations": [
+          "2.npy",
+          "3.npy"
+        ]
+      },
+      "general30": {
+        "total": 30,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 2,
+        "silent_count": 3,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 6,
+        "acoustic_only_count": 3,
+        "degenerate_count": 8,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 4,
+          "median": 40.5,
+          "max": 50
+        },
+        "audio_top_token_share": {
+          "min": 0.4032258064516129,
+          "median": 0.5564516129032258,
+          "max": 0.9274193548387096
+        },
+        "audio_entropy_bits": {
+          "min": 0.4643484808471165,
+          "median": 3.231455792317158,
+          "max": 4.1842203264846125
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": [
+          "7.npy",
+          "8.npy",
+          "17.npy",
+          "19.npy",
+          "20.npy",
+          "23.npy"
+        ]
+      }
+    },
+    "v-real/epoch4": {
+      "held-out": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 0,
+        "silent_count": 8,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 8,
+        "acoustic_only_count": 0,
+        "degenerate_count": 8,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 4,
+          "median": 5.0,
+          "max": 47
+        },
+        "audio_top_token_share": {
+          "min": 0.3951612903225806,
+          "median": 0.7137096774193548,
+          "max": 0.9112903225806451
+        },
+        "audio_entropy_bits": {
+          "min": 0.564761929521125,
+          "median": 1.2156941242776949,
+          "max": 4.140733501326394
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": [
+          "0.npy",
+          "1.npy",
+          "2.npy",
+          "3.npy",
+          "4.npy",
+          "5.npy",
+          "6.npy",
+          "8.npy"
+        ]
+      },
+      "seen": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 0,
+        "silent_count": 8,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 8,
+        "acoustic_only_count": 0,
+        "degenerate_count": 8,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 4,
+          "median": 4.5,
+          "max": 32
+        },
+        "audio_top_token_share": {
+          "min": 0.47580645161290325,
+          "median": 0.7903225806451613,
+          "max": 0.9193548387096774
+        },
+        "audio_entropy_bits": {
+          "min": 0.5242447814241266,
+          "median": 0.9803223543873474,
+          "max": 2.7871253910107483
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": [
+          "0.npy",
+          "2.npy",
+          "3.npy",
+          "4.npy",
+          "5.npy",
+          "6.npy",
+          "8.npy",
+          "9.npy"
+        ]
+      },
+      "general30": {
+        "total": 30,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 1,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 1,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 23,
+          "median": 38.0,
+          "max": 55
+        },
+        "audio_top_token_share": {
+          "min": 0.3951612903225806,
+          "median": 0.5080645161290323,
+          "max": 0.6129032258064516
+        },
+        "audio_entropy_bits": {
+          "min": 2.3968139822800274,
+          "median": 3.425413664616069,
+          "max": 4.314581592907036
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": []
+      }
+    },
+    "v-real/epoch5": {
+      "held-out": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 1,
+        "silent_count": 8,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 8,
+        "acoustic_only_count": 0,
+        "degenerate_count": 9,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 4,
+          "median": 5.0,
+          "max": 61
+        },
+        "audio_top_token_share": {
+          "min": 0.18548387096774194,
+          "median": 0.8346774193548387,
+          "max": 0.9193548387096774
+        },
+        "audio_entropy_bits": {
+          "min": 0.5533547852502299,
+          "median": 0.8761330585564832,
+          "max": 4.702042626484381
+        },
+        "modal_top_token": 2029,
+        "collapsed_generations": [
+          "0.npy",
+          "1.npy",
+          "2.npy",
+          "3.npy",
+          "4.npy",
+          "5.npy",
+          "6.npy",
+          "8.npy"
+        ]
+      },
+      "seen": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 1,
+        "silent_count": 8,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 8,
+        "acoustic_only_count": 0,
+        "degenerate_count": 9,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 4,
+          "median": 4.5,
+          "max": 60
+        },
+        "audio_top_token_share": {
+          "min": 0.08064516129032258,
+          "median": 0.8629032258064516,
+          "max": 0.9193548387096774
+        },
+        "audio_entropy_bits": {
+          "min": 0.5311379505553632,
+          "median": 0.7545023164858762,
+          "max": 5.485412871923502
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": [
+          "0.npy",
+          "2.npy",
+          "3.npy",
+          "4.npy",
+          "5.npy",
+          "6.npy",
+          "8.npy",
+          "9.npy"
+        ]
+      },
+      "general30": {
+        "total": 30,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 3,
+        "silent_count": 8,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 10,
+        "acoustic_only_count": 2,
+        "degenerate_count": 13,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 4,
+          "median": 35.5,
+          "max": 52
+        },
+        "audio_top_token_share": {
+          "min": 0.3951612903225806,
+          "median": 0.5766129032258065,
+          "max": 0.9193548387096774
+        },
+        "audio_entropy_bits": {
+          "min": 0.4977370678934577,
+          "median": 2.988258097279265,
+          "max": 4.139260376302782
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": [
+          "7.npy",
+          "8.npy",
+          "11.npy",
+          "14.npy",
+          "17.npy",
+          "19.npy",
+          "21.npy",
+          "23.npy",
+          "24.npy",
+          "28.npy"
+        ]
+      }
+    },
+    "v-tts/epoch1": {
+      "held-out": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 4,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 4,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 36,
+          "median": 55.5,
+          "max": 84
+        },
+        "audio_top_token_share": {
+          "min": 0.18548387096774194,
+          "median": 0.2903225806451613,
+          "max": 0.5241935483870968
+        },
+        "audio_entropy_bits": {
+          "min": 3.2132916037057453,
+          "median": 4.606462240006907,
+          "max": 5.8126503426962435
+        },
+        "modal_top_token": 84,
+        "collapsed_generations": []
+      },
+      "seen": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 4,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 4,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 37,
+          "median": 58.5,
+          "max": 74
+        },
+        "audio_top_token_share": {
+          "min": 0.20967741935483872,
+          "median": 0.29838709677419356,
+          "max": 0.5564516129032258
+        },
+        "audio_entropy_bits": {
+          "min": 3.0941201250931343,
+          "median": 4.698530814714303,
+          "max": 5.48870270009659
+        },
+        "modal_top_token": 84,
+        "collapsed_generations": []
+      },
+      "general30": {
+        "total": 30,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 10,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 10,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 24,
+          "median": 45.5,
+          "max": 79
+        },
+        "audio_top_token_share": {
+          "min": 0.1693548387096774,
+          "median": 0.39919354838709675,
+          "max": 0.7903225806451613
+        },
+        "audio_entropy_bits": {
+          "min": 1.6719668569557955,
+          "median": 3.8365952283951796,
+          "max": 5.469904347431399
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": []
+      }
+    },
+    "v-tts/epoch2": {
+      "held-out": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 0,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 0,
+        "passes": true,
+        "audio_distinct_tokens": {
+          "min": 39,
+          "median": 68.5,
+          "max": 90
+        },
+        "audio_top_token_share": {
+          "min": 0.03225806451612903,
+          "median": 0.11693548387096775,
+          "max": 0.532258064516129
+        },
+        "audio_entropy_bits": {
+          "min": 3.351741073383042,
+          "median": 5.600607902257291,
+          "max": 6.310854072396412
+        },
+        "modal_top_token": 2029,
+        "collapsed_generations": []
+      },
+      "seen": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 1,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 1,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 33,
+          "median": 71.0,
+          "max": 82
+        },
+        "audio_top_token_share": {
+          "min": 0.04838709677419355,
+          "median": 0.08064516129032258,
+          "max": 0.43548387096774194
+        },
+        "audio_entropy_bits": {
+          "min": 3.09938424148339,
+          "median": 5.7500324400905996,
+          "max": 6.115357500459427
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": []
+      },
+      "general30": {
+        "total": 30,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 0,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 0,
+        "passes": true,
+        "audio_distinct_tokens": {
+          "min": 26,
+          "median": 49.5,
+          "max": 78
+        },
+        "audio_top_token_share": {
+          "min": 0.23387096774193547,
+          "median": 0.4314516129032258,
+          "max": 0.7016129032258065
+        },
+        "audio_entropy_bits": {
+          "min": 2.182780990890076,
+          "median": 3.994264016564569,
+          "max": 5.468500601702121
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": []
+      }
+    },
+    "v-tts/epoch3": {
+      "held-out": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 1,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 1,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 41,
+          "median": 54.5,
+          "max": 74
+        },
+        "audio_top_token_share": {
+          "min": 0.08870967741935484,
+          "median": 0.2943548387096774,
+          "max": 0.46774193548387094
+        },
+        "audio_entropy_bits": {
+          "min": 3.8242467157798274,
+          "median": 4.730445626715633,
+          "max": 5.715673800082987
+        },
+        "modal_top_token": 2029,
+        "collapsed_generations": []
+      },
+      "seen": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 1,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 1,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 44,
+          "median": 64.0,
+          "max": 79
+        },
+        "audio_top_token_share": {
+          "min": 0.08064516129032258,
+          "median": 0.13709677419354838,
+          "max": 0.4596774193548387
+        },
+        "audio_entropy_bits": {
+          "min": 3.764597171297781,
+          "median": 5.3004428269039146,
+          "max": 5.907031218193614
+        },
+        "modal_top_token": 2029,
+        "collapsed_generations": []
+      },
+      "general30": {
+        "total": 30,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 1,
+        "silent_count": 1,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 1,
+        "acoustic_only_count": 0,
+        "degenerate_count": 2,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 5,
+          "median": 47.0,
+          "max": 67
+        },
+        "audio_top_token_share": {
+          "min": 0.24193548387096775,
+          "median": 0.5120967741935484,
+          "max": 0.9193548387096774
+        },
+        "audio_entropy_bits": {
+          "min": 0.5311379505553633,
+          "median": 3.595094833597514,
+          "max": 5.262776609731743
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": [
+          "23.npy"
+        ]
+      }
+    },
+    "v-tts/epoch4": {
+      "held-out": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 2,
+        "silent_count": 3,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 3,
+        "acoustic_only_count": 0,
+        "degenerate_count": 5,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 4,
+          "median": 45.0,
+          "max": 64
+        },
+        "audio_top_token_share": {
+          "min": 0.12096774193548387,
+          "median": 0.3709677419354839,
+          "max": 0.8951612903225806
+        },
+        "audio_entropy_bits": {
+          "min": 0.6369267892288758,
+          "median": 3.8325550885691086,
+          "max": 5.3526617271044845
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": [
+          "2.npy",
+          "3.npy",
+          "8.npy"
+        ]
+      },
+      "seen": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 0,
+        "silent_count": 4,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 4,
+        "acoustic_only_count": 0,
+        "degenerate_count": 4,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 4,
+          "median": 22.0,
+          "max": 49
+        },
+        "audio_top_token_share": {
+          "min": 0.4596774193548387,
+          "median": 0.5846774193548387,
+          "max": 0.8951612903225806
+        },
+        "audio_entropy_bits": {
+          "min": 0.6369267892288758,
+          "median": 2.4995669853829465,
+          "max": 3.8143527424930115
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": [
+          "2.npy",
+          "3.npy",
+          "8.npy",
+          "9.npy"
+        ]
+      },
+      "general30": {
+        "total": 30,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 6,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 6,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 32,
+          "median": 50.5,
+          "max": 70
+        },
+        "audio_top_token_share": {
+          "min": 0.25806451612903225,
+          "median": 0.4798387096774194,
+          "max": 0.7096774193548387
+        },
+        "audio_entropy_bits": {
+          "min": 2.2833505850461844,
+          "median": 3.8426467922383933,
+          "max": 5.229403544411655
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": []
+      }
+    },
+    "v-tts/epoch5": {
+      "held-out": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 0,
+        "silent_count": 4,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 4,
+        "acoustic_only_count": 0,
+        "degenerate_count": 4,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 4,
+          "median": 40.5,
+          "max": 82
+        },
+        "audio_top_token_share": {
+          "min": 0.056451612903225805,
+          "median": 0.407258064516129,
+          "max": 0.8951612903225806
+        },
+        "audio_entropy_bits": {
+          "min": 0.6372642406802178,
+          "median": 3.670950956073895,
+          "max": 6.1079406896647175
+        },
+        "modal_top_token": 84,
+        "collapsed_generations": [
+          "2.npy",
+          "3.npy",
+          "6.npy",
+          "8.npy"
+        ]
+      },
+      "seen": {
+        "total": 10,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 0,
+        "silent_count": 2,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 2,
+        "acoustic_only_count": 0,
+        "degenerate_count": 2,
+        "passes": false,
+        "audio_distinct_tokens": {
+          "min": 4,
+          "median": 59.0,
+          "max": 76
+        },
+        "audio_top_token_share": {
+          "min": 0.07258064516129033,
+          "median": 0.27419354838709675,
+          "max": 0.8951612903225806
+        },
+        "audio_entropy_bits": {
+          "min": 0.6372642406802178,
+          "median": 4.860094710412616,
+          "max": 5.8945181618686675
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": [
+          "2.npy",
+          "3.npy"
+        ]
+      },
+      "general30": {
+        "total": 30,
+        "monologue_loop_count": 0,
+        "exact_repeat_collapse_count": 0,
+        "silent_count": 0,
+        "acoustic_scored": true,
+        "acoustic_collapse_count": 0,
+        "acoustic_only_count": 0,
+        "degenerate_count": 0,
+        "passes": true,
+        "audio_distinct_tokens": {
+          "min": 37,
+          "median": 47.0,
+          "max": 66
+        },
+        "audio_top_token_share": {
+          "min": 0.27419354838709675,
+          "median": 0.4798387096774194,
+          "max": 0.5967741935483871
+        },
+        "audio_entropy_bits": {
+          "min": 3.029849822198923,
+          "median": 3.827797320726793,
+          "max": 4.998684120009145
+        },
+        "modal_top_token": 1316,
+        "collapsed_generations": []
+      }
+    }
+  },
+  "text_versus_audio": {
+    "counts": {
+      "both_clean": 363,
+      "text_failure_only": 105,
+      "acoustic_collapse_only": 21,
+      "both": 61
+    },
+    "reading": "21 of 550 generations are acoustically collapsed while every text test passes, and 105 fail a text test with a healthy audio row. The two halves are not views of one thing, so the merge is a disjunction; requiring both would have certified 126 failures as clean.",
+    "degenerate_over_550": {
+      "text_only_detector": 166,
+      "with_audio": 187
+    }
+  },
+  "findings": [
+    {
+      "headline": "The control is the worst arm on general30, not the baseline.",
+      "detail": "control general30: 17 of 30 acoustically collapsed, median distinct 4, modal top token 1316 at a 0.90-0.91 share - the same 1316/768/318 texture that fills the teacher-forced silent partner stream. The same control on held-out and seen is clean (0 of 10 and 0 of 10, median distinct 57 and 65), so this is a property of the general30 prompts, not of the checkpoint."
+    },
+    {
+      "headline": "The audio collapse is monotone in epoch on the voice prompt sets.",
+      "detail": "V-real held-out acoustic collapses run 0, 0, 1, 8, 8 across epochs 1-5 and V-tts 0, 0, 0, 3, 4. The text-side silence counts tell the same story one epoch later, which is what a knife-edge test does to a graded failure."
+    },
+    {
+      "headline": "V-real epoch 1 collapses in text while its audio stays varied.",
+      "detail": "Epoch 1 has 20 monologue and 50 repeat failures over 50 generations and 0 acoustic collapses, with median distinct 42-50. Neither half of the detector subsumes the other."
+    }
+  ],
+  "limits": [
+    "Silence and collapse are the same shape in codebook 0. What separates them is whether the partner was speaking, and the partner stream is teacher-forced, so it cannot be used as evidence about the checkpoint.",
+    "One generation per prompt at one seed. Every count is a single draw.",
+    "Codebook 0 of speaker A only. Speaker B is teacher-forced and carries no information about the checkpoint.",
+    "The audio thresholds were derived after the candidates existed. The calibration file records that, derives them from M0 alone, and shows the control's general30 count is 17 of 30 under every line in the plausible range."
+  ]
+}

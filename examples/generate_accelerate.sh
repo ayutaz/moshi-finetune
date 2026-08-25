@@ -17,4 +17,5 @@ uv run accelerate launch \
         --example_length $((${prompt_len} + ${gen_len})) \
         --prompt_length ${prompt_len} \
         --generation_length ${gen_len} \
-        --temperature 0.8
+        --temperature 0.8 \
+        --seed 20260825

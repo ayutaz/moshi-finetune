@@ -1,0 +1,756 @@
+{
+  "schema_version": 1,
+  "milestone": "M3-R",
+  "step": "第1段-4 — tokenize のフラグをゲート化し、text 統計をテストにする",
+  "captured_at": "2026-08-25",
+  "condition": "text stream の裸 U+2581 比率がしきい値を超える dataset を CI が落とす。tokenize の全フラグが manifest の隣に記録され、後から参照できる。",
+  "status": "fail",
+  "finding": "M3 が出荷した 4 つの parquet すべてが --no_whitespace_before_word なしで tokenize されている。tokenizer が実際に発行した text token のうち 44.6%〜46.6% が中身のない裸の U+2581 である。同じ台本を フラグ付きで tokenize し直すと 0.0% になる。",
+  "how_the_flag_was_established": {
+    "method": "Ran tokenize_and_pad_text over the shipped word transcripts twice - with and without the flag - and compared each result to the shipped tok-text .npz.",
+    "result": {
+      "npz_compared": 160,
+      "byte_exact_with_flag": 0,
+      "byte_exact_without_flag": 160
+    },
+    "what_it_also_proves": "The byte-exact match pins --text_padding_id 3, --end_of_text_padding_id 0 and an effective audio_tokenizer_frame_rate of 12.5 as well: any other frame rate moves every token to a different frame index. In particular the 12 Hz rounding that tools/tokenize_text.py's type=int made possible did not happen in M3, because the flag was left at its default and argparse applies type= only to strings it parses from the command line.",
+    "reproduce": "uv run --no-sync --with sentencepiece --with numpy --with tqdm --with huggingface_hub python -m tools.text_stream_audit counterfactual --word_transcript_dir data/experiments/tsukuyomi_ojousama/m3/v-real/text --text_tokenizer_path <j-moshi-ext>/tokenizer_spm_32k_3.model"
+  },
+  "tokenizer": {
+    "repo": "nu-dialogue/j-moshi-ext",
+    "model": "tokenizer_spm_32k_3.model",
+    "resolved_from": "The three ids are looked up by piece and each lookup is confirmed by mapping the id back, so a tokenizer that does not hold the piece raises instead of counting the unknown id. None of them is hardcoded.",
+    "ids": {
+      "pad": {
+        "id": 3,
+        "piece": "[PAD]"
+      },
+      "bare_whitespace": {
+        "id": 9,
+        "piece": "▁"
+      },
+      "end_of_text_padding": {
+        "id": 0,
+        "piece": "<unk>"
+      }
+    }
+  },
+  "gate": {
+    "metric": "bare_whitespace_share_of_text_tokens",
+    "definition": "bare U+2581 / (bare U+2581 + words), per parquet per speaker, over the text row (row 0) that tools/prepare_dataset.merge_text_audio writes. Padding and end-of-text padding are excluded from the denominator: they come from the frame layout, not from the tokenizer, and the flag cannot change them. Measuring against non-pad instead reads 32.1% for the same parquet - a number that compares to nothing.",
+    "max_share": 0.1,
+    "applies_to": "every parquet under data/experiments/tsukuyomi_ojousama/**/parquet/*.parquet that is not listed in quarantine",
+    "rationale": [
+      "Every compliant measurement available sits at or below 0.036: 0.000 on this dataset's own transcripts re-tokenized with the flag, 0.036 on the verification's independent pyopenjtalk path.",
+      "Every non-compliant measurement sits at or above 0.4464.",
+      "0.1 is 2.8x the highest compliant value, which leaves room for a script that legitimately contains spaces - latin words, numerals, a quoted phrase - without going red.",
+      "0.1 is 4.5x below the lowest non-compliant value, so dropping the flag fails by a factor of four and a half rather than by a hair. A gate that only just catches the defect it was built for is a gate that will miss the next one.",
+      "It sits below the geometric mean of the two poles (0.127), i.e. deliberately biased toward catching the defect rather than toward passing.",
+      "It was not chosen to let anything existing through: passing the four shipped parquets would take a threshold above 0.466. They are quarantined by name instead, because a threshold raised until the candidate passes is indistinguishable from no threshold at all."
+    ],
+    "calibration": {
+      "worst_compliant": 0.036,
+      "best_non_compliant": 0.44640605296343,
+      "compliant": [
+        {
+          "label": "v-real train speaker A, re-tokenized with --no_whitespace_before_word",
+          "share": 0.0,
+          "bare_whitespace": 0,
+          "text_tokens": 1356,
+          "source": "counterfactual re-tokenization of this dataset's own word transcripts"
+        },
+        {
+          "label": "v-real train speaker B, re-tokenized with --no_whitespace_before_word",
+          "share": 0.0,
+          "bare_whitespace": 0,
+          "text_tokens": 2910,
+          "source": "counterfactual re-tokenization of this dataset's own word transcripts"
+        },
+        {
+          "label": "v-real dev speaker A, re-tokenized with --no_whitespace_before_word",
+          "share": 0.0,
+          "bare_whitespace": 0,
+          "text_tokens": 162,
+          "source": "counterfactual re-tokenization of this dataset's own word transcripts"
+        },
+        {
+          "label": "v-real dev speaker B, re-tokenized with --no_whitespace_before_word",
+          "share": 0.0,
+          "bare_whitespace": 0,
+          "text_tokens": 326,
+          "source": "counterfactual re-tokenization of this dataset's own word transcripts"
+        },
+        {
+          "label": "pyopenjtalk re-segmentation with the flag, both speakers",
+          "share": 0.036,
+          "bare_whitespace": 51,
+          "text_tokens": 1408,
+          "source": "docs/experiments/j-moshi-tsukuyomi-ojousama-m3-verification.md section 3.1"
+        }
+      ],
+      "non_compliant": [
+        {
+          "label": "v-real train speaker A, re-tokenized without the flag",
+          "share": 0.44640605296343,
+          "bare_whitespace": 1416,
+          "text_tokens": 3172,
+          "source": "counterfactual re-tokenization of this dataset's own word transcripts"
+        },
+        {
+          "label": "v-real train speaker B, re-tokenized without the flag",
+          "share": 0.46346769033909146,
+          "bare_whitespace": 3622,
+          "text_tokens": 7815,
+          "source": "counterfactual re-tokenization of this dataset's own word transcripts"
+        },
+        {
+          "label": "v-real dev speaker A, re-tokenized without the flag",
+          "share": 0.45382585751978893,
+          "bare_whitespace": 172,
+          "text_tokens": 379,
+          "source": "counterfactual re-tokenization of this dataset's own word transcripts"
+        },
+        {
+          "label": "v-real dev speaker B, re-tokenized without the flag",
+          "share": 0.4636471990464839,
+          "bare_whitespace": 389,
+          "text_tokens": 839,
+          "source": "counterfactual re-tokenization of this dataset's own word transcripts"
+        },
+        {
+          "label": "pyopenjtalk re-segmentation without the flag, both speakers",
+          "share": 0.455,
+          "bare_whitespace": 1469,
+          "text_tokens": 3226,
+          "source": "docs/experiments/j-moshi-tsukuyomi-ojousama-m3-verification.md section 3.1"
+        },
+        {
+          "label": "data/experiments/tsukuyomi_ojousama/m3/v-real/parquet/train-001-of-001.parquet speaker A, as shipped",
+          "share": 0.44640605296343,
+          "bare_whitespace": 1416,
+          "text_tokens": 3172,
+          "source": "this audit"
+        },
+        {
+          "label": "data/experiments/tsukuyomi_ojousama/m3/v-real/parquet/train-001-of-001.parquet speaker B, as shipped",
+          "share": 0.4660831509846827,
+          "bare_whitespace": 3621,
+          "text_tokens": 7769,
+          "source": "this audit"
+        },
+        {
+          "label": "data/experiments/tsukuyomi_ojousama/m3/v-real/parquet/dev-001-of-001.parquet speaker A, as shipped",
+          "share": 0.45382585751978893,
+          "bare_whitespace": 172,
+          "text_tokens": 379,
+          "source": "this audit"
+        },
+        {
+          "label": "data/experiments/tsukuyomi_ojousama/m3/v-real/parquet/dev-001-of-001.parquet speaker B, as shipped",
+          "share": 0.46642685851318944,
+          "bare_whitespace": 389,
+          "text_tokens": 834,
+          "source": "this audit"
+        },
+        {
+          "label": "data/experiments/tsukuyomi_ojousama/m3/v-tts/parquet/train-001-of-001.parquet speaker A, as shipped",
+          "share": 0.44640605296343,
+          "bare_whitespace": 1416,
+          "text_tokens": 3172,
+          "source": "this audit"
+        },
+        {
+          "label": "data/experiments/tsukuyomi_ojousama/m3/v-tts/parquet/train-001-of-001.parquet speaker B, as shipped",
+          "share": 0.46609188006691543,
+          "bare_whitespace": 3622,
+          "text_tokens": 7771,
+          "source": "this audit"
+        },
+        {
+          "label": "data/experiments/tsukuyomi_ojousama/m3/v-tts/parquet/dev-001-of-001.parquet speaker A, as shipped",
+          "share": 0.45382585751978893,
+          "bare_whitespace": 172,
+          "text_tokens": 379,
+          "source": "this audit"
+        },
+        {
+          "label": "data/experiments/tsukuyomi_ojousama/m3/v-tts/parquet/dev-001-of-001.parquet speaker B, as shipped",
+          "share": 0.46642685851318944,
+          "bare_whitespace": 389,
+          "text_tokens": 834,
+          "source": "this audit"
+        }
+      ]
+    },
+    "quarantine": [
+      {
+        "path": "data/experiments/tsukuyomi_ojousama/m3/v-real/parquet/train-001-of-001.parquet",
+        "sha256": "28da029e472fdcbe75b124e60fc097a0e9fd2c234440bdf70867cff85120b571",
+        "recorded_shares": {
+          "A": 0.44640605296343,
+          "B": 0.4660831509846827
+        },
+        "reason": "Shipped by M3 without --no_whitespace_before_word. The defect is measured, recorded and closed as a finding; re-tokenizing this parquet now would rewrite the artifact the M3 report and the collapse re-judgement are computed against.",
+        "superseded_by": "M3-R 第2段 2-1: rebuild with the flag and diff rows 1-16 byte for byte. The rebuilt dataset lands at a new path and is gated, not quarantined."
+      },
+      {
+        "path": "data/experiments/tsukuyomi_ojousama/m3/v-real/parquet/dev-001-of-001.parquet",
+        "sha256": "b1b6e25836d66db118441f0af9cf9ddd9ea0e778f270f09f1f811a2ec7b746d3",
+        "recorded_shares": {
+          "A": 0.45382585751978893,
+          "B": 0.46642685851318944
+        },
+        "reason": "Shipped by M3 without --no_whitespace_before_word. The defect is measured, recorded and closed as a finding; re-tokenizing this parquet now would rewrite the artifact the M3 report and the collapse re-judgement are computed against.",
+        "superseded_by": "M3-R 第2段 2-1: rebuild with the flag and diff rows 1-16 byte for byte. The rebuilt dataset lands at a new path and is gated, not quarantined."
+      },
+      {
+        "path": "data/experiments/tsukuyomi_ojousama/m3/v-tts/parquet/train-001-of-001.parquet",
+        "sha256": "15fdfb65cddd562a785634be2284f6b90fd9bbee7e94ef3fc08955e1904d423e",
+        "recorded_shares": {
+          "A": 0.44640605296343,
+          "B": 0.46609188006691543
+        },
+        "reason": "Shipped by M3 without --no_whitespace_before_word. The defect is measured, recorded and closed as a finding; re-tokenizing this parquet now would rewrite the artifact the M3 report and the collapse re-judgement are computed against.",
+        "superseded_by": "M3-R 第2段 2-1: rebuild with the flag and diff rows 1-16 byte for byte. The rebuilt dataset lands at a new path and is gated, not quarantined."
+      },
+      {
+        "path": "data/experiments/tsukuyomi_ojousama/m3/v-tts/parquet/dev-001-of-001.parquet",
+        "sha256": "1dd212b56b52c7d621395e298c4a115b4d1981d4b10f5c8300f79387abb8ae09",
+        "recorded_shares": {
+          "A": 0.45382585751978893,
+          "B": 0.46642685851318944
+        },
+        "reason": "Shipped by M3 without --no_whitespace_before_word. The defect is measured, recorded and closed as a finding; re-tokenizing this parquet now would rewrite the artifact the M3 report and the collapse re-judgement are computed against.",
+        "superseded_by": "M3-R 第2段 2-1: rebuild with the flag and diff rows 1-16 byte for byte. The rebuilt dataset lands at a new path and is gated, not quarantined."
+      }
+    ],
+    "no_text_stream": [
+      {
+        "path": "data/experiments/tsukuyomi_ojousama/m3/eval-prompts/general30/dataset/prompts-001-of-001.parquet",
+        "sha256": "46c77b9657f0bf50efe8e44c9a7202cb34c4d688d51aea3a36c9b99d4d7d291c",
+        "frames": 6210,
+        "text_tokens": 0,
+        "reason": "A generation prompt set, not a training dataset: it carries audio conditioning only and its text stream is padding in every frame by design (reports/m3-prompt-sets.json). The whitespace share is undefined here, which is not the same as clean, so it is named rather than quietly passed."
+      },
+      {
+        "path": "data/experiments/tsukuyomi_ojousama/m3/eval-prompts/held-out/dataset/prompts-001-of-001.parquet",
+        "sha256": "27012b0832e5e5d0d15fb70a030726bd50593992ef5e8735c7df447040a8a7b7",
+        "frames": 1670,
+        "text_tokens": 0,
+        "reason": "A generation prompt set, not a training dataset: it carries audio conditioning only and its text stream is padding in every frame by design (reports/m3-prompt-sets.json). The whitespace share is undefined here, which is not the same as clean, so it is named rather than quietly passed."
+      },
+      {
+        "path": "data/experiments/tsukuyomi_ojousama/m3/eval-prompts/seen/dataset/prompts-001-of-001.parquet",
+        "sha256": "74e2922f7b3deae5fee83320d7d2c09eaf629f781b9655d1bbd4ab8fcb464c22",
+        "frames": 1670,
+        "text_tokens": 0,
+        "reason": "A generation prompt set, not a training dataset: it carries audio conditioning only and its text stream is padding in every frame by design (reports/m3-prompt-sets.json). The whitespace share is undefined here, which is not the same as clean, so it is named rather than quietly passed."
+      }
+    ],
+    "why_an_empty_text_stream_is_not_a_pass": "Three eval-prompt parquets emit no text tokens at all, so the ratio has a zero denominator. Returning 0.0 for them would report the cleanest possible result for an artifact the metric cannot see, and a training dataset that came out with an empty text stream would inherit that free pass. They are listed here instead, with a reason each, and the gate fails any other parquet whose text stream is empty.",
+    "why_quarantine_rather_than_a_looser_threshold": "The gate has to be red for a flag-dropped dataset and green for the repository as it stands, and the four shipped parquets are flag-dropped. Loosening the threshold to 45% would satisfy the second requirement by abandoning the first. Naming the four paths satisfies both and costs something: a fifth path can only join them through a committed edit that states a reason and what supersedes it, which a reviewer sees. The test pins each quarantined share to the value recorded here, so the entries cannot quietly drift away from what they claim.",
+    "enforced_by": {
+      "tests/test_experiment_assets.py::TokenizeFlagRecordTests": "Runs everywhere, standard library only. Every dialogue manifest must have a tokenize sidecar; every sidecar must state no_whitespace_before_word explicitly; a sidecar that states false must carry a known_defect block. This is the layer that catches the next dataset, because CI installs only pytest.",
+      "tests/test_experiment_assets.py::TextStreamGateTests": "Threshold-versus-poles and quarantine bookkeeping run everywhere. The parquet measurement runs where pandas, pyarrow, sentencepiece, the tokenizer and the gitignored data are all present - the machine that built the dataset - and skips elsewhere, the way RawCorpusIntegrityTests already skips absent audio."
+    }
+  },
+  "measurements": [
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m3/v-real/parquet/train-001-of-001.parquet",
+      "sha256": "28da029e472fdcbe75b124e60fc097a0e9fd2c234440bdf70867cff85120b571",
+      "byte_size": 305978,
+      "dialogues": 72,
+      "vocabulary": {
+        "pad": {
+          "id": 3,
+          "piece": "[PAD]"
+        },
+        "bare_whitespace": {
+          "id": 9,
+          "piece": "▁"
+        },
+        "end_of_text_padding": {
+          "id": 0,
+          "piece": "<unk>"
+        }
+      },
+      "speakers": {
+        "A": {
+          "streams": 72,
+          "frames": 18841,
+          "pad": 14433,
+          "pad_share_of_frames": 0.7660421421368293,
+          "non_pad": 4408,
+          "bare_whitespace": 1416,
+          "bare_whitespace_share_of_non_pad": 0.32123411978221417,
+          "end_of_text_padding": 1236,
+          "words": 1756,
+          "text_tokens": 3172,
+          "bare_whitespace_share_of_text_tokens": 0.44640605296343
+        },
+        "B": {
+          "streams": 72,
+          "frames": 18841,
+          "pad": 8669,
+          "pad_share_of_frames": 0.4601135820816305,
+          "non_pad": 10172,
+          "bare_whitespace": 3621,
+          "bare_whitespace_share_of_non_pad": 0.35597719229256786,
+          "end_of_text_padding": 2403,
+          "words": 4148,
+          "text_tokens": 7769,
+          "bare_whitespace_share_of_text_tokens": 0.4660831509846827
+        }
+      }
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m3/v-real/parquet/dev-001-of-001.parquet",
+      "sha256": "b1b6e25836d66db118441f0af9cf9ddd9ea0e778f270f09f1f811a2ec7b746d3",
+      "byte_size": 49742,
+      "dialogues": 8,
+      "vocabulary": {
+        "pad": {
+          "id": 3,
+          "piece": "[PAD]"
+        },
+        "bare_whitespace": {
+          "id": 9,
+          "piece": "▁"
+        },
+        "end_of_text_padding": {
+          "id": 0,
+          "piece": "<unk>"
+        }
+      },
+      "speakers": {
+        "A": {
+          "streams": 8,
+          "frames": 2075,
+          "pad": 1555,
+          "pad_share_of_frames": 0.7493975903614458,
+          "non_pad": 520,
+          "bare_whitespace": 172,
+          "bare_whitespace_share_of_non_pad": 0.33076923076923076,
+          "end_of_text_padding": 141,
+          "words": 207,
+          "text_tokens": 379,
+          "bare_whitespace_share_of_text_tokens": 0.45382585751978893
+        },
+        "B": {
+          "streams": 8,
+          "frames": 2075,
+          "pad": 968,
+          "pad_share_of_frames": 0.46650602409638553,
+          "non_pad": 1107,
+          "bare_whitespace": 389,
+          "bare_whitespace_share_of_non_pad": 0.35140018066847334,
+          "end_of_text_padding": 273,
+          "words": 445,
+          "text_tokens": 834,
+          "bare_whitespace_share_of_text_tokens": 0.46642685851318944
+        }
+      }
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m3/v-tts/parquet/train-001-of-001.parquet",
+      "sha256": "15fdfb65cddd562a785634be2284f6b90fd9bbee7e94ef3fc08955e1904d423e",
+      "byte_size": 316715,
+      "dialogues": 72,
+      "vocabulary": {
+        "pad": {
+          "id": 3,
+          "piece": "[PAD]"
+        },
+        "bare_whitespace": {
+          "id": 9,
+          "piece": "▁"
+        },
+        "end_of_text_padding": {
+          "id": 0,
+          "piece": "<unk>"
+        }
+      },
+      "speakers": {
+        "A": {
+          "streams": 72,
+          "frames": 19368,
+          "pad": 14792,
+          "pad_share_of_frames": 0.7637339942172656,
+          "non_pad": 4576,
+          "bare_whitespace": 1416,
+          "bare_whitespace_share_of_non_pad": 0.3094405594405594,
+          "end_of_text_padding": 1404,
+          "words": 1756,
+          "text_tokens": 3172,
+          "bare_whitespace_share_of_text_tokens": 0.44640605296343
+        },
+        "B": {
+          "streams": 72,
+          "frames": 19368,
+          "pad": 9204,
+          "pad_share_of_frames": 0.4752168525402726,
+          "non_pad": 10164,
+          "bare_whitespace": 3622,
+          "bare_whitespace_share_of_non_pad": 0.3563557654466745,
+          "end_of_text_padding": 2393,
+          "words": 4149,
+          "text_tokens": 7771,
+          "bare_whitespace_share_of_text_tokens": 0.46609188006691543
+        }
+      }
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m3/v-tts/parquet/dev-001-of-001.parquet",
+      "sha256": "1dd212b56b52c7d621395e298c4a115b4d1981d4b10f5c8300f79387abb8ae09",
+      "byte_size": 51136,
+      "dialogues": 8,
+      "vocabulary": {
+        "pad": {
+          "id": 3,
+          "piece": "[PAD]"
+        },
+        "bare_whitespace": {
+          "id": 9,
+          "piece": "▁"
+        },
+        "end_of_text_padding": {
+          "id": 0,
+          "piece": "<unk>"
+        }
+      },
+      "speakers": {
+        "A": {
+          "streams": 8,
+          "frames": 2141,
+          "pad": 1599,
+          "pad_share_of_frames": 0.7468472676319476,
+          "non_pad": 542,
+          "bare_whitespace": 172,
+          "bare_whitespace_share_of_non_pad": 0.3173431734317343,
+          "end_of_text_padding": 163,
+          "words": 207,
+          "text_tokens": 379,
+          "bare_whitespace_share_of_text_tokens": 0.45382585751978893
+        },
+        "B": {
+          "streams": 8,
+          "frames": 2141,
+          "pad": 1029,
+          "pad_share_of_frames": 0.48061653432975243,
+          "non_pad": 1112,
+          "bare_whitespace": 389,
+          "bare_whitespace_share_of_non_pad": 0.3498201438848921,
+          "end_of_text_padding": 278,
+          "words": 445,
+          "text_tokens": 834,
+          "bare_whitespace_share_of_text_tokens": 0.46642685851318944
+        }
+      }
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m3/eval-prompts/general30/dataset/prompts-001-of-001.parquet",
+      "sha256": "46c77b9657f0bf50efe8e44c9a7202cb34c4d688d51aea3a36c9b99d4d7d291c",
+      "byte_size": 46309,
+      "dialogues": 30,
+      "vocabulary": {
+        "pad": {
+          "id": 3,
+          "piece": "[PAD]"
+        },
+        "bare_whitespace": {
+          "id": 9,
+          "piece": "▁"
+        },
+        "end_of_text_padding": {
+          "id": 0,
+          "piece": "<unk>"
+        }
+      },
+      "speakers": {
+        "A": {
+          "streams": 30,
+          "frames": 6210,
+          "pad": 6210,
+          "pad_share_of_frames": 1.0,
+          "non_pad": 0,
+          "bare_whitespace": 0,
+          "bare_whitespace_share_of_non_pad": 0.0,
+          "end_of_text_padding": 0,
+          "words": 0,
+          "text_tokens": 0,
+          "bare_whitespace_share_of_text_tokens": 0.0
+        },
+        "B": {
+          "streams": 30,
+          "frames": 6210,
+          "pad": 6210,
+          "pad_share_of_frames": 1.0,
+          "non_pad": 0,
+          "bare_whitespace": 0,
+          "bare_whitespace_share_of_non_pad": 0.0,
+          "end_of_text_padding": 0,
+          "words": 0,
+          "text_tokens": 0,
+          "bare_whitespace_share_of_text_tokens": 0.0
+        }
+      }
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m3/eval-prompts/held-out/dataset/prompts-001-of-001.parquet",
+      "sha256": "27012b0832e5e5d0d15fb70a030726bd50593992ef5e8735c7df447040a8a7b7",
+      "byte_size": 21966,
+      "dialogues": 10,
+      "vocabulary": {
+        "pad": {
+          "id": 3,
+          "piece": "[PAD]"
+        },
+        "bare_whitespace": {
+          "id": 9,
+          "piece": "▁"
+        },
+        "end_of_text_padding": {
+          "id": 0,
+          "piece": "<unk>"
+        }
+      },
+      "speakers": {
+        "A": {
+          "streams": 10,
+          "frames": 1670,
+          "pad": 1670,
+          "pad_share_of_frames": 1.0,
+          "non_pad": 0,
+          "bare_whitespace": 0,
+          "bare_whitespace_share_of_non_pad": 0.0,
+          "end_of_text_padding": 0,
+          "words": 0,
+          "text_tokens": 0,
+          "bare_whitespace_share_of_text_tokens": 0.0
+        },
+        "B": {
+          "streams": 10,
+          "frames": 1670,
+          "pad": 1670,
+          "pad_share_of_frames": 1.0,
+          "non_pad": 0,
+          "bare_whitespace": 0,
+          "bare_whitespace_share_of_non_pad": 0.0,
+          "end_of_text_padding": 0,
+          "words": 0,
+          "text_tokens": 0,
+          "bare_whitespace_share_of_text_tokens": 0.0
+        }
+      }
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m3/eval-prompts/seen/dataset/prompts-001-of-001.parquet",
+      "sha256": "74e2922f7b3deae5fee83320d7d2c09eaf629f781b9655d1bbd4ab8fcb464c22",
+      "byte_size": 22169,
+      "dialogues": 10,
+      "vocabulary": {
+        "pad": {
+          "id": 3,
+          "piece": "[PAD]"
+        },
+        "bare_whitespace": {
+          "id": 9,
+          "piece": "▁"
+        },
+        "end_of_text_padding": {
+          "id": 0,
+          "piece": "<unk>"
+        }
+      },
+      "speakers": {
+        "A": {
+          "streams": 10,
+          "frames": 1670,
+          "pad": 1670,
+          "pad_share_of_frames": 1.0,
+          "non_pad": 0,
+          "bare_whitespace": 0,
+          "bare_whitespace_share_of_non_pad": 0.0,
+          "end_of_text_padding": 0,
+          "words": 0,
+          "text_tokens": 0,
+          "bare_whitespace_share_of_text_tokens": 0.0
+        },
+        "B": {
+          "streams": 10,
+          "frames": 1670,
+          "pad": 1670,
+          "pad_share_of_frames": 1.0,
+          "non_pad": 0,
+          "bare_whitespace": 0,
+          "bare_whitespace_share_of_non_pad": 0.0,
+          "end_of_text_padding": 0,
+          "words": 0,
+          "text_tokens": 0,
+          "bare_whitespace_share_of_text_tokens": 0.0
+        }
+      }
+    }
+  ],
+  "counterfactual": {
+    "train": {
+      "word_transcript_dir": "data/experiments/tsukuyomi_ojousama/m3/v-real/text",
+      "dialogues": 72,
+      "audio_tokenizer_frame_rate": 12.5,
+      "vocabulary": {
+        "pad": {
+          "id": 3,
+          "piece": "[PAD]"
+        },
+        "bare_whitespace": {
+          "id": 9,
+          "piece": "▁"
+        },
+        "end_of_text_padding": {
+          "id": 0,
+          "piece": "<unk>"
+        }
+      },
+      "paths": {
+        "with_flag": {
+          "A": {
+            "streams": 72,
+            "frames": 12148,
+            "pad": 9669,
+            "pad_share_of_frames": 0.7959334869937438,
+            "non_pad": 2479,
+            "bare_whitespace": 0,
+            "bare_whitespace_share_of_non_pad": 0.0,
+            "end_of_text_padding": 1123,
+            "words": 1356,
+            "text_tokens": 1356,
+            "bare_whitespace_share_of_text_tokens": 0.0
+          },
+          "B": {
+            "streams": 72,
+            "frames": 19669,
+            "pad": 14264,
+            "pad_share_of_frames": 0.7252020946667345,
+            "non_pad": 5405,
+            "bare_whitespace": 0,
+            "bare_whitespace_share_of_non_pad": 0.0,
+            "end_of_text_padding": 2495,
+            "words": 2910,
+            "text_tokens": 2910,
+            "bare_whitespace_share_of_text_tokens": 0.0
+          }
+        },
+        "without_flag": {
+          "A": {
+            "streams": 72,
+            "frames": 12148,
+            "pad": 7740,
+            "pad_share_of_frames": 0.6371419163648337,
+            "non_pad": 4408,
+            "bare_whitespace": 1416,
+            "bare_whitespace_share_of_non_pad": 0.32123411978221417,
+            "end_of_text_padding": 1236,
+            "words": 1756,
+            "text_tokens": 3172,
+            "bare_whitespace_share_of_text_tokens": 0.44640605296343
+          },
+          "B": {
+            "streams": 72,
+            "frames": 19669,
+            "pad": 9451,
+            "pad_share_of_frames": 0.48050231328486454,
+            "non_pad": 10218,
+            "bare_whitespace": 3622,
+            "bare_whitespace_share_of_non_pad": 0.35447249951066745,
+            "end_of_text_padding": 2403,
+            "words": 4193,
+            "text_tokens": 7815,
+            "bare_whitespace_share_of_text_tokens": 0.46346769033909146
+          }
+        }
+      }
+    },
+    "dev": {
+      "word_transcript_dir": "data/experiments/tsukuyomi_ojousama/m3/v-real/text",
+      "dialogues": 8,
+      "audio_tokenizer_frame_rate": 12.5,
+      "vocabulary": {
+        "pad": {
+          "id": 3,
+          "piece": "[PAD]"
+        },
+        "bare_whitespace": {
+          "id": 9,
+          "piece": "▁"
+        },
+        "end_of_text_padding": {
+          "id": 0,
+          "piece": "<unk>"
+        }
+      },
+      "paths": {
+        "with_flag": {
+          "A": {
+            "streams": 8,
+            "frames": 1285,
+            "pad": 987,
+            "pad_share_of_frames": 0.7680933852140078,
+            "non_pad": 298,
+            "bare_whitespace": 0,
+            "bare_whitespace_share_of_non_pad": 0.0,
+            "end_of_text_padding": 136,
+            "words": 162,
+            "text_tokens": 162,
+            "bare_whitespace_share_of_text_tokens": 0.0
+          },
+          "B": {
+            "streams": 8,
+            "frames": 2168,
+            "pad": 1556,
+            "pad_share_of_frames": 0.7177121771217713,
+            "non_pad": 612,
+            "bare_whitespace": 0,
+            "bare_whitespace_share_of_non_pad": 0.0,
+            "end_of_text_padding": 286,
+            "words": 326,
+            "text_tokens": 326,
+            "bare_whitespace_share_of_text_tokens": 0.0
+          }
+        },
+        "without_flag": {
+          "A": {
+            "streams": 8,
+            "frames": 1285,
+            "pad": 765,
+            "pad_share_of_frames": 0.5953307392996109,
+            "non_pad": 520,
+            "bare_whitespace": 172,
+            "bare_whitespace_share_of_non_pad": 0.33076923076923076,
+            "end_of_text_padding": 141,
+            "words": 207,
+            "text_tokens": 379,
+            "bare_whitespace_share_of_text_tokens": 0.45382585751978893
+          },
+          "B": {
+            "streams": 8,
+            "frames": 2168,
+            "pad": 1056,
+            "pad_share_of_frames": 0.4870848708487085,
+            "non_pad": 1112,
+            "bare_whitespace": 389,
+            "bare_whitespace_share_of_non_pad": 0.3498201438848921,
+            "end_of_text_padding": 273,
+            "words": 450,
+            "text_tokens": 839,
+            "bare_whitespace_share_of_text_tokens": 0.4636471990464839
+          }
+        }
+      }
+    }
+  },
+  "commands": [
+    "uv run --no-sync --with pandas --with pyarrow --with sentencepiece --with numpy python -m tools.text_stream_audit audit <parquet>... --text_tokenizer_path <model> --out <json>",
+    "uv run --no-sync --with sentencepiece --with numpy --with tqdm --with huggingface_hub python -m tools.text_stream_audit counterfactual --word_transcript_dir <dir> --text_tokenizer_path <model> --dialogue_names <stems>... --out <json>",
+    "uv run --no-sync python -m tools.text_stream_audit record-tokenize --dataset_id <id> --manifest <jsonl> --out <sidecar> --split <split> --provenance <recorded|reconstructed> --recorded_at <date> [--append] -- <tokenize_text.py argv>"
+  ]
+}

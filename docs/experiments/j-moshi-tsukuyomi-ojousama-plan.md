@@ -178,7 +178,19 @@ M3 着手時の実測で、当初案から三点を変更した。確定した�
 **100 文ではなく train 分割の 80 文に限る。** コーパスは train 80 / dev 10 / test 10 に
 分割済みで、固定評価セット `eval/voice-seen-heldout-20.jsonl` の held-out 側は test 由来である。
 100 文すべてを学習に入れると M3 完了条件4「held-out 音声の話者らしさ」が測れなくなる。
-結果として A の音声は 8.67 分となり、過去のあみたろ 189.9 分の 4.6% にとどまる。
+結果として A の音声は 8.67 分となる。
+
+> **訂正（2026-08-24）**: この段落はもともと、8.67 分を「過去のあみたろ 189.9 分」に対する比率で示し、
+> 量が桁違いに足りないと書いていた（撤回した文言は
+> [M3 検証記録 §9](./j-moshi-tsukuyomi-ojousama-m3-verification.md) に残してある）。
+> **その比較は成立しない。** 189.9 分は上の表の「話者原音」、すなわち Irodori-TTS を fine-tuning する
+> ための学習コーパスであって、Moshi に入った量ではない。Moshi の学習データは同じ表の
+> 「合成対話 100 dialog / 612 turn / **31.7 分**」である。V-real の対話は合計 **27.83 分**
+> （[`m3-dataset-agreement.json`](../../experiments/tsukuyomi_ojousama/reports/m3-dataset-agreement.json)）で、
+> like-for-like では過去実験の **87.8%** にあたる。**Moshi に与えた量は過去とほぼ同等であり、
+> 「量が足りない」という主張はこのデータでは立たない。** 根拠は
+> [M3 検証記録 §6](./j-moshi-tsukuyomi-ojousama-m3-verification.md)。
+> 話者適応に必要な量そのものについても、文献は 8.67 分を不足とはしていない（同 §4.1）。
 
 これは過去記事が代替案として挙げた「Speaker A のみ実 corpus、Speaker B は別 TTS」を具体化したものになる。
 

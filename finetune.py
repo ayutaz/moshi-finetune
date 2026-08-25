@@ -33,6 +33,149 @@ from utils import (
 logger = get_logger(__name__)
 
 
+# Reporting
+#
+# M3 computed every per-component loss below and then threw all of them away: the
+# breakdown only ever reached W&B, and M3 ran without --report_to. Two arms x five epochs
+# of `loss/audio_semantic` and `loss/audio_semantic_user` - the split the whole voice
+# question turns on - are unrecoverable because of it. The helpers here build the stdout
+# lines out of a plain dict of floats, so the breakdown prints unconditionally and the
+# formatting can be tested without importing torch.
+
+LOSS_BREAKDOWN_KEYS: tuple[str, ...] = (
+    "loss/text_non_pad",
+    "loss/text_pad",
+    "loss/audio_semantic",
+    "loss/audio_acoustic",
+    "loss/audio_semantic_user",
+    "loss/audio_acoustic_user",
+)
+
+
+def format_loss_breakdown(
+    means: dict[str, float],
+    prefix: str = "training_",
+    keys: tuple[str, ...] = LOSS_BREAKDOWN_KEYS,
+) -> str:
+    """Render the per-component losses as `name=value` pairs, in a fixed order.
+
+    A key the run does not produce is skipped rather than printed as NaN:
+    `loss/audio_semantic_user` and `loss/audio_acoustic_user` exist only under
+    `--model_user_stream`, and a placeholder would make a single-stream run look like a
+    two-stream run whose user side had failed.
+    """
+    parts = []
+    for key in keys:
+        prefixed = prefix + key
+        if prefixed not in means:
+            continue
+        parts.append(f"{key}={means[prefixed]:.5f}")
+    return ", ".join(parts)
+
+
+def format_training_log_line(
+    epoch: int,
+    steps: int,
+    lrs: dict[str, str],
+    means: dict[str, float],
+    prefix: str = "training_",
+) -> str:
+    """Build one logging-step stdout line out of already-reduced means.
+
+    `means` must be reduced over the accumulation window and over every process before it
+    gets here. The line this replaced printed `total_loss.item()`, one micro-batch out of
+    per_device_batch x grad_accum x world_size - eight of them in the M3 configuration - so
+    two runs over an identical script disagreed at step 1 (text 7.588 vs 7.160) for no
+    reason beyond which dialogue happened to land last in the window.
+
+    `lrs` is labelled "next step" because that is what it is: DeepSpeed's
+    `_take_model_step` calls `lr_scheduler.step()` after `optimizer.step()`, and the caller
+    reads `param_groups` after both, so the rate printed beside step N is the one step N+1
+    will use. Reading M3's log as though the column were the applied rate is how three
+    measurements of the untrained base got mistaken for three training steps.
+    """
+    nan = float("nan")
+    total = means.get(prefix + "loss/total", nan)
+    text = means.get(prefix + "loss/text_total", nan)
+    audio = means.get(prefix + "loss/audio_total", nan)
+    line = (
+        f"Epoch: {epoch}, "
+        f"Steps: {steps}, "
+        f"LRs(next step): {lrs}, "
+        f"Loss: {total:.5f} "
+        f"(text: {text:.5f}, "
+        f"audio: {audio:.5f})"
+    )
+    breakdown = format_loss_breakdown(means, prefix=prefix)
+    if breakdown:
+        line += f" | {breakdown}"
+    return line
+
+
+def format_evaluation_log_line(steps: int, means: dict[str, float]) -> str:
+    """Build the evaluation stdout line: every metric, sorted, so a log can be grepped."""
+    return f"Evaluation at step {steps}: " + ", ".join(
+        f"{key}={value:.5f}" for key, value in sorted(means.items())
+    )
+
+
+def reduce_partial_means(sums: list[float], counts: list[float]) -> float:
+    """Combine per-process (sum, count) pairs into one mean over every observation.
+
+    Weighting by count instead of averaging per-process means keeps the answer right when
+    one process buffered fewer micro-batches than another, and an all-empty metric returns
+    NaN rather than raising - which is the ordinary state of `loss/text_pad` on a window
+    whose batches carried no text padding.
+    """
+    total_sum = 0.0
+    total_count = 0.0
+    # strict: the two lists come from one gather of matched keys, so a length mismatch
+    # means the collective returned something unusable and must not be averaged anyway.
+    for value, count in zip(sums, counts, strict=True):
+        count = float(count)
+        if count <= 0.0:
+            continue
+        total_sum += float(value)
+        total_count += count
+    if total_count <= 0.0:
+        return float("nan")
+    return total_sum / total_count
+
+
+def gather_metric_means(accelerator, logging_buffer: dict) -> dict[str, float]:
+    """Average every buffered metric over the accumulation window and over all processes.
+
+    Only two one-element tensors per key cross the wire - the sum of the non-NaN values a
+    process saw, and how many there were - so the gathered shapes never depend on how many
+    micro-batches each process happened to buffer. Gathering the raw per-micro-batch lists
+    instead deadlocks the collective the moment two processes disagree on that count.
+
+    This is a collective, so every process must reach it with the same keys. Call it before
+    the logging call and never inside one: `logger` writes on the main process only.
+    """
+    if not logging_buffer:
+        return {}
+    keys = sorted(logging_buffer)
+    partials = {}
+    for key in keys:
+        values = torch.stack(
+            [
+                torch.as_tensor(value, dtype=torch.float32, device=accelerator.device)
+                for value in logging_buffer[key]
+            ]
+        )
+        partials[f"{key}|sum"] = values.nansum().reshape(1)
+        partials[f"{key}|count"] = (~torch.isnan(values)).sum().to(torch.float32).reshape(1)
+    gathered = accelerator.gather(partials)
+    return {
+        key: reduce_partial_means(
+            gathered[f"{key}|sum"].reshape(-1).tolist(),
+            gathered[f"{key}|count"].reshape(-1).tolist(),
+        )
+        for key in keys
+    }
+
+
 # Parsing input arguments
 def setup_argparser(parser: argparse.ArgumentParser):
     parser.add_argument(
@@ -631,9 +774,19 @@ def main():
     )
     logger.info(accelerator.state, main_process_only=False)
 
-    # If passed along, set the training seed now.
-    if args.seed is not None:
+    # If passed along, set the training seed now. An omitted seed is stated rather than
+    # passed over in silence: M3 recorded no seed anywhere, so every count taken from the
+    # run was a single draw whose spread nobody could measure. It stays optional here -
+    # unlike generate.py, whose --seed is required - only because the example launchers in
+    # this repository do not pass one.
+    if args.seed is None:
+        logger.warning(
+            "No --seed given: this run is not reproducible, and every number taken from it "
+            "is a single draw."
+        )
+    else:
         set_seed(args.seed)
+    logger.info(f"Seed = {args.seed}")
 
     # Load the model
     logger.info(f"Loading Moshi model from {args.model_dir}")
@@ -913,35 +1066,24 @@ def main():
                         name: f"{optimizer.param_groups[i]['lr']:.3e}"
                         for name, i in group_idx.items()
                     }
+                    # Reduce before logging, not inside it. `logger` writes on the main
+                    # process only, so a gather placed inside the logging call would leave
+                    # every other process waiting at the next collective.
+                    means = gather_metric_means(accelerator, logging_buffer)
                     logger.info(
-                        f"Epoch: {epoch}, "
-                        f"Steps: {current_steps}, "
-                        f"LRs: {lrs}, "
-                        f"Loss: {total_loss.item():.5f} "
-                        f"(text: {log['loss/text_total'].item():.5f}, "
-                        f"audio: {log['loss/audio_total'].item():.5f})"
+                        format_training_log_line(
+                            epoch=epoch,
+                            steps=current_steps,
+                            lrs=lrs,
+                            means=means,
+                        )
                     )
                     if args.with_tracking:
-                        gathered_metrics = accelerator.gather(
-                            {
-                                key: torch.tensor(values, device=accelerator.device)
-                                for key, values in logging_buffer.items()
-                            }
-                        )
                         lr_log = {
                             f"learning_rate/{name}": optimizer.param_groups[i]["lr"]
                             for name, i in group_idx.items()
                         }
-                        accelerator.log(
-                            {
-                                **{
-                                    key: values.nanmean()
-                                    for key, values in gathered_metrics.items()
-                                },
-                                **lr_log,
-                            },
-                            step=current_steps,
-                        )
+                        accelerator.log({**means, **lr_log}, step=current_steps)
                     logging_buffer = collections.defaultdict(list)  # reset
 
                 # Evaluate the model
@@ -963,24 +1105,13 @@ def main():
                             _, log = forward(moshi_lm=moshi_lm, batch=batch, args=args)
                             for key, value in log.items():
                                 eval_logging_buffer[f"evaluation_{key}"].append(value)
-                    gathered_metrics = accelerator.gather(
-                        {
-                            key: torch.tensor(values, device=accelerator.device)
-                            for key, values in eval_logging_buffer.items()
-                        }
-                    )
-                    eval_means = {
-                        key: float(values.nanmean()) for key, values in gathered_metrics.items()
-                    }
+                    eval_means = gather_metric_means(accelerator, eval_logging_buffer)
                     # Log to stdout regardless of --with_tracking. Reporting these only
                     # through W&B meant a run without it finished with no eval loss anywhere
                     # - not in a file, not in the log - and the numbers cannot be recovered
                     # afterwards because the dep_q=16 weights are gone once the checkpoints
                     # are converted for inference.
-                    logger.info(
-                        f"Evaluation at step {current_steps}: "
-                        + ", ".join(f"{k}={v:.5f}" for k, v in sorted(eval_means.items()))
-                    )
+                    logger.info(format_evaluation_log_line(current_steps, eval_means))
                     if args.with_tracking:
                         accelerator.log(eval_means, step=current_steps)
 

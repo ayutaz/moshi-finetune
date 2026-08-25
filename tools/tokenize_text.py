@@ -263,7 +263,14 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--audio_tokenizer_frame_rate",
-        type=int,
+        # float, not int. Mimi runs at 12.5 Hz, which is what the default already says, and
+        # tokenize_and_pad_text divides by this to place every token in a frame. Under
+        # type=int, `--audio_tokenizer_frame_rate 12.5` raises ValueError and `12` is
+        # accepted silently - and a silent 12 slides the text stream progressively out of
+        # step with the audio, by one frame every two seconds, with nothing to see in any
+        # artifact. The default is a float literal, so argparse never coerced it and the
+        # shipped M3 datasets are unaffected (reports/m3-text-stream-audit.json).
+        type=float,
         default=12.5,
         help="Frame rate for the audio tokenizer.",
     )

@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "dataset_id": "v-real-v1",
+  "manifest": "experiments/tsukuyomi_ojousama/manifests/v-real-v1.jsonl",
+  "tool": "tools/tokenize_text.py",
+  "provenance": "reconstructed",
+  "recorded_at": "2026-08-25",
+  "invocations": [
+    {
+      "split": "train",
+      "argv": [
+        "--word_transcript_dir",
+        "data/experiments/tsukuyomi_ojousama/m3/v-real/train/text",
+        "--output_dir",
+        "data/experiments/tsukuyomi_ojousama/m3/v-real/train/tok-text",
+        "--text_tokenizer_repo",
+        "nu-dialogue/j-moshi-ext"
+      ],
+      "flags": {
+        "word_transcript_dir": "data/experiments/tsukuyomi_ojousama/m3/v-real/train/text",
+        "output_dir": "data/experiments/tsukuyomi_ojousama/m3/v-real/train/tok-text",
+        "text_tokenizer_repo": "nu-dialogue/j-moshi-ext",
+        "text_tokenizer_name": "tokenizer_spm_32k_3.model",
+        "no_whitespace_before_word": false,
+        "text_padding_id": 3,
+        "end_of_text_padding_id": 0,
+        "audio_tokenizer_frame_rate": 12.5,
+        "num_workers": 1,
+        "resume": false
+      },
+      "defaults_used": [
+        "audio_tokenizer_frame_rate",
+        "end_of_text_padding_id",
+        "no_whitespace_before_word",
+        "num_workers",
+        "resume",
+        "text_padding_id",
+        "text_tokenizer_name"
+      ]
+    },
+    {
+      "split": "dev",
+      "argv": [
+        "--word_transcript_dir",
+        "data/experiments/tsukuyomi_ojousama/m3/v-real/dev/text",
+        "--output_dir",
+        "data/experiments/tsukuyomi_ojousama/m3/v-real/dev/tok-text",
+        "--text_tokenizer_repo",
+        "nu-dialogue/j-moshi-ext"
+      ],
+      "flags": {
+        "word_transcript_dir": "data/experiments/tsukuyomi_ojousama/m3/v-real/dev/text",
+        "output_dir": "data/experiments/tsukuyomi_ojousama/m3/v-real/dev/tok-text",
+        "text_tokenizer_repo": "nu-dialogue/j-moshi-ext",
+        "text_tokenizer_name": "tokenizer_spm_32k_3.model",
+        "no_whitespace_before_word": false,
+        "text_padding_id": 3,
+        "end_of_text_padding_id": 0,
+        "audio_tokenizer_frame_rate": 12.5,
+        "num_workers": 1,
+        "resume": false
+      },
+      "defaults_used": [
+        "audio_tokenizer_frame_rate",
+        "end_of_text_padding_id",
+        "no_whitespace_before_word",
+        "num_workers",
+        "resume",
+        "text_padding_id",
+        "text_tokenizer_name"
+      ]
+    }
+  ],
+  "evidence": {
+    "why_reconstructed": "M3 recorded no command line anywhere. data/experiments/tsukuyomi_ojousama/m3/tokenize.log holds four `tokenize_text rc=0` lines and the tqdm output, and no document in the repository names the invocation. That absence is the defect this sidecar exists to stop recurring: from M3-R on, tools/text_stream_audit.py record-tokenize is run after each tokenize_text.py call, with provenance `recorded`.",
+    "how_the_flags_were_established": "All 160 shipped tok-text .npz files reproduce byte for byte from tokenize_and_pad_text with no_whitespace_before_word=False, text_padding_id=3, end_of_text_padding_id=0 and audio_tokenizer_frame_rate=12.5 over the shipped word transcripts; 0 of 160 reproduce with the flag on. Those four values are therefore measured, not assumed. Only the two directory paths (read off the on-disk layout) and --text_tokenizer_repo (DATASET_SPEC.md:138 and reports/m3-tokenize-report.json) are inferred, and --num_workers is 1 because the log shows a single worker.",
+    "reproduce": "uv run --no-sync --with sentencepiece --with numpy --with tqdm --with huggingface_hub python -m tools.text_stream_audit counterfactual --word_transcript_dir data/experiments/tsukuyomi_ojousama/m3/<dataset>/<split>/text --text_tokenizer_path <j-moshi-ext snapshot>/tokenizer_spm_32k_3.model"
+  },
+  "known_defect": {
+    "flag": "no_whitespace_before_word",
+    "expected": true,
+    "actual": false,
+    "required_by": [
+      "README-ja.md:109",
+      "README.md:112"
+    ],
+    "effect": "tokenize_text.py prefixes every pyopenjtalk word with a space, and SentencePiece emits each of those as a bare U+2581. 44.6% of speaker A's emitted text tokens and 46.6% of speaker B's carry no content, and the stream runs 2.3x longer than it needs to. Nothing downstream notices: the parquet is well formed and training starts.",
+    "report": "experiments/tsukuyomi_ojousama/reports/m3-text-stream-audit.json",
+    "superseded_by": "M3-R 第2段 2-1: re-tokenize with the flag and diff rows 1-16 byte for byte. The rebuilt dataset gets its own dataset_id, manifest and sidecar."
+  }
+}

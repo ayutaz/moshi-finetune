@@ -166,7 +166,10 @@ V-real epoch4 以降で held-out の有声フレーム中央値が 0 になっ�
 **音響側の崩壊は原理的に検出できない。**
 
 〔実測〕550 個の生成トークン `.npy`（shape `(17,124)`）から、話者 A の audio codebook 0
-（row 1）を集計した。`deg` は distinct ≤ 8 かつ最頻占有率 ≥ 0.7 の clip 数。
+（row 1）を集計した。`deg` は distinct ≤ 8 かつ最頻占有率 ≥ 0.7 の clip 数
+（本調査が探索的に置いた規則。M3-R 第 1 段が較正から導いた規則は entropy ≤ 1.43 bit かつ
+distinct ≤ 9 で、control の general30 を **17/30** と判定する。以後は較正済みの 17 を正とし、
+本表の 16 は探索時の値として残す。閾値は `reports/m3-collapse-acoustic-calibration.json`）。
 
 | arm | prompt set | n | distinct 中央値 | deg |
 | --- | --- | ---: | ---: | ---: |
@@ -189,7 +192,7 @@ held-out prompt set において、user codebook 0 の **91.1%** が `1316` で�
 
 同じ control は held-out / seen では distinct 57 / 65・退化 0/10 で健全である。
 にもかかわらず `m3-collapse.json` の control `silent_count` は **0** と記録されている
-（退化した 16 件の `emitted_text_ratio` は 0 にならないため）。
+（退化した 17 件の `emitted_text_ratio` は 0 にならないため）。
 
 **【確定】劣化は epoch に対して単調である。** held-out の distinct 中央値は
 v-real で 48 → 81 → 52 → **5** → 5 と推移する。
@@ -198,7 +201,7 @@ v-real で 48 → 81 → 52 → **5** → 5 と推移する。
 **V-real epoch4 の崩壊は指標のアーティファクトではなく実在する。**
 
 **【確定】両 arm とも epoch 2 が頂点である。** v-real/epoch2 は held-out の distinct 81 で
-control（57）を上回り、general30 で退化 0/30（control は 16/30）。
+control（57）を上回り、general30 で退化 0/30（control は 17/30）。
 そして **epoch 2 は export されていない**。
 
 ### 3.4 検証して問題がなかった箇所【確定】
@@ -416,7 +419,7 @@ audio codebook の distinct が 81 → 5 へ落ちる軌跡は text 欠陥では
 1. **崩壊は実在し、epoch に依存する。** held-out の distinct 中央値は v-real で 48 → 81 → 52 → 5 → 5。〔実測〕
 2. **原因診断は比較対象の取り違え。** like-for-like は 87.8% であって 4.6% ではない。
 3. **過去の成功 run は M3 より強く最適化して崩壊していない。** 65 steps / 1.24 対 45 steps / 1.73。
-4. **turn-taking の基準線は壊れている。** control は general30 で 16/30 が退化状態。〔実測〕
+4. **turn-taking の基準線は壊れている。** control は general30 で 17/30 が退化状態。〔実測〕
 5. **崩壊検出器は row 0 しか読まない。** `m3-collapse.json` の control `silent_count = 0` は上記を見落とす。
 6. **条件 4 の効果量基準は満たされていた。** 落ちたのは一貫性基準 8/10 のみ。
 7. **8/10 は検出力 0.383。** 「効果なし」と「検出力不足」が分離できていない。
@@ -434,7 +437,7 @@ audio codebook の distinct が 81 → 5 へ落ちる軌跡は text 欠陥では
 4. V-real epoch4/5 の無音が Moshi Appendix D の silence か background noise か
 5. 崩壊の原因が LR か、データ構造か、更新パラメータ範囲か（M3 は 3 つを同時に振っている）
 6. 観測された正の delta が本物の声質転移か、ECAPA が平坦な出力を減点しないことによる見かけか
-7. control 16/30 の退化が general30 の prompt 形状の産物か J-Moshi-ext の性質か
+7. control 17/30 の退化が general30 の prompt 形状の産物か J-Moshi-ext の性質か
 
 ### 記録間の不一致（1 件・未解消）
 
@@ -452,7 +455,7 @@ audio codebook の distinct が 81 → 5 へ落ちる軌跡は text 欠陥では
 | --- | --- | --- |
 | 1 | §5 原因の読み（および `plan.md:181`, `m3-plan.md:48,229,257`, `milestones.md:446`） | 189.9 分は TTS 学習コーパス、Moshi 学習データは 31.7 分。like-for-like は 87.8%。**段落全体を撤回し「原因未特定」と書き直す** |
 | 2 | §3「5/10 にとどまる。ほぼコイン投げ」 | 効果量基準は満たされていた。**絶対値・較正帯・per-clip 分散を併記し「一貫性基準が構造的に達成困難だった」と書き直す** |
-| 3 | §3「fine-tuning はモデルを『より答えるように』した」 | control は general30 で 16/30 が退化。**「比較の基準線が成立していない」と書き直す** |
+| 3 | §3「fine-tuning はモデルを『より答えるように』した」 | control は general30 で 17/30 が退化。**「比較の基準線が成立していない」と書き直す** |
 | 4 | 条件 3 の判定 | `dialogue_collapse.py` は row 0 のみを読む。**全数値は「テキスト崩壊」としてしか読めないと明記** |
 | 5 | 「6.88 → 1.02 の再現」 | 始点も終点も成功 run・失敗 run を区別しない。**loss から崩壊を推定する記述を撤回し、証拠を生成トークン側（distinct 81 → 5）に置き換える** |
 | 6 | §3「11.39 → 1.73 へ単調に減少」 | epoch 平均でのみ真。step レベルでは約 4 割の遷移で増加。各値は 8 対話中 1 対話。**「epoch 平均は」と限定する** |

@@ -26,11 +26,13 @@ from utils import (
 logger = get_logger(__name__)
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description="Inference script for prompted dialogue continuation with finetuned Moshi."
-    )
+def setup_argparser(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    """Declare every generation argument.
 
+    Split out of `parse_args` so the argument table can be built and exercised without
+    importing torch, accelerate or datasets - which is the only way the test suite can
+    check that `--seed` is genuinely required rather than merely documented as such.
+    """
     parser.add_argument(
         "--launcher",
         choices=["accelerate", "mpi"],
@@ -146,13 +148,45 @@ def parse_args():
         help="Top-p for sampling. Set to 0 for no top-p.",
     )
 
+    # Required, not defaulted. M3 never passed --seed, so `set_seed` was never called and
+    # every generation was one unrepeatable draw: the collapse counts, the win counts and
+    # the speaker-likeness deltas of conditions 3, 4 and 5 all rest on a sample of one that
+    # cannot be drawn again. A default here would restore exactly that failure, because the
+    # failure was silence - nothing in the output said the seed was missing.
     parser.add_argument(
         "--seed",
         type=int,
-        default=None,
-        help="A seed for reproducible training.",
+        required=True,
+        help=(
+            "Seed for reproducible generation. Required: a generation whose seed is not "
+            "recorded cannot be repeated, and every count taken from it is a single draw."
+        ),
     )
 
+    return parser
+
+
+def build_run_config(args: argparse.Namespace) -> dict:
+    """The config written beside the generated tokens, with the seed guaranteed present.
+
+    argparse already refuses a command line without `--seed`, but the config file is the
+    artifact a later reader actually has, so the guarantee is re-checked at the point of
+    writing rather than assumed from the parser.
+    """
+    config = dict(vars(args))
+    if config.get("seed") is None:
+        raise ValueError(
+            "refusing to write a generation config with no seed: the output could not be "
+            "reproduced, and every number taken from it would be a single draw"
+        )
+    return config
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Inference script for prompted dialogue continuation with finetuned Moshi."
+    )
+    setup_argparser(parser)
     args = parser.parse_args()
 
     # post process args
@@ -175,9 +209,9 @@ def main():
     )
     logger.info(accelerator.state, main_process_only=False)
 
-    # If passed along, set the training seed now.
-    if args.seed is not None:
-        set_seed(args.seed)
+    # Unconditional: --seed is required, so there is no unseeded path to fall through to.
+    set_seed(args.seed)
+    logger.info(f"Seed = {args.seed}")
 
     # Load the model
     logger.info(f"Loading Moshi model from {args.model_dir}")
@@ -253,7 +287,7 @@ def main():
     # save config
     os.makedirs(args.output_dir, exist_ok=True)
     with open(os.path.join(args.output_dir, "config.json"), "w") as f:
-        json.dump(vars(args), f, indent=4)
+        json.dump(build_run_config(args), f, indent=4)
 
     # make directory for results
     result_dir = os.path.join(args.output_dir, "generated_tokens")
@@ -269,6 +303,7 @@ def main():
     logger.info(f"  Num steps = {local_num_steps}")
     logger.info(f"  Generation length = {args.generation_length}")
     logger.info(f"  Use sampling = {args.use_sampling}")
+    logger.info(f"  Seed = {args.seed}")
     if args.use_sampling:
         logger.info(f"  Sampling parameters = {sampling_params}")
 

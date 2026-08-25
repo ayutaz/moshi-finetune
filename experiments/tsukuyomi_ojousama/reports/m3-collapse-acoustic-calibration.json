@@ -1,0 +1,227 @@
+{
+  "schema_version": 1,
+  "milestone": "M3-R",
+  "step": "1-1",
+  "captured_at": "2026-08-25",
+  "detector": "tools/dialogue_collapse.py :: summarise_acoustics",
+  "measures": "speaker A's Mimi codebook 0 (row 1 of the (17, frames) generation)",
+  "purpose": "Fix the audio-side collapse thresholds against healthy data before the 550 M3 generations are re-judged. The text-side half of this detector was frozen on 2026-08-21 in m3-collapse-calibration.json; this is the same exercise for row 1.",
+  "honesty_note": {
+    "frozen_before_the_candidates": false,
+    "why_it_is_still_usable": "The M3 generations already exist, so this calibration cannot claim the 2026-08-21 file's provenance. What it can do is derive the numbers from a source that contains no candidate: the twenty M0 continuations from the published J-Moshi Stage 2 and Stage 3 checkpoints. The derivation rule was written down first - the line sits a factor of four below the sparsest healthy generation on both statistics - and the thresholds are whatever that rule returns. `verdict_sensitivity` below shows the control's general30 count is the same 17 of 30 for every entropy ceiling from 1.0 to 2.5 bits, so the verdict does not rest on where inside that range the line fell."
+  },
+  "calibration_source": {
+    "chosen": "M0 continuation generations, Stage 2 and Stage 3",
+    "generations": 20,
+    "paths": "data/experiments/tsukuyomi_ojousama/m0-run-2026-08-20/{stage2,stage3}/evaluation/continuation/generated_tokens/",
+    "frames_per_generation": 124,
+    "why": [
+      "It is the same object being scored: a 124-frame generation from generate.py with moshi_speakers=[\"A\"], prompt_length 40, generation_length 125, temperature 0.8, seed 20260818 - byte for byte the settings the M3 arms were generated under.",
+      "Its checkpoints are known to work: reports/m0-baseline-final.json records status pass with both sha256 digests verified after re-download.",
+      "It is the provenance the text-side thresholds already use, so both halves of the detector are calibrated on the same footing."
+    ],
+    "caveat": "M0's partner channel is digital silence, so speaker A speaks for the whole window and never has to hold the floor open. The band below therefore describes a SPEAKING channel, which is a stricter notion of health than a dialogue window needs. The thresholds are set a factor of four below it for exactly that reason."
+  },
+  "rejected_source": {
+    "candidate": "124-frame windows of channel A in data/experiments/tsukuyomi_ojousama/m3/v-real/parquet/train-001-of-001.parquet",
+    "what_it_is": "The target speaker's real recordings, Mimi-tokenised and laid on the training timeline. The obvious choice, and it was measured before being set aside.",
+    "windows": {
+      "speaker_A_emits_text": {
+        "distinct_tokens": {
+          "n": 121,
+          "min": 14,
+          "median": 41,
+          "mean": 41.81818181818182,
+          "max": 70
+        },
+        "top_token_share": {
+          "n": 121,
+          "min": 0.10483870967741936,
+          "median": 0.5,
+          "mean": 0.5130631831511597,
+          "max": 0.8548387096774194
+        },
+        "entropy_bits": {
+          "n": 121,
+          "min": 1.100047474210564,
+          "median": 3.391949775279295,
+          "mean": 3.404831678372334,
+          "max": 5.590223052748902
+        }
+      },
+      "speaker_A_silent": {
+        "distinct_tokens": {
+          "n": 1,
+          "min": 6,
+          "median": 6,
+          "mean": 6,
+          "max": 6
+        },
+        "top_token_share": {
+          "n": 1,
+          "min": 0.7741935483870968,
+          "median": 0.7741935483870968,
+          "mean": 0.7741935483870968,
+          "max": 0.7741935483870968
+        },
+        "entropy_bits": {
+          "n": 1,
+          "min": 1.112447940798278,
+          "median": 1.112447940798278,
+          "mean": 1.112447940798278,
+          "max": 1.112447940798278
+        }
+      }
+    },
+    "whole_dialogue_rows": {
+      "distinct_tokens": {
+        "n": 72,
+        "min": 40,
+        "median": 69.0,
+        "mean": 69.73611111111111,
+        "max": 111
+      },
+      "top_token_share": {
+        "n": 72,
+        "min": 0.16666666666666666,
+        "median": 0.34303904411320985,
+        "mean": 0.344204678466651,
+        "max": 0.4525316455696203
+      },
+      "entropy_bits": {
+        "n": 72,
+        "min": 2.461265116104724,
+        "median": 3.9627052813615045,
+        "mean": 3.8873439246674737,
+        "max": 5.252080100231519
+      }
+    },
+    "why_rejected": "Its floor lies inside the failures the detector has to catch. The sparsest window in which speaker A actually speaks scores 1.100 bits with 14 distinct tokens and a top-token share of 0.855 - inside the 1.09 to 1.26 bit range of six M3 generations that are unambiguously collapsed, and above five of them. A line drawn under this floor would have to miss those five to avoid firing on real recorded speech, so a band built here cannot separate collapse from the data it was trained on.",
+    "finding_in_its_own_right": "The rejection is itself a measurement M3-R should carry: the training data contains ten-second windows of channel A that are acoustically indistinguishable from the collapse the model later exhibits, because speaker A is silent 68.8% of the time. Over the WHOLE dialogue (213-321 frames) the same channel is healthy - entropy never below 2.461 bits, top share never above 0.453. The degeneracy is a property of the 124-frame window, which is the window a generation occupies.",
+    "three_sparsest_windows": [
+      {
+        "source": "train/v-034@0",
+        "distinct_tokens": 14,
+        "top_token": 1316,
+        "top_token_share": 0.8548387096774194,
+        "entropy_bits": 1.100047474210564
+      },
+      {
+        "source": "train/v-042@124",
+        "distinct_tokens": 6,
+        "top_token": 2029,
+        "top_token_share": 0.7741935483870968,
+        "entropy_bits": 1.112447940798278
+      },
+      {
+        "source": "train/v-027@0",
+        "distinct_tokens": 14,
+        "top_token": 1316,
+        "top_token_share": 0.8467741935483871,
+        "entropy_bits": 1.1497554486360175
+      }
+    ]
+  },
+  "observed_distribution": {
+    "distinct_tokens": {
+      "n": 20,
+      "min": 37,
+      "median": 59.0,
+      "mean": 57.9,
+      "max": 74
+    },
+    "top_token_share": {
+      "n": 20,
+      "min": 0.08870967741935484,
+      "median": 0.21370967741935484,
+      "mean": 0.21814516129032258,
+      "max": 0.45161290322580644
+    },
+    "entropy_bits": {
+      "n": 20,
+      "min": 3.4304701136182634,
+      "median": 4.949136148127037,
+      "mean": 4.847060187797617,
+      "max": 5.667391243917235
+    }
+  },
+  "derivation": {
+    "rule_stated_first": "The collapse line sits a factor of four below the sparsest healthy generation, on both statistics. Four is the same order of headroom the 2026-08-21 text calibration used (1.93x on distinct_ratio, 2x on repeat count) and is applied here in each statistic's own scale.",
+    "entropy": {
+      "healthy_floor_bits": 3.4304701136182634,
+      "healthy_floor_effective_vocabulary": 10.78138124114934,
+      "quarter_of_it": 2.695345310287335,
+      "line_before_rounding_bits": 1.4304701136182634,
+      "max_entropy_bits": 1.43,
+      "rounding": "Two decimal places, rounded towards the tighter bar, so the published number is auditable by hand: 3.430470 - 2 = 1.430470 -> 1.43.",
+      "why_entropy_carries_the_threshold": "2**entropy is the effective number of tokens the window uses, which is a quantity with a meaning independent of this dataset. At the line it is 2.69 tokens: over ten seconds, speaker A's coarse acoustic token is no more varied than a coin flip."
+    },
+    "distinct": {
+      "healthy_floor": 37,
+      "quarter_of_it": 9.25,
+      "max_distinct_tokens": 9,
+      "rounding": "Floored, again towards the tighter bar: 37 / 4 = 9.25 -> 9.",
+      "why_it_is_kept_as_a_second_ceiling": "The two statistics fail on different shapes and neither contains the other. Six M3 generations sit at 5 to 8 distinct tokens with entropies of 1.09 to 1.26 - above the entropy line in three cases - because a handful of singleton tokens pushes entropy up faster than it pushes variety up. One (control/general30/7.npy) sits at 10 distinct with 0.946 bits, the mirror image. Either ceiling on its own condemns a generation."
+    },
+    "top_token_share": {
+      "thresholded": false,
+      "why_not": "It is a fraction bounded by 1, so a multiplicative margin below the healthy ceiling is not defined for it and any line would have been chosen rather than derived. Entropy already carries the concentration it measures. It is REPORTED for every generation because which token holds the window is the readable part of the finding: Mimi's codebook-0 silence token is 1316, and a speaker-A row that is 1316 on 91% of frames is not speaking whatever else the numbers say.",
+      "silence_token_evidence": {
+        "token": 1316,
+        "share_of_the_teacher_forced_silent_partner_stream": 0.9113,
+        "measured_on": "row 9 (speaker B codebook 0) of the ten control held-out generations, 1240 frames, where the partner is silence by construction",
+        "silence_texture": "1316 at 0.911, 768 at 0.065, 318 at 0.016"
+      }
+    }
+  },
+  "thresholds": {
+    "max_entropy_bits": 1.43,
+    "max_distinct_tokens": 9,
+    "rule": "acoustic_collapse = entropy_bits <= max_entropy_bits OR distinct_tokens <= max_distinct_tokens"
+  },
+  "self_check": {
+    "m0_generations_flagged": 0,
+    "of": 20,
+    "headroom": {
+      "entropy_bits": "3.4305 healthy floor vs 1.43 line",
+      "effective_vocabulary": "10.78 healthy floor vs 2.69 line",
+      "distinct_tokens": "37 healthy floor vs 9 line"
+    },
+    "assertion": "The thresholds do not fire on any of M0's 20 working generations."
+  },
+  "verdict_sensitivity": {
+    "question": "Does the gate's answer depend on where inside a plausible range the line fell?",
+    "measured_on": "the control's 30 general30 generations, flagged count",
+    "entropy_ceiling_alone": {
+      "1.0": 17,
+      "1.2": 17,
+      "1.43": 17,
+      "1.6": 17,
+      "2.0": 17,
+      "2.5": 17
+    },
+    "distinct_ceiling_alone": {
+      "4": 16,
+      "6": 16,
+      "9": 16,
+      "12": 17,
+      "16": 17,
+      "20": 17
+    },
+    "both_ceilings_moved_together": {
+      "1.0/4": 17,
+      "1.2/6": 17,
+      "1.43/9": 17,
+      "1.6/12": 17,
+      "2.0/16": 17,
+      "2.5/20": 17
+    },
+    "reading": "Each condition is swept on its own, because sweeping one with the other held at its chosen value would show a plateau the other condition was propping up. The entropy condition alone flags 17 of 30 at every ceiling from 1.0 to 2.5 bits; the distinct condition alone flags 16 at ceilings 4 to 9 and 17 from 12 up; moving both together flags 17 throughout. The control's general30 is degenerate under every line in the range, so the gate's answer does not rest on where inside it the chosen line fell."
+  },
+  "limits": [
+    "This cannot tell collapse from a whole window of appropriate silence. Both are one token repeated, and the only thing separating them is whether the partner was speaking - which under --model_user_stream is teacher-forced and therefore says nothing about the checkpoint. m3-collapse-calibration.json records the same ban.",
+    "That ambiguity does not weaken the control's verdict: 17 of the control's 30 general30 generations emit 2 to 8 text tokens while row 1 is the silence texture, so the model is not holding the floor open, it is producing text with no voice under it. The text-side silent test is a knife edge at zero emitted tokens and those two stray tokens were enough to clear it.",
+    "Codebook 0 only. A channel alive in codebook 0 could still be degenerate in the finer codebooks; this measures the coarse acoustic content, which is where a collapse to silence has to show.",
+    "One generation per prompt, one seed. Every count here is a single draw."
+  ]
+}

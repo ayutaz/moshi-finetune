@@ -212,6 +212,7 @@ uv run accelerate launch \
         --prompt_length 125 \
         --generation_length 250 \
         --temperature 0.8 \
+        --seed 20260825 \
         ...
 ```
 Specify both the length of the prompt and the generation using `--prompt_length` and `--generation_length` respectively. For each sample in the dataset, the part from the beginning to the length specified by `--prompt_length` in the sample is input to the model. The unit is one frame of Mimi (80ms). Other settings such as batch size and temperature parameter can be specified as arguments to `generate.py`. Use `uv run generate.py --help` for details.

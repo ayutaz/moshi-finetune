@@ -1,0 +1,295 @@
+{
+  "schema_version": 2,
+  "report_kind": "calibration",
+  "milestone": "M3-R",
+  "step": "第1段-2 (M3-R plan 1-3 / 1-4)",
+  "captured_at": "2026-08-25",
+  "condition": "4. held-out 話者らしさが改善する — その較正帯",
+  "why_this_file_exists": "CLAUDE.md: 「0.74 という within-group 類似度は、実人間が 0.70 を取ると知るまで 何も意味しない」。M3 の条件4 は較正帯を持たずに判定された。delta だけが記録され、絶対 cosine も、対象話者自身が同じ centroid に対して何点を取るかも記録されていない。そのため「control より +0.032」が良いのか悪いのかを、誰も言えなかった。",
+  "model": "speechbrain/spkrec-ecapa-voxceleb",
+  "device": "cpu (Apple Silicon, local)",
+  "target_dir": "data/experiments/tsukuyomi_ojousama/baseline-input/tsukuyomi-heldout",
+  "target_clips": 10,
+  "target_note": "つくよみちゃんコーパス test 分割の 10 録音。実験のどの段階にも投入していない。M3 の条件4 が centroid に使ったのと同一の 10 件であり、帯と判定が同じ空間に載る。",
+  "preparation": {
+    "voiced_frame_samples": 480,
+    "voiced_rms_threshold": 500,
+    "target_rms": 0.05,
+    "path": "tools/speaker_similarity.py の既存経路をそのまま使用 (_read_wav → voiced_segments → rms_normalise → _embed_all → cosine_similarity)。腕の採点と同じ前処理でなければ、帯は腕と比較できない。"
+  },
+  "calibration_band": {
+    "count": 10,
+    "mean": 0.8166439711675627,
+    "median": 0.8175358862846673,
+    "min": 0.7404582336559322,
+    "max": 0.8780368695311239,
+    "stdev": 0.037067675980246476,
+    "floor": 0.7404582336559322,
+    "method": "leave-one-out: each recording against the centroid of the other n-1",
+    "per_clip": {
+      "VOICEACTRESS100_026": 0.8030857601586017,
+      "VOICEACTRESS100_032": 0.7963094521678861,
+      "VOICEACTRESS100_047": 0.8245896750034397,
+      "VOICEACTRESS100_048": 0.7978501395023357,
+      "VOICEACTRESS100_052": 0.8246630630711043,
+      "VOICEACTRESS100_069": 0.8480837647331207,
+      "VOICEACTRESS100_074": 0.842880656286188,
+      "VOICEACTRESS100_092": 0.8780368695311239,
+      "VOICEACTRESS100_095": 0.8104820975658948,
+      "VOICEACTRESS100_099": 0.7404582336559322
+    }
+  },
+  "band_reading": {
+    "mean": "対象話者の録音が、自分自身の centroid に対して平均で取る値。条件4 の到達点。",
+    "floor": "帯の最悪値。これを下回る腕は「対象話者の平均より悪い」のではなく 「対象話者の声が占める範囲の外にある」。負の delta より強い主張である。",
+    "not_an_upper_bound_of_1.0": "同一話者でも 1.0 にはならない。ECAPA は発話内容・収録条件・長さに反応する。1.0 を目標に読むと、到達不可能な基準を課すことになる。"
+  },
+  "duration_check": {
+    "mean_seconds": 6.7743697916666665,
+    "median_seconds": 7.500375,
+    "min_seconds": 3.8016354166666666,
+    "max_seconds": 8.919052083333334,
+    "why": "短い発話は embedding が不安定になる。帯の発話長が比較対象と大きく違えば、帯の差は話者の差ではなく長さの差になる。V-tts 教師 (mean 7.10s) と 対象話者 test (mean 6.77s) は同等であり、交絡ではないことを本セッションで確認済み。"
+  },
+  "per_clip": {
+    "VOICEACTRESS100_026": {
+      "leave_one_out_cosine": 0.8030857601586017,
+      "sample_rate": 96000,
+      "duration_seconds": 3.8016354166666666,
+      "voiced_seconds": 1.7,
+      "voiced_frames": 340,
+      "sha256": "c39266ae5ebcf43b5842fb0e3ccdb22aced7a015a005027831301d0f9d6b9467"
+    },
+    "VOICEACTRESS100_032": {
+      "leave_one_out_cosine": 0.7963094521678861,
+      "sample_rate": 96000,
+      "duration_seconds": 8.919052083333334,
+      "voiced_seconds": 2.495,
+      "voiced_frames": 499,
+      "sha256": "88679614169899d1e22824cfaffa288c1439eee5c466071fe068f8287a5c885c"
+    },
+    "VOICEACTRESS100_047": {
+      "leave_one_out_cosine": 0.8245896750034397,
+      "sample_rate": 96000,
+      "duration_seconds": 7.619,
+      "voiced_seconds": 2.45,
+      "voiced_frames": 490,
+      "sha256": "f9f4da6b88f2dd9d495fdc6dbb47fa1f6d32ec62f88736a8eb918762fe6ebff1"
+    },
+    "VOICEACTRESS100_048": {
+      "leave_one_out_cosine": 0.7978501395023357,
+      "sample_rate": 96000,
+      "duration_seconds": 7.756177083333333,
+      "voiced_seconds": 2.815,
+      "voiced_frames": 563,
+      "sha256": "dafe64258b9862c683e6aa4bde82136a5dad8a252069fa68e213dee5940f75aa"
+    },
+    "VOICEACTRESS100_052": {
+      "leave_one_out_cosine": 0.8246630630711043,
+      "sample_rate": 96000,
+      "duration_seconds": 7.4308125,
+      "voiced_seconds": 3.12,
+      "voiced_frames": 624,
+      "sha256": "8b9f2aa8f6baa6db6bd60ff1c09e46d11ebb7d0753c70654d448fd519685ec22"
+    },
+    "VOICEACTRESS100_069": {
+      "leave_one_out_cosine": 0.8480837647331207,
+      "sample_rate": 96000,
+      "duration_seconds": 8.129520833333334,
+      "voiced_seconds": 2.12,
+      "voiced_frames": 424,
+      "sha256": "6307c3f1ac3ec5206505e08baf808aebfb58e4e4c7e525858768511dfb53eda7"
+    },
+    "VOICEACTRESS100_074": {
+      "leave_one_out_cosine": 0.842880656286188,
+      "sample_rate": 96000,
+      "duration_seconds": 4.9198125,
+      "voiced_seconds": 1.495,
+      "voiced_frames": 299,
+      "sha256": "65dc767b3d0ce4f8bc978da49c71f2b4279212011645b92e8ddeddce2e5d4a68"
+    },
+    "VOICEACTRESS100_092": {
+      "leave_one_out_cosine": 0.8780368695311239,
+      "sample_rate": 96000,
+      "duration_seconds": 7.5699375,
+      "voiced_seconds": 1.66,
+      "voiced_frames": 332,
+      "sha256": "60d68112d009dda1dea0ad242ccef6e5230b58235dddc1235c7500744e7ec437"
+    },
+    "VOICEACTRESS100_095": {
+      "leave_one_out_cosine": 0.8104820975658948,
+      "sample_rate": 96000,
+      "duration_seconds": 6.958520833333333,
+      "voiced_seconds": 1.945,
+      "voiced_frames": 389,
+      "sha256": "ebc246c8b5792b367757b101cb1e7c176b71023e41d4734be79440171028f497"
+    },
+    "VOICEACTRESS100_099": {
+      "leave_one_out_cosine": 0.7404582336559322,
+      "sample_rate": 96000,
+      "duration_seconds": 4.6392291666666665,
+      "voiced_seconds": 1.61,
+      "voiced_frames": 322,
+      "sha256": "41619f067f60fcc2d3142dc8d02689a8a3066aaca72748cc5d6eb16111dd752f"
+    }
+  },
+  "reference_points_measured_2026_08_24": {
+    "note": "同じ centroid・同じ前処理で測った参照点。いずれも候補 checkpoint ではなく 教師音声であり、基準の固定に使ってよい。腕の値は含まない。",
+    "v_real_teacher_corpus_audio": {
+      "n": 90,
+      "mean": 0.8045,
+      "within_band_ge_floor": "82/90",
+      "reading": "コーパス原音 (test を除く)。帯の内側にある。V-real の天井は対象話者に届く。"
+    },
+    "v_tts_teacher_synthetic": {
+      "n": 80,
+      "mean": 0.7213,
+      "median": 0.7267,
+      "min": 0.613,
+      "within_band_ge_floor": "35/80",
+      "reading": "80 ターン中 45 ターンが帯の外。V-tts 腕は学習前から天井が対象話者に届いていない。M3-R が V-real のみを再走する根拠。"
+    }
+  },
+  "criterion_fixed_here": {
+    "fixed_at": "2026-08-25",
+    "fixed_before_seeing": "M3-R の候補 checkpoint は 1 つも存在しない (第4段は未実行)。この基準は M3 の既存 11 腕の絶対 cosine を計算する前に確定させた。",
+    "replaces": "8 of 10 higher (sign test)",
+    "replaced_because": "真の勝率 0.70 に対する検出力 0.383。「効果なし」と「検出力不足」が同じ出力になる。実際 v-tts/epoch3 は効果量基準 +0.02 を +0.0321 で満たしながら 5/10 で落ちた。",
+    "criteria": [
+      "1. interlock: 条件3 を落ちた腕 (degenerate_count > 0) は通せない",
+      "2. memorisation 判定が 'memorisation' でない",
+      "3. paired mean delta の 95% 区間下限が 0 を超える",
+      "4. control から較正帯までの距離を 25% 以上閉じる"
+    ],
+    "implementation": "tools/likeness_guard.py condition4_verdict",
+    "interval": {
+      "confidence": 0.95,
+      "methods": "Student-t (表引き) と percentile bootstrap の両方を計算し、下限の低い方を採る",
+      "bootstrap_iterations": 10000,
+      "bootstrap_seed": 20260824,
+      "no_scipy": "scipy は本リポジトリの依存ではない。入っている環境でしか走らないゲートは、いつか飛ばされる。"
+    },
+    "band_closure": {
+      "definition": "(candidate_mean - control_mean) / (band_mean - control_mean)",
+      "min": 0.25,
+      "edge_cases": [
+        "分母 <= 0 (control が帯以上): closed は None。比率では判定せず、candidate_mean >= control_mean の非後退のみを課し、判定は区間と聴取に委ねる",
+        "closed < 0 (control より悪化) と closed > 1 (帯平均を超える) はそのまま報告する。clamp すると別の結果が同じ数字に潰れる"
+      ]
+    },
+    "voiced_floor_frames": 25
+  },
+  "limits": [
+    "帯は 10 録音の leave-one-out である。10 件の min は母集団の下限ではなく、この 10 件の最悪値にすぎない。より多くの録音を測れば floor は下がりうる。",
+    "centroid は held-out prompt と同じ 10 録音から作られている。M0・M2 と同じ設計で 比較を paired に保つが、話者の独立標本ではない。",
+    "ECAPA は平坦・過平滑な出力を優遇する。帯そのものは実録音なので影響を受けないが、帯に近づいた腕が本当に似ているかは条件3 のインターロックと聴取が決める。"
+  ],
+  "reproduce": "uv run --no-sync --with speechbrain --with torch --with torchaudio --with soundfile --with numpy python -m tools.speaker_similarity --target-dir data/experiments/tsukuyomi_ojousama/baseline-input/tsukuyomi-heldout --report experiments/tsukuyomi_ojousama/reports/m3-likeness-calibration.json",
+  "record_reconciliation": {
+    "question": "m3-speaker-likeness.json は v-tts/epoch3 (held-out) を scorable 9 / higher_on 5 / mean_delta_full_set +0.0321 と記録する。2026-08-24 の再測定は同じ腕を 「10件すべて採点可能、paired mean +0.0738」とした。採点可能数と delta の両方で食い違う。",
+    "answer": "有声区間の抽出条件でも floor 判定でもない。原因は degeneracy guard である。clip 4 が tools/dialogue_collapse.py に exact_repeat_collapse として flag され、likeness_guard.apply_degeneracy_guard が候補側からその clip を取り除いてから paired_comparison_over_fixed_set を呼んでいた。再測定は guard を通していない生の経路である。",
+    "evidence": {
+      "shipped_record": {
+        "file": "reports/m3-speaker-likeness.json",
+        "results_held_out['v-tts/epoch3']": {
+          "scorable": 9,
+          "unscorable": 1,
+          "higher_on": 5,
+          "mean_delta_full_set": 0.03213444964307947,
+          "withheld": {
+            "4": "exact_repeat_collapse"
+          },
+          "below_floor": 0
+        },
+        "scorability_census['v-tts/epoch3']['held-out']": {
+          "scorable": 10,
+          "total": 10,
+          "voiced_frames_min": 86,
+          "voiced_frames_median": 142
+        },
+        "reading": "同じファイル内で census は 10/10 採点可能・最小 86 フレーム (floor は 25) と記録し、below_floor は 0 である。floor 由来ではありえない。"
+      },
+      "collapse_record": {
+        "file": "reports/m3-collapse.json",
+        "per_arm_by_set['v-tts/epoch3']['held-out']": {
+          "n": 10,
+          "monologue": 0,
+          "repeat": 1,
+          "silent": 0
+        },
+        "reading": "held-out の repeat 1 件が clip 4 に対応する。"
+      },
+      "remeasured_2026_08_25": {
+        "path": "tools/speaker_similarity.py CLI, guard なし, 同一前処理",
+        "control_absolute_mean": 0.3727984296062104,
+        "candidate_absolute_mean": 0.44656345499923145,
+        "scorable": 10,
+        "higher_on": 6,
+        "mean_delta_full_set": 0.0737650253930211,
+        "delta_stdev_full_set": 0.1760099326611402,
+        "per_clip_absolute": {
+          "0": {
+            "base": 0.5401225759145645,
+            "candidate": 0.35331516054045775,
+            "delta": -0.18680741537410672
+          },
+          "1": {
+            "base": 0.5599247775097181,
+            "candidate": 0.5385738133822773,
+            "delta": -0.021350964127440863
+          },
+          "2": {
+            "base": 0.3679783507252905,
+            "candidate": 0.43821983333951114,
+            "delta": 0.07024148261422064
+          },
+          "3": {
+            "base": 0.14287395204987213,
+            "candidate": 0.32150872111984624,
+            "delta": 0.1786347690699741
+          },
+          "4": {
+            "base": 0.13981472836374176,
+            "candidate": 0.5561205818092543,
+            "delta": 0.4163058534455125
+          },
+          "5": {
+            "base": 0.3390025578672371,
+            "candidate": 0.5591683962794736,
+            "delta": 0.22016583841223647
+          },
+          "6": {
+            "base": 0.21924380283536538,
+            "candidate": 0.33783071743967996,
+            "delta": 0.11858691460431459
+          },
+          "7": {
+            "base": 0.4959406235210287,
+            "candidate": 0.45251853212017756,
+            "delta": -0.043422091400851126
+          },
+          "8": {
+            "base": 0.554806725767861,
+            "candidate": 0.4397719389552869,
+            "delta": -0.11503478681257417
+          },
+          "9": {
+            "base": 0.3682762015074247,
+            "candidate": 0.4686068550063502,
+            "delta": 0.1003306534989255
+          }
+        },
+        "clip_4": {
+          "control": 0.13981472836374176,
+          "candidate": 0.5561205818092543,
+          "delta": 0.4163058534455125
+        }
+      }
+    },
+    "arithmetic": "guard 済み 9 件の平均 +0.035705 に clip 4 の delta +0.4163 を戻すと (9 x 0.035705 + 0.4163) / 10 = +0.0738。再測定値と一致する。higher_on も clip 4 が勝ちなので 5 -> 6 に変わる。両方の食い違いが 1 件で説明される。",
+    "which_number_is_right": "どちらも内部的には正しく、測っているものが違う。guard 済みの +0.0321 は 「崩壊していない生成だけでの改善」、guard なしの +0.0738 は「全生成での改善」である。clip 4 は guard が存在する理由そのものであり、control の最悪 clip (0.1398) に対して 反復 flag のついた生成が 0.5561 を取っている。ECAPA が退化を優遇した典型例である。したがって guard なしの +0.0738 は楽観側の数字であって訂正値ではない。**記録が壊れているのではなく、どちらを見ているかを言っていなかったことが欠陥である。**",
+    "second_inconsistency_found": "同じファイルの verdicts['v-tts/epoch3'] は degenerate_count 0 を記録している。results_held_out の withheld と m3-collapse.json の repeat 1 に矛盾する。condition4_verdict に渡された collapse payload が guard の入力と別物だった。この値が通っていれば v-tts/epoch3 は符号数ではなく interlock で落ちていた。出荷済み JSON は書き換えない (M3-R 第0段の訂正対象)。",
+    "caveat": "clip 4 の flag は tools/dialogue_collapse.py が row 0 (text stream) だけを見て出したものである。音響が退化しているかはこの検出器では確定しない。第1段-1 の音響指標追加後に再判定される。",
+    "what_this_says_about_the_new_criterion": "絶対 cosine を初めて並べると、control 0.3728 / v-tts-epoch3 0.4466 に対して 較正帯は mean 0.8166 / floor 0.7405 である。この腕が閉じた距離は 16.6% にすぎず、帯の floor にも遠く届かない。「+0.02 を満たした」と「話者に近づいた」は別のことだった。"
+  }
+}

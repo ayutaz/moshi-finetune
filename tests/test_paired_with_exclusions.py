@@ -79,6 +79,55 @@ class PairedComparisonOverFixedSetTests(unittest.TestCase):
                 base={}, candidate={}, all_keys=(), names=("control", "candidate")
             )
 
+    def test_the_absolute_cosines_travel_with_the_deltas(self) -> None:
+        # A delta of +0.03 is a different result at 0.78 than at 0.37, and M3 reported only
+        # the delta - which is how an arm could be discussed as "improving" with nobody able
+        # to say whether it was anywhere near the target speaker's own range.
+        result = paired_comparison_over_fixed_set(
+            base={"a": 0.5, "b": 0.4},
+            candidate={"a": 0.6},
+            all_keys=("a", "b"),
+            names=("control", "candidate"),
+        )
+        entry = result["per_clip_absolute"]["a"]
+        self.assertEqual(entry["base"], 0.5)
+        self.assertEqual(entry["candidate"], 0.6)
+        self.assertAlmostEqual(entry["delta"], 0.1)
+
+    def test_a_clip_the_candidate_could_not_produce_is_named_rather_than_dropped(self) -> None:
+        result = paired_comparison_over_fixed_set(
+            base={"a": 0.5, "b": 0.4},
+            candidate={"a": 0.6},
+            all_keys=("a", "b"),
+            names=("control", "candidate"),
+        )
+        self.assertEqual(set(result["per_clip_absolute"]), {"a", "b"})
+        self.assertIsNone(result["per_clip_absolute"]["b"]["candidate"])
+        self.assertEqual(result["per_clip_absolute"]["b"]["base"], 0.4)
+
+    def test_the_spread_of_the_deltas_is_reported_over_the_full_set(self) -> None:
+        # Condition 4 now rests on an interval, and an interval needs a spread. Reporting
+        # only a mean is what let "+0.032" be quoted for a week with no idea how noisy it was.
+        result = paired_comparison_over_fixed_set(
+            base={"a": 0.5, "b": 0.5, "c": 0.5, "d": 0.5},
+            candidate={"a": 0.6, "b": 0.6, "c": 0.6, "d": 0.6},
+            all_keys=self.ALL,
+            names=("control", "candidate"),
+        )
+        self.assertAlmostEqual(result["delta_stdev_full_set"], 0.0)
+
+    def test_the_full_set_spread_counts_the_clips_charged_zero(self) -> None:
+        # Survivors-only, these two clips agree exactly; over the fixed set the two absences
+        # are part of the variability and the interval has to see them.
+        result = paired_comparison_over_fixed_set(
+            base={"a": 0.5, "b": 0.5, "c": 0.5, "d": 0.5},
+            candidate={"a": 0.9, "b": 0.9},
+            all_keys=self.ALL,
+            names=("control", "candidate"),
+        )
+        self.assertAlmostEqual(result["delta_stdev_survivors"], 0.0)
+        self.assertGreater(result["delta_stdev_full_set"], 0.2)
+
 
 if __name__ == "__main__":
     unittest.main()

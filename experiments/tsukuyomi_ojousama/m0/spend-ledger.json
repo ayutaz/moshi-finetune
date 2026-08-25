@@ -2,9 +2,9 @@
   "schema_version": 1,
   "currency": "USD",
   "experiment_cap": 125.0,
-  "warning_threshold": 75.0,
-  "new_run_prediction_limit": 90.0,
-  "active_stop_threshold": 95.0,
+  "warning_threshold": 93.75,
+  "new_run_prediction_limit": 112.5,
+  "active_stop_threshold": 118.75,
   "starting_account_balance": 749.305209156038,
   "starting_balance_captured_at": "2026-08-18",
   "dedicated_instance_id": 48370306,
@@ -326,5 +326,6 @@
       "Include export time in the estimate; M3 measured roughly 30 minutes per 15.4 GB file.",
       "Invoke tools/experiment_budget.py during the run, not only before renting."
     ]
-  }
+  },
+  "threshold_note": "Fractions of experiment_cap (0.75 / 0.90 / 0.95), not absolutes. They were left at the US$100 values when the cap moved to US$125, which made tools/experiment_budget.py return non-zero for every possible plan - a preflight that always says no is one nobody reads. tools/experiment_budget.py holds the same fractions and takes --cap."
 }

@@ -1,6 +1,6 @@
 # つくよみちゃん系の声 × お嬢様口調 実験マイルストーン
 
-更新日: 2026-08-20
+更新日: 2026-08-25
 
 作業ブランチ: `experiment-j-moshi-character-voice-overfit`
 
@@ -39,7 +39,8 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と、自然�
 | M1 | 権利・データ確定 | 学習可能で再現可能な入力を確定 | データ台帳、分割、固定評価セットを完成 | 完了 | なし（M0と並行可） |
 | M2 | Tsukuyomi TTS | 対話音声を生成できる対象話者TTSを作る | 未学習30文のTTS Gateを通過 | 完了 | M0, M1 |
 | M3 | Voice control | 過去成功条件をつくよみちゃんで再現 | V0/V1の少なくとも一方で声質改善と対話維持を両立 | **完了（不合格）** | M2 |
-| M4 | Voice overfit | 声質をcontrolより強く適応 | V2/V3から品質を壊さない最良checkpointを選定 | **Blocked** | M3（不合格のため採用checkpointなし） |
+| M3-R | [Voice control 再走](./j-moshi-tsukuyomi-ojousama-m3r-plan.md) | 計器・データ・記録を直し、壊れていない基準線を取り直す | 第0〜3段（課金ゼロ）を通過し、V-real 1腕でcontrolを取得 | **進行中** | M3（完了・不合格） |
+| M4 | Voice overfit | 声質をcontrolより強く適応 | V2/V3から品質を壊さない最良checkpointを選定 | **Blocked** | M3-R（control checkpoint 不在、かつ判定に使う計器3件が未修復） |
 | M5 | お嬢様口調 | 声を保持しながら話し方を転移 | S0/S1で口調改善、声質・対話品質を維持 | 未着手 | M4 |
 | M6 | 最終検証 | 全条件を満たす再現可能な成果物へ統合 | final-overfitと全Gateを完了しrelease candidateを固定 | 未着手 | M5 |
 
@@ -79,6 +80,11 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と、自然�
 - 予測累計が`US$90`を超える新規runは開始しない。
 - 請求反映遅延の余裕を残すため、実測累計`US$95`で稼働中の学習を停止する。
 - 上限変更はユーザーの明示的な承認がある場合だけ行う。
+- **2026-08-24 更新**: 上限を`US$125`に引き上げた（ユーザー承認済み。`m0/spend-ledger.json`の`cap_raise`）。
+  累計`US$102.70`の時点で残余は`US$22.30`。**警告`US$75`・新規run予測`US$90`・稼働停止`US$95`の
+  各閾値と、`tools/experiment_budget.py`の`HARD_CAP = 100.0`は旧上限のまま更新されていない。**
+  次にGPUを借りる前に、この2つを新上限に合わせること。合っていない間、preflightの非ゼロ終了は
+  「開始してよい／いけない」のどちらの証拠にもならない。
 
 ### 成果物
 
@@ -424,14 +430,23 @@ V-realまたはV-ttsの少なくとも一方で、J-Moshi-extより対象話者�
 | --- | --- | --- | --- |
 | 1 | dataset検証で不一致0 | **達成** | [`m3-dataset-agreement.json`](../../experiments/tsukuyomi_ojousama/reports/m3-dataset-agreement.json) |
 | 2 | tokenizeのskipが全記録 | **達成** | [`m3-tokenize-report.json`](../../experiments/tsukuyomi_ojousama/reports/m3-tokenize-report.json) |
-| 3 | 独話loop・反復collapseなし | **未達** | [`m3-collapse.json`](../../experiments/tsukuyomi_ojousama/reports/m3-collapse.json) |
+| 3 | 独話loop・反復collapseなし | **未達**（※） | [`m3-collapse.json`](../../experiments/tsukuyomi_ojousama/reports/m3-collapse.json) |
 | 4 | held-out話者らしさが改善 | **未達** | [`m3-speaker-likeness.json`](../../experiments/tsukuyomi_ojousama/reports/m3-speaker-likeness.json) |
 | 5 | 明瞭度とturn-taking | **部分評価** | [`m3-turn-taking.json`](../../experiments/tsukuyomi_ojousama/reports/m3-turn-taking.json) |
 | 6 | 中間checkpointの採用理由 | **達成（記録として）** | [`m3-voice-control-gate.json`](../../experiments/tsukuyomi_ojousama/reports/m3-voice-control-gate.json) |
 
+**※ 条件3の全数値は「テキスト崩壊」としてしか読めない。** `tools/dialogue_collapse.py`は
+row 0（テキストstream）しか読まず、音を見ていない。基準線`control`自身の音響的な退化
+（general30で17/30）も検出できていない。下記「原因: 未特定」を参照。
+
 #### 中心的な発見: lossは下がり、モデルは黙った
 
-train lossは両runとも **11.39 → 1.73** へ単調に減少した。同じ期間に生成は劣化した。
+train lossは両runとも、epoch平均で **11.39 → 1.73** へ減少した。同じ期間に生成は劣化した。
+
+**ただしこのloss値は計器が壊れている（2026-08-24 訂正）。** 印字されているのはgatherされていない
+8対話中1対話の値（`finetune.py:916-923`）であり、stepレベルでは約4割の遷移で増加している。
+「単調」と言えるのはepoch平均に対してだけである。eval lossは一度も出力されておらず、
+seedも未記録で、以下の全計数が1回の抽選の結果である。
 
 | run | epoch | train loss | 劣化生成/50 | held-out有声フレーム中央値 |
 | --- | ---: | ---: | ---: | ---: |
@@ -442,12 +457,47 @@ train lossは両runとも **11.39 → 1.73** へ単調に減少した。同じ�
 | V-tts | 2 | 5.62 | **1** | 214 |
 | V-tts | 5 | 1.62 | 6 | 108 |
 
-**V-realは最良のlossで音を出さない。** これは`CLAUDE.md`が記録する過去のdepformer-only実験の
-崩壊（audio loss 6.88→1.02）の再現であり、「lossだけで判定しない」という原則が実データで裏づけられた。
+「劣化生成/50」は`dialogue_collapse.py`によるテキストstreamのみの判定である（上の※）。
 
-原因はデータ量と考えられる。V-realの話者Aは**8.67分・72文**で、過去のあみたろ実験189.9分の4.6%。
-5 epochはこの量に対して過剰である。ただし**「実音 vs 合成音」を分離した結果ではない** —
-V-ttsのチャンネルAは単一TTS音声で均質であり、モデルが耐えたのはその均質さかもしれない。
+**V-realは最良のlossで音を出さない。**「lossだけで判定しない」という原則は実データで裏づけられた。
+ただし**その証拠はlossではなく生成トークン側にある（2026-08-24 訂正）。** ここには当初、過去の
+depformer-only崩壊（audio loss 6.88→1.02）の再現と書いていたが、`6.88 → 1.02`という軌跡は
+成功runと失敗runを区別しない。崩壊の直接証拠は、held-outの話者A codebook0 distinct中央値が
+**81 → 5**へ落ちることである（下記）。
+
+#### 原因: 未特定（2026-08-24 訂正）
+
+**この欄は当初「原因はデータ量」と書いていた。撤回する。** 根拠だった「189.9分に対する比率」は
+比較対象の取り違えだった。189.9分はIrodori-TTSの学習コーパスであり、Moshiに入った過去の学習データは
+**31.7分**である。V-realは**27.83分**で、like-for-likeでは**87.8%**にあたる。さらに過去の成功runは
+**65 steps・loss 1.24**まで最適化して崩壊しておらず、M3は**45 steps・1.72886**である。
+**過去の方が強く最適化して壊れていない。**「この量に対して5 epoch・`3e-5`は強すぎる」は、
+このプロジェクト自身の記録と矛盾する。
+
+M3はデータ構造・学習率・更新範囲の3つを同時に振っており、**どれが効いたかは分離されていない。**
+確定しているのは次の2点だけである。
+
+**1. 崩壊は実在し、epochに単調である。** held-out生成の話者A codebook0 distinct中央値は、
+V-realで epoch1〜5 が **48 → 81 → 52 → 5 → 5**。これは生成トークンの直接観測であり、
+lossからの推定ではない。
+
+**2. 判定に使った計器のうち3件が壊れている。**
+
+| 計器 | 欠陥 | 影響 |
+| --- | --- | --- |
+| 基準線 `control` | general30の**30会話中16会話**で話者A codebook0のdistinctが4、無音token 1316が124フレーム中113回。同じcontrolがheld-out/seenではdistinct 57/65で健全 | 「fine-tuningが壊した」という比較が成立していない |
+| 崩壊検出器 | `tools/dialogue_collapse.py`はrow 0（テキストstream）しか読まず、上の16件を原理的に検出できない | 条件3の全数値は「テキスト崩壊」としてしか読めない |
+| 条件4の一貫性基準 | 8/10の符号検定は、真の勝率0.70でも検出力**0.383** | 「効果なし」と「検出力不足」が分離できていない |
+
+条件4の効果量基準（+0.02）は、実は満たされていた。`v-tts/epoch3`のresults_held_outは
+mean_delta_full_set **+0.0321**（10件中9件採点可能）である。落ちたのは一貫性基準だけである。
+
+**「実音 vs 合成音」も分離できていない。** V-ttsの教師音声そのものが対象話者の較正帯
+（test 10録音のleave-one-out: mean 0.8166 / min 0.7405）の外にある（mean 0.7213、帯内35/80）。
+発話長は同等（7.10s vs 6.77s）で交絡ではない。**この腕の天井は学習前から対象話者に届いていない。**
+
+以上の根拠と実測値は[M3 検証記録](./j-moshi-tsukuyomi-ojousama-m3-verification.md)にある
+（§3.3 崩壊検出器、§4 文献、§5 話者類似度、§6 比較対象の取り違え、§9 訂正10件）。
 
 #### 採用checkpoint: なし
 
@@ -460,20 +510,32 @@ V-ttsのチャンネルAは単一TTS音声で均質であり、モデルが耐�
 
 計画の「両方不合格なら学習率を上げず、M2またはdataset構築へ戻る」に該当する。**M4へは進まない。**
 
+**次は M3-R である。**「M3のやり直し」ではない。M3は原因を特定していないので、変数を1つ足すM4も、
+同じ設定を回すM3再走も、結果を読めない。M3-Rは[実行計画](./j-moshi-tsukuyomi-ojousama-m3r-plan.md)の
+第0〜3段（すべて課金ゼロ・blocking）で記録・計器・データを直してから、第4段でV-real 1腕だけを再走する。
+**M4は、壊れていないcontrol checkpointが存在し、かつ上記の計器3件が直るまでBlockedのままとする。**
+
 #### 満たせなかった項目
 
 - **eval loss**: `finetune.py`がW&B経由でしか出力せず、dq16重みも削除済みで再計算不能。
   コードは修正済みでM4以降は残る
 - **live対話**: マイクを持つ人間が必要。`CLAUDE.md`の「live対話で崩壊するcheckpointは
   lossに関わらず不合格」は**未検証のまま**
-- **明瞭度**: 生成対話に正解テキストがなく、局所的に測る手段がない
+- **明瞭度**: 未実施。生成対話に正解テキストがないが、**測る方法は存在しGPUなしで実行できる**
+  （decode済み生成をWhisperにかけ、転写の日本語LM perplexityを反復検出と併記する）。M3-R 第3段で測る
+- **再現性**: seedが記録されておらず、promptあたりの生成が1サンプルしかない。
+  条件3・4・5の全計数が1回の抽選の結果であり、**同じ数値をもう一度出せる保証がない**
 
 #### 予算
 
 **上限US$100を超過した（累計US$102.70）。** M3セッションが打ち切り線14.0時間に対し25.21時間動き、
 超過分US$34.27がそのまま上限突破の原因。詳細と原因は`m0/spend-ledger.json`の`cap_breach`に記録。
 
-- 実行計画: [M3 Voice control 実行計画](./j-moshi-tsukuyomi-ojousama-m3-plan.md)
+**2026-08-24、ユーザーが上限を`US$125`へ引き上げた**（`cap_raise`）。残余は`US$22.30`で、
+その用途はM3-R 第4段（base loss内訳のforward 1回 US$0.40 ＋ V-real 1腕の再走 US$18）に限定されている。
+超過の3つの原因への対策は`vast-run`スキルに反映済み — 打ち切り線をUTC時刻で固定する、
+export時間を見積もりに含める、`tools/experiment_budget.py`を実行中にも呼ぶ。
+
 - 実行計画: [M3 Voice control 実行計画](./j-moshi-tsukuyomi-ojousama-m3-plan.md)（37ステップ、うち課金は12。GPU見込みUS$25.63）
 - **第1部（ローカル準備、ステップ1〜18）完了（2026-08-22）**。GPU課金は未発生
   - 条件1（dataset一致）と条件2（tokenize台帳）は**達成済み**。証拠は[`m3-dataset-agreement.json`](../../experiments/tsukuyomi_ojousama/reports/m3-dataset-agreement.json)、[`m3-tokenize-report.json`](../../experiments/tsukuyomi_ojousama/reports/m3-tokenize-report.json)
@@ -485,7 +547,77 @@ V-ttsのチャンネルAは単一TTS音声で均質であり、モデルが耐�
   - Mimiはローカルで動き、160対話のtokenizeはMPS 1.2分。借りたGPUはwavを見ない。[`m3-local-compute-probe.json`](../../experiments/tsukuyomi_ojousama/reports/m3-local-compute-probe.json)
   - 学習は2× A100 80GBが必須。1枚では常駐133.94 GBに対し48.04 GB不足する。
   - checkpointは100.46 GB/本でローテーションが無く、ディスクは900 GB必要。
-- 証拠: 未作成（第3部のローカル採点で作られる）
+- 証拠: 上表の条件1〜6が指す6件のレポートと、[M3 検証記録](./j-moshi-tsukuyomi-ojousama-m3-verification.md)。
+  総括は[`m3-voice-control-gate.json`](../../experiments/tsukuyomi_ojousama/reports/m3-voice-control-gate.json)
+
+## M3-R: Voice control 再走
+
+### 目的
+
+M3 が答えられなかった問いに、初めて答えられる状態を作る。**M3のやり直しではない。**
+M3は「データ構造・学習率・更新範囲」の3つを同時に振り、計器3件が壊れた状態で判定したため、
+何が崩壊を起こしたかを分離できていない。
+
+答えるべき問いは1つ。**データ構造と学習率を文献・過去成功例に合わせたとき、J-Moshi-extは
+つくよみちゃんの声に寄りながら対話能力を保てるか。**
+
+### ゴール
+
+記録・計器・データを直したうえで、V-real 1腕で壊れていないcontrolを取得し、M4が比較できる基準線にする。
+
+### 入力
+
+- M3の全生成550件と評価レポート（再判定の対象）
+- [M3 検証記録](./j-moshi-tsukuyomi-ojousama-m3-verification.md)が確定させた12件
+- つくよみちゃんコーパスtrain 72文と、M3で凍結した話者B音声
+
+### 作業
+
+[M3-R 実行計画](./j-moshi-tsukuyomi-ojousama-m3r-plan.md)を正とする。
+**第0〜3段は課金ゼロかつblockingで、通過前にGPUを借りてはならない。**
+
+| 段 | 内容 | 課金 |
+| --- | --- | --- |
+| 第0段 | 記録を直す。撤回された原因診断の伝播を4文書から除去し、M4のBlocked理由を差し替える | US$0 |
+| 第1段 | 計器を直す。崩壊検出器に音響指標、条件4を区間推定へ、eval loss、seed必須化 | US$0 |
+| 第2段 | データを作り直す。`--no_whitespace_before_word`、ターン数、重なり、ルームトーン、系列長 | US$0 |
+| 第3段 | ローカルで測り切る。投入tokenのdecode確認、明瞭度の数値化、打ち切り線のUTC確定 | US$0 |
+| 第4段 | V-real 1腕をtempformer `2e-6` / depformer `4e-6`・warmupあり・全epoch export・seed固定で再走 | US$18.40（内訳合計）|
+
+### 成果物
+
+- 音響指標を含む新崩壊検出器と、全11腕×3 setの再判定結果
+- 候補を見る前に固定した条件4の新基準（較正帯・絶対cosine・per-clip σを必須出力）
+- 作り直したV-real dataset、manifest、registry
+- V-real再走の全epoch checkpointと固定生成音声
+
+### 完了条件
+
+- [ ] 第0〜3段のゲートがすべて通過している。
+- [ ] 崩壊検出器が音響指標を持ち、controlのgeneral30を**17/30退化**と自動判定する。
+- [ ] 条件4の判定基準が**候補を見る前に**文書化され、較正帯・絶対cosine・per-clip σを出力する。
+- [ ] `pad ⟺ 話者A無音`の一致率が60%未満まで下がっている。
+- [ ] 再走の全epochがexportされ、seedと生成条件が記録されている。
+- [ ] M4へ渡せる壊れていないcontrol checkpointが1本ある、または渡せない理由が記録されている。
+
+### 次へ進む条件
+
+第0〜3段を通さずに第4段へ進んではならない。計器が壊れたまま再走すれば、
+**再走の結果も同じ理由で判定できない。**
+第4段が不合格でも、それは「原因が特定できた」ことにはならない。その場合の次の変数は
+更新範囲を狭めること（`--parameters_to_finetune tempformer`）である。
+
+### 状態
+
+- 状態: **進行中**（2026-08-24開始）
+- 依存先: M3（完了・不合格）
+- 予算: 上限`US$125`、残余`US$22.30`。第4段の内訳はbase loss内訳のforward 1回`US$0.40`と
+  V-real再走`US$18`（学習5＋変換export 9＋生成4）で計`US$18.40`。承認記録は`m0/spend-ledger.json`の`cap_raise`。
+  **M3-R実行計画の第4段見出しは「US$25以内」と書いているが、残余は`US$22.30`しかない。**
+  拘束力を持つのは残余の方であり、打ち切り線はそれに合わせる
+- 承認済みの決定（2026-08-24）: **V-realのみ再走する**（V-ttsの教師音声が較正帯の外にあり、
+  この腕の天井は対象話者に届かない）。**寄せ集めコーパスは申請しない**（「データ量が主因」は撤回済み）
+- 証拠: 未作成（各段のゲート通過時に記録する）
 
 ## M4: Voice overfit
 
@@ -497,10 +629,17 @@ V-ttsのチャンネルAは単一TTS音声で均質であり、モデルが耐�
 
 V2またはV3でheld-out声質をM3 controlより改善し、明瞭度・内容・turn-takingをcontrol同等に保つ。
 
+> **前提の変更（2026-08-24）**: 以下の設計は、M3が壊れていないcontrolを作ることを前提に書かれている。
+> **M3はそれを作れず、比較対象になるcontrol checkpointは存在しない。** 基準となる`3e-5`も、
+> 文献上はJ-Moshiの**事前学習**の学習率であり（fine-tuningは tempformer 2e-6 / depformer 4e-6）、
+> depformerを`6e-5`・`1e-4`へ上げる設計はその上に乗っている。
+> **M4に着手する前に、[M3-R](./j-moshi-tsukuyomi-ojousama-m3r-plan.md)が確定させる
+> control・学習率・dataset・判定基準で、この節を書き直すこと。**
+
 ### 入力
 
-- M3で採用したdataset、分割、base checkpoint
-- V0/V1 controlの評価結果
+- M3-Rで採用したdataset、分割、base checkpoint（M3は採用checkpointを出せなかった）
+- M3-R controlの評価結果（M3のV0/V1は両方とも不合格）
 - 固定評価promptとsampling条件
 
 ### 作業
@@ -533,7 +672,11 @@ V2またはV3でheld-out声質をM3 controlより改善し、明瞭度・内容�
 
 ### 完了記録
 
-- 状態: 未着手
+- 状態: **Blocked**
+- 理由: M3-Rが未了。**(1) 比較対象になるcontrol checkpointが存在しない**、
+  **(2) 判定に使う計器3件（基準線control、崩壊検出器、条件4の一貫性基準）が未修復**。
+  計器が壊れたままM4を走らせても、M4の結果も同じ理由で判定できない
+- 解除条件: [M3-R](./j-moshi-tsukuyomi-ojousama-m3r-plan.md)の完了条件がすべて満たされること
 - 証拠: 未作成
 
 ## M5: お嬢様口調

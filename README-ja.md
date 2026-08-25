@@ -209,6 +209,7 @@ uv run accelerate launch \
         --prompt_length 125 \
         --generation_length 250 \
         --temperature 0.8 \
+        --seed 20260825 \
         ...
 ```
 `--prompt_length` および `--generation_length` を用いて，それぞれプロンプトの長さと生成テキストの長さを指定してください．データセットに含まれる各サンプルについて，その始まりから `--prompt_lenght` で指定された長さまでの部分がモデルに入力されます．単位は Mimi の1フレーム（80ms）です．その他，バッチサイズや温度パラメータ等の設定は，`generate.py` の引数として指定可能です．詳細は `uv run generate.py --help` で確認してください．
