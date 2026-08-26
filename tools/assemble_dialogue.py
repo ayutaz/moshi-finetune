@@ -375,6 +375,33 @@ def stable_seed(base: int, *parts: object) -> int:
     return int.from_bytes(hashlib.blake2b(key.encode(), digest_size=4).digest(), "big")
 
 
+def input_sources(args) -> list[Any]:
+    """Every material this build reads, named for `tools/provenance.py` to fingerprint.
+
+    The M3-R stereo is being rebuilt because nobody could prove what went into the previous
+    one: its backchannel wavs were re-synthesised two hours after the stereo was written,
+    and the stereo was never rebuilt. Nothing failed - every manifest checksum still matched
+    the product it described, because the question a manifest answers is "is this file the
+    file I wrote down", and the question nobody could ask is "are these still the materials
+    it was built from". Naming the sources here is what makes the second question askable.
+    """
+    from tools.provenance import Source, record_root_field
+
+    def relative(path) -> str:
+        return record_root_field(path)
+
+    sources = [
+        Source(role="scripts", path=relative(args.scripts)),
+        Source(role="split_map", path=relative(args.split_map)),
+        Source(role="m3_audio", path=relative(args.m3_audio_dir)),
+        Source(role="m3_text", path=relative(args.m3_text_dir)),
+        Source(role="backchannel", path=relative(args.backchannel_dir)),
+    ]
+    if args.roomtone_dir is not None:
+        sources.append(Source(role="roomtone", path=relative(args.roomtone_dir)))
+    return sources
+
+
 def draw_offsets(rng, spec: OverlapSpec, *, has_backchannel: bool) -> dict[str, float]:
     """One offset per drawn join of a dialogue.
 
@@ -417,10 +444,15 @@ def dialogue_joins(roles: Sequence[str], offsets: dict[str, float]) -> list[Join
 def group_dialogues(dialogue_ids: Sequence[str], *, group_size: int) -> list[list[str]]:
     """Split dialogues into the sequences that become one training row.
 
-    A dialogue is about 19 s, and the sequence length M3-R is aiming at is 60 s or more, so
-    a row has to hold several. Grouping is non-overlapping: a dialogue appearing in two rows
-    would be seen twice per epoch, which is a change to how much training each recording
-    gets and has nothing to do with sequence length.
+    `group_size=1` is what M3-R ships: one dialogue is one row, and this returns each id in
+    a list of its own. The dataset audit retracted the 60 s sequence-length target the
+    larger groups were built for - the only run that ever worked on this task was 19.02 s
+    at one dialogue per row - so grouping is kept for the M3 rebuild and for the option
+    table, not used.
+
+    Grouping is non-overlapping: a dialogue appearing in two rows would be seen twice per
+    epoch, which is a change to how much training each recording gets and has nothing to do
+    with sequence length.
 
     A short final group is kept rather than dropped - dropping it would lose dialogues, and
     padding it by repeating one would put a recording in twice.
@@ -466,10 +498,11 @@ def grouping_options(
 ) -> list[dict[str, Any]]:
     """Every (group size, batch) pair that lands on `target_steps`, with what it costs.
 
-    M3-R has to hold two things at once: sequences of 60 s or more, and the 45 steps M3 ran.
-    They pull against each other, because grouping trades rows for length and the step count
-    is set by rows. Enumerating rather than asserting means the choice can be seen to be a
-    choice, and the fallback is visible if the chosen one does not fit in memory.
+    Kept as the record of a decision rather than as a chooser. `meets_60s` marks the pairs
+    that satisfied the sequence-length gate the audit retracted; the shipped shape is
+    `group_size=1, global_batch=8`, which is in this table and does not meet it. Enumerating
+    means the choice can be seen to be a choice, and the fallback stays visible if the
+    chosen one does not fit in memory.
     """
     from tools.training_shape import total_steps
 
@@ -783,6 +816,46 @@ def resample(samples, *, source_rate: int, target_rate: int):
     return converted.squeeze(0).numpy().astype(np.float64)
 
 
+def best_lag_ncc(signal, template) -> dict[str, Any]:
+    """Largest normalised correlation of `template` against any window of `signal`.
+
+    Maximised over lag, not taken at the offset the clip was placed at. A fixed-offset
+    comparison answers "is it exactly here", and the question that matters is "is it in the
+    file at all" - the two differ because the placed span in the word transcript starts at
+    the clip's first audible sample while the clip file starts 20-70 ms earlier, and 20 ms
+    of offset is enough to decorrelate speech completely. Measured on a build that provably
+    contains the clips, a zero-lag comparison reads a median of 0.009 and this reads 1.000.
+
+    Both series are mean-removed, so a room-tone floor under the clip cannot inflate the
+    result by giving the two a shared DC term.
+    """
+    import numpy as np
+
+    signal = np.asarray(signal, dtype=np.float64)
+    centred = np.asarray(template, dtype=np.float64)
+    centred = centred - centred.mean()
+    norm = float(np.linalg.norm(centred))
+    n = len(centred)
+    if n == 0 or norm == 0:
+        raise ValueError("a silent template correlates with everything equally")
+    if len(signal) < n:
+        raise ValueError(f"template of {n} samples does not fit in {len(signal)}")
+
+    size = 1 << (len(signal) + n).bit_length()
+    corr = np.fft.irfft(np.fft.rfft(signal, size) * np.conj(np.fft.rfft(centred, size)), size)
+    corr = corr[: len(signal) - n + 1]
+    # Exact windowed variance by prefix sums: cheaper than re-summing each window and, at
+    # float64 over half a million samples, accurate enough that the reported 1.0 is real.
+    total = np.concatenate([[0.0], np.cumsum(signal)])
+    square = np.concatenate([[0.0], np.cumsum(signal**2)])
+    variance = (square[n:] - square[:-n]) - (total[n:] - total[:-n]) ** 2 / n
+    scale = np.sqrt(np.maximum(variance, 0.0)) * norm
+    with np.errstate(divide="ignore", invalid="ignore"):
+        ratio = np.where(scale > 0, corr / scale, 0.0)
+    lag = int(np.argmax(ratio))
+    return {"ncc": float(ratio[lag]), "lag_samples": lag}
+
+
 def render_channels(placed: Sequence[dict[str, Any]], clips: Sequence[Any], *, sample_rate: int):
     """Write every clip onto its speaker's channel at the placed offset."""
     import numpy as np
@@ -992,6 +1065,32 @@ def _dialogue_stats(
     }
 
 
+def _check_backchannel(
+    audio_path, backchannel_path, backchannel, *, backchannel_rate: int, sample_rate: int
+):
+    """Is the backchannel wav on disk audible in the stereo that was just written?
+
+    Returns None for the dialogues that have no backchannel - the two three-turn ones -
+    rather than a passing score, so "no aizuchi here" cannot be read as "aizuchi verified".
+    The digest of the source wav goes in the same row, so a later reader does not have to
+    infer which file the score was against.
+    """
+    from tools.provenance import sha256_file
+
+    if backchannel is None:
+        return None
+    stereo, _ = _read_stereo(str(audio_path))
+    template = resample(backchannel, source_rate=backchannel_rate, target_rate=sample_rate)
+    found = best_lag_ncc(stereo[:, 1], template)
+    return {
+        "wav": str(backchannel_path),
+        "sha256": sha256_file(backchannel_path),
+        "seconds": len(template) / sample_rate,
+        "ncc": found["ncc"],
+        "lag_seconds": found["lag_samples"] / sample_rate,
+    }
+
+
 def _tone_gap(samples: int, pool, *, seed: int, sample_rate: int):
     """A stereo stretch of room tone `samples` long, ramped in and out.
 
@@ -1031,15 +1130,19 @@ def _build_sequences(
     group_size: int,
     gap: float,
 ) -> dict[str, Any]:
-    """Concatenate the finished dialogues into the rows a training step actually sees.
+    """Write the rows a training step actually sees, one per group of dialogues.
 
-    One dialogue is about 19 s and Kyutai's guidance for this model is 100-300 s, so the
-    length has to come from putting dialogues together. Concatenating the *rendered* files,
-    rather than re-placing the turns on a longer timeline, keeps every sequence an exact
-    concatenation of files that can be listened to on their own.
+    At `group_size=1` - the shipped shape - a row is one dialogue and this copies it
+    through: `identical_to_dialogue` is computed per row and says so with a digest rather
+    than with a comment, because the concatenation path must not quietly add a gap to a
+    group of one. The "100-300 s" that motivated grouping was a misreading of Kyutai's
+    README, retracted by the dataset audit; the only run that ever worked here was one
+    dialogue per row.
 
-    The gap between two dialogues is filled with room tone like any other gap, so the join
-    is a pause in a conversation rather than a splice of digital silence - but the tone is
+    For `group_size > 1`, kept so the grouped build can be reproduced: concatenating the
+    *rendered* files, rather than re-placing the turns on a longer timeline, keeps every
+    sequence an exact concatenation of files that can be listened to on their own. The gap
+    between two dialogues is filled with room tone like any other gap - but the tone is
     rendered into the gap alone and the dialogues are pasted in untouched. Running the fill
     over the joined array instead changes them: it re-frames the channel from a different
     offset, so a stretch of digital silence that fell across two frames in the dialogue
@@ -1051,6 +1154,8 @@ def _build_sequences(
     import json
 
     import numpy as np
+
+    from tools.provenance import sha256_file
 
     by_split: dict[str, list[str]] = {}
     for row in rows:
@@ -1085,24 +1190,34 @@ def _build_sequences(
                 cursor += len(rendered[did]) / spec.sample_rate
             joined = np.concatenate(pieces, axis=0)
             name = f"{split}-seq-{index:03d}"
-            _write_stereo(str(directory / "audio" / f"{name}.wav"), joined, spec.sample_rate)
+            audio_path = directory / "audio" / f"{name}.wav"
+            _write_stereo(str(audio_path), joined, spec.sample_rate)
             (directory / "text" / f"{name}.json").write_text(
                 json.dumps(words, ensure_ascii=False), encoding="utf-8"
             )
             seconds = len(joined) / spec.sample_rate
-            entries.append(
-                {
-                    "name": name,
-                    "dialogues": list(group),
-                    "seconds": seconds,
-                    "frames": frames_for(seconds, frame_rate_hz=spec.frame_rate_hz),
-                }
-            )
+            entry = {
+                "name": name,
+                "dialogues": list(group),
+                "seconds": seconds,
+                "frames": frames_for(seconds, frame_rate_hz=spec.frame_rate_hz),
+                "sha256": sha256_file(audio_path),
+            }
+            if len(group) == 1:
+                # A group of one must be the dialogue itself. Comparing the bytes is what
+                # rules out a gap, a re-frame of the room tone, or a stray resample having
+                # been applied on the way through the concatenation path.
+                source = out_dir / "audio" / f"{group[0]}.wav"
+                entry["identical_to_dialogue"] = sha256_file(source) == entry["sha256"]
+            entries.append(entry)
         out["splits"][split] = {
             "rows": len(entries),
             "dialogues": len(ids),
             "seconds": _summary([entry["seconds"] for entry in entries]),
             "frames": _summary([float(entry["frames"]) for entry in entries]),
+            "rows_identical_to_their_dialogue": sum(
+                1 for entry in entries if entry.get("identical_to_dialogue")
+            ),
             "entries": entries,
         }
     return out
@@ -1184,8 +1299,48 @@ def m3_reference(
     return rows
 
 
+def _backchannel_block(per_dialogue, *, floor: float) -> dict[str, Any]:
+    """Did every rendered aizuchi end up in the file it was rendered for?
+
+    The gate that would have caught the 08/25 20:27 build. That stereo was written two
+    hours before the backchannels in its own source directory were re-synthesised, so the
+    aizuchi on disk was not the aizuchi in the dialogue - and nothing in the timeline
+    report, the loss, or a listen to one file would have said so.
+    """
+    scored = [
+        {"dialogue_id": row["dialogue_id"], **row["backchannel"]}
+        for row in per_dialogue
+        if row.get("backchannel")
+    ]
+    without = [row["dialogue_id"] for row in per_dialogue if row.get("backchannel") is None]
+    if not scored:
+        return {"checked": 0, "without_backchannel": without}
+    values = [row["ncc"] for row in scored]
+    return {
+        "checked": len(scored),
+        "without_backchannel": without,
+        "floor": floor,
+        "at_or_above_floor": sum(1 for value in values if value >= floor),
+        "ncc": _summary(values),
+        "below_floor": sorted(
+            (row["dialogue_id"], row["ncc"]) for row in scored if row["ncc"] < floor
+        ),
+        "method": "normalised cross-correlation of the resampled backchannel wav against "
+        "channel 1 of the written file, maximised over lag. A zero-lag comparison against "
+        "the transcript span reads a median of 0.009 on this same build, because the span "
+        "starts at the clip's first audible sample and the file starts 20-70 ms earlier.",
+    }
+
+
 def _report(
-    per_dialogue, sequences, m3, *, spec: TimelineSpec, overlap_spec: OverlapSpec, args
+    per_dialogue,
+    sequences,
+    m3,
+    *,
+    spec: TimelineSpec,
+    overlap_spec: OverlapSpec,
+    args,
+    provenance: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """The timeline report: every number the 2-5 and 2-6 gates are judged on."""
     train = [row for row in per_dialogue if row["split"] == "train"]
@@ -1218,10 +1373,11 @@ def _report(
     return {
         "schema_version": 1,
         "milestone": "M3-R",
-        "step": "2-3, 2-5, 2-6",
+        "step": "2-3, 2-5 (2-6 withdrawn: the sequence-length gate the audit retracted)",
         "captured_at": args.captured_at,
         "builder": "tools/assemble_dialogue.py",
         "commands": args.command,
+        "inputs": provenance,
         "timeline": {
             "lead_in_seconds": spec.lead_in_seconds,
             "sample_rate": spec.sample_rate,
@@ -1238,6 +1394,7 @@ def _report(
             "room_tone": str(args.roomtone_dir) if args.roomtone_dir else None,
             "speech_threshold_rms": args.speech_threshold,
         },
+        "backchannel_check": _backchannel_block(per_dialogue, floor=args.backchannel_ncc_floor),
         "m3_recomputed": block(m3) if m3 else None,
         "all": block(per_dialogue),
         "train": block(train),
@@ -1271,10 +1428,16 @@ def _report(
                 for entry in block["entries"]
                 if entry["frames"] < args.min_frames_floor
             ),
-            "note": "The floor was written when one dialogue was one training row. It is "
-            "now the sequence, which is four dialogues; the per-dialogue files are the "
-            "auditable unit, not the trained one. Where a dialogue falls under 200 it is "
-            "because dead time was removed, not because content was.",
+            "note": (
+                "The floor was written when one dialogue was one training row, which is "
+                "again what this build ships: the dialogue and the trained row are the "
+                "same file. Where a dialogue falls under 200 frames it is because dead "
+                "time was removed, not because content was."
+                if args.group_size == 1
+                else "The floor was written when one dialogue was one training row. Here "
+                f"the row is {args.group_size} dialogues; the per-dialogue files are the "
+                "auditable unit, not the trained one."
+            ),
         },
         "splits": {
             "found": sum(1 for row in per_dialogue if row["pause_seconds"] is not None),
@@ -1309,20 +1472,47 @@ def main(argv: Sequence[str] | None = None) -> int:
     parser.add_argument("--report", type=Path, required=True)
     parser.add_argument("--seed", type=int, default=20260825)
     parser.add_argument("--lead-in", type=float, default=0.3)
-    parser.add_argument("--group-size", type=int, default=4, help="dialogues per training row")
+    parser.add_argument(
+        "--group-size",
+        type=int,
+        default=1,
+        help="dialogues per training row. 1 is what M3-R ships: the dataset audit "
+        "retracted the 60 s sequence target, and the only run that ever worked on this "
+        "task was one dialogue per row.",
+    )
     parser.add_argument("--sequence-gap", type=float, default=0.4)
-    parser.add_argument("--global-batch", type=int, default=2)
+    parser.add_argument(
+        "--global-batch",
+        type=int,
+        default=8,
+        help="examples per optimisation step. 72 train rows at 8 over 5 epochs is the 45 "
+        "steps M3 ran.",
+    )
     parser.add_argument("--epochs", type=int, default=5)
     parser.add_argument("--target-steps", type=int, default=45, help="the M3 step count")
     parser.add_argument("--min-frames-floor", type=int, default=200)
     parser.add_argument("--speech-threshold", type=float, default=0.01)
+    parser.add_argument(
+        "--backchannel-ncc-floor",
+        type=float,
+        default=0.9,
+        help="the correlation a rendered aizuchi must reach against the file it was "
+        "written into. A build using the right wav scores 1.000; the 08/25 20:27 build, "
+        "which used wavs that were later replaced, had a median of 0.363.",
+    )
     parser.add_argument(
         "--compare-m3",
         action="store_true",
         help="recompute the same statistics on the M3 dialogues, so the comparison is a "
         "measurement rather than a quotation",
     )
-    parser.add_argument("--captured-at", default=None)
+    parser.add_argument(
+        "--captured-at",
+        required=True,
+        help="the build date. Required, because it goes into the provenance record and a "
+        "record with no date cannot be placed against the files it claims to describe - "
+        "which is precisely how the 08/25 stereo went stale unnoticed.",
+    )
     parser.add_argument(
         "--command",
         action="append",
@@ -1336,6 +1526,13 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     spec = TimelineSpec(lead_in_seconds=args.lead_in)
     overlap_spec = OverlapSpec()
+    # Fingerprinted before anything is written, so the record is of what was read rather
+    # than of whatever happens to be on disk once the run has finished.
+    from tools import provenance as prov
+
+    sources = input_sources(args)
+    repository = prov.repository_root()
+    fingerprints = prov.fingerprint_sources(sources, root=repository)
     rows = [
         json.loads(line)
         for line in args.scripts.read_text(encoding="utf-8").splitlines()
@@ -1386,13 +1583,23 @@ def main(argv: Sequence[str] | None = None) -> int:
         split = assignment[did]
         for directory in ("audio", "text"):
             (args.out_dir / directory).mkdir(parents=True, exist_ok=True)
-        _write_stereo(str(args.out_dir / "audio" / f"{did}.wav"), wet, spec.sample_rate)
+        audio_path = args.out_dir / "audio" / f"{did}.wav"
+        _write_stereo(str(audio_path), wet, spec.sample_rate)
         (args.out_dir / "text" / f"{did}.json").write_text(
             json.dumps(built["words"], ensure_ascii=False), encoding="utf-8"
         )
-        per_dialogue.append(
-            _dialogue_stats(did, split, built, dry, spec=spec, threshold=args.speech_threshold)
+        stats = _dialogue_stats(did, split, built, dry, spec=spec, threshold=args.speech_threshold)
+        # Read back from disk rather than trusting `wet`: the whole reason this dataset is
+        # being rebuilt is that a stereo file did not contain the backchannel its directory
+        # said it did, and an in-memory check would not have caught that either.
+        stats["backchannel"] = _check_backchannel(
+            audio_path,
+            bc_path,
+            backchannel,
+            backchannel_rate=int(bc_rate),
+            sample_rate=spec.sample_rate,
         )
+        per_dialogue.append(stats)
         rendered[did] = wet
         words_by_id[did] = built["words"]
         print(f"{did} {split} {timeline_seconds(built['placed']):.2f}s", flush=True)
@@ -1417,6 +1624,21 @@ def main(argv: Sequence[str] | None = None) -> int:
         if args.compare_m3
         else []
     )
+    record_path = args.out_dir / "provenance.json"
+    record = prov.build_record(
+        artifact_id=f"m3r-{args.out_dir.name}",
+        tool="tools/assemble_dialogue.py",
+        captured_at=args.captured_at or "",
+        why="M3-R second stage: rebuild the stereo with the current backchannel wavs, one "
+        "dialogue per training row. The 2026-08-25 20:27 build used backchannels that were "
+        "re-synthesised at 22:27 and never went back into the stereo.",
+        root=prov.record_root_field(repository),
+        inputs=fingerprints,
+        input_sources=sources,
+        extra={"commands": args.command},
+    )
+    prov.write_record(record_path, record)
+
     report = _report(
         per_dialogue,
         sequences,
@@ -1424,6 +1646,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         spec=spec,
         overlap_spec=overlap_spec,
         args=args,
+        provenance={
+            "record": prov.record_root_field(record_path),
+            "verify": f"uv run --python 3.12 --no-project python -m tools.provenance verify "
+            f"--record {prov.record_root_field(record_path)} --skip-outputs",
+            "root": record["root"],
+            "sources": [source.as_json() for source in sources],
+            "n": len(fingerprints),
+            "files": fingerprints,
+        },
     )
     args.report.parent.mkdir(parents=True, exist_ok=True)
     args.report.write_text(json.dumps(report, ensure_ascii=False, indent=1), encoding="utf-8")

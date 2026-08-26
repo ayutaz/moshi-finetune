@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "dataset_id": "v-real-v2",
+  "manifest": "experiments/tsukuyomi_ojousama/manifests/v-real-v2.jsonl",
+  "tool": "tools/tokenize_text.py",
+  "provenance": "recorded",
+  "recorded_at": "2026-08-26",
+  "invocations": [
+    {
+      "split": "train",
+      "tool": "tokenize_text",
+      "argv": [
+        "--word_transcript_dir",
+        "data/experiments/tsukuyomi_ojousama/m3r/v-real/train/text",
+        "--output_dir",
+        "data/experiments/tsukuyomi_ojousama/m3r/v-real/train/tok-text",
+        "--text_tokenizer_repo",
+        "nu-dialogue/j-moshi-ext",
+        "--text_tokenizer_name",
+        "tokenizer_spm_32k_3.model",
+        "--no_whitespace_before_word",
+        "--text_padding_id",
+        "3",
+        "--end_of_text_padding_id",
+        "0",
+        "--audio_tokenizer_frame_rate",
+        "12.5",
+        "--num_workers",
+        "1"
+      ],
+      "flags": {
+        "word_transcript_dir": "data/experiments/tsukuyomi_ojousama/m3r/v-real/train/text",
+        "output_dir": "data/experiments/tsukuyomi_ojousama/m3r/v-real/train/tok-text",
+        "text_tokenizer_repo": "nu-dialogue/j-moshi-ext",
+        "text_tokenizer_name": "tokenizer_spm_32k_3.model",
+        "no_whitespace_before_word": true,
+        "text_padding_id": 3,
+        "end_of_text_padding_id": 0,
+        "audio_tokenizer_frame_rate": 12.5,
+        "num_workers": 1,
+        "resume": false
+      },
+      "defaults_used": [
+        "resume"
+      ]
+    },
+    {
+      "split": "dev",
+      "tool": "tokenize_text",
+      "argv": [
+        "--word_transcript_dir",
+        "data/experiments/tsukuyomi_ojousama/m3r/v-real/dev/text",
+        "--output_dir",
+        "data/experiments/tsukuyomi_ojousama/m3r/v-real/dev/tok-text",
+        "--text_tokenizer_repo",
+        "nu-dialogue/j-moshi-ext",
+        "--text_tokenizer_name",
+        "tokenizer_spm_32k_3.model",
+        "--no_whitespace_before_word",
+        "--text_padding_id",
+        "3",
+        "--end_of_text_padding_id",
+        "0",
+        "--audio_tokenizer_frame_rate",
+        "12.5",
+        "--num_workers",
+        "1"
+      ],
+      "flags": {
+        "word_transcript_dir": "data/experiments/tsukuyomi_ojousama/m3r/v-real/dev/text",
+        "output_dir": "data/experiments/tsukuyomi_ojousama/m3r/v-real/dev/tok-text",
+        "text_tokenizer_repo": "nu-dialogue/j-moshi-ext",
+        "text_tokenizer_name": "tokenizer_spm_32k_3.model",
+        "no_whitespace_before_word": true,
+        "text_padding_id": 3,
+        "end_of_text_padding_id": 0,
+        "audio_tokenizer_frame_rate": 12.5,
+        "num_workers": 1,
+        "resume": false
+      },
+      "defaults_used": [
+        "resume"
+      ]
+    }
+  ]
+}

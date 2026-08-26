@@ -7,6 +7,7 @@ from tools.assemble_dialogue import (
     OverlapSpec,
     TimelineSpec,
     allocate_word_times,
+    best_lag_ncc,
     channel_gate,
     choose_pause,
     dialogue_joins,
@@ -492,6 +493,53 @@ class StepsForGroupingTests(unittest.TestCase):
         # 4 dialogues x batch 2 is the same 8 dialogues a step M3 saw at batch 8.
         shape = steps_for_grouping(dialogues=72, group_size=4, global_batch=2, epochs=5)
         self.assertEqual(shape["dialogues_per_step"], 8)
+
+
+class BestLagNccTests(unittest.TestCase):
+    """The check that would have caught the stereo built before its own backchannels."""
+
+    def setUp(self) -> None:
+        try:
+            import numpy
+        except ImportError as error:  # numpy is not in the test env
+            self.skipTest(f"best_lag_ncc needs numpy: {error}")
+        self.np = numpy
+        rng = self.np.random.default_rng(0)
+        self.template = rng.standard_normal(400)
+        self.other = rng.standard_normal(400)
+        self.signal = self.np.zeros(5000)
+        self.signal[1234:1634] = self.template
+
+    def test_an_embedded_clip_scores_one_at_its_offset(self) -> None:
+        found = best_lag_ncc(self.signal, self.template)
+        self.assertAlmostEqual(found["ncc"], 1.0, places=9)
+        self.assertEqual(found["lag_samples"], 1234)
+
+    def test_a_clip_that_is_not_there_scores_low(self) -> None:
+        self.assertLess(best_lag_ncc(self.signal, self.other)["ncc"], 0.5)
+
+    def test_a_clip_shifted_by_twenty_milliseconds_is_still_found(self) -> None:
+        # The whole point of maximising over lag: the placed span starts at the first
+        # audible sample, the wav starts at its silent head, and a fixed-offset comparison
+        # reads ~0 on a file that provably contains the clip.
+        found = best_lag_ncc(self.signal, self.np.concatenate([self.np.zeros(480), self.template]))
+        self.assertAlmostEqual(found["ncc"], 1.0, places=6)
+        self.assertEqual(found["lag_samples"], 1234 - 480)
+
+    def test_a_room_tone_floor_under_the_clip_does_not_inflate_the_score(self) -> None:
+        # Both series are mean-removed, so a shared DC offset cannot pass for a match.
+        self.assertLess(
+            best_lag_ncc(self.signal + 0.5, self.other + 0.5)["ncc"],
+            0.5,
+        )
+
+    def test_a_silent_template_is_refused(self) -> None:
+        with self.assertRaises(ValueError):
+            best_lag_ncc(self.signal, self.np.zeros(400))
+
+    def test_a_template_longer_than_the_file_is_refused(self) -> None:
+        with self.assertRaises(ValueError):
+            best_lag_ncc(self.np.zeros(100), self.template)
 
 
 class SpeakerSpansTests(unittest.TestCase):

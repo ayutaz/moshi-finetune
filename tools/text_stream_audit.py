@@ -15,10 +15,16 @@ Two things are needed to close that, and this module provides both.
 
 * A measurement. :func:`summarise_text_stream` reduces a text row to counts, and
   :func:`audit_parquet` applies it to a shipped parquet.
-* A declaration. :func:`resolve_tokenize_invocation` turns the argv of a
-  ``tools/tokenize_text.py`` run into a record in which every flag appears with its
-  resolved value, so a *dropped* flag is written down as ``false`` rather than being
-  invisible by absence. :func:`write_tokenize_record` files that beside the manifest.
+* A declaration. :func:`resolve_tokenize_invocation` turns the argv of a tokenize run into
+  a record in which every flag appears with its resolved value, so a *dropped* flag is
+  written down as ``false`` rather than being invisible by absence.
+  :func:`write_tokenize_record` files that beside the manifest.
+
+The flag tables themselves live in :mod:`tools.tokenize_flags`, which holds all three tools
+of the pipeline - ``tokenize_audio.py`` and ``prepare_dataset.py`` as well - because the
+record covering one tool of three left ``--device`` reachable from a report and not from the
+manifest, and mps produces a different parquet from the same wav. Pass ``--tool`` to
+``record-tokenize`` once per tool per split.
 
 The declaration is what runs in CI: it is JSON, and ``tests/test_experiment_assets.py``
 checks it with no dependency beyond the standard library. The measurement needs pandas,
@@ -35,6 +41,8 @@ from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+from tools import tokenize_flags
 
 # Pieces rather than ids. `tokenizer_spm_32k_3.model` happens to put `[PAD]` at 3 and
 # `U+2581` at 9, but writing those integers here would make this module a second,
@@ -53,27 +61,14 @@ DEFAULT_END_OF_TEXT_PADDING_ID = 0
 # eight Mimi codebooks.
 TEXT_ROW = 0
 
-# Every flag of `tools/tokenize_text.py`, with the default its argparse block declares.
-# The parser there is built inside `if __name__ == "__main__"` and so cannot be imported;
-# this is a copy, and `tests/test_experiment_assets.py` asserts the copy still names the
-# same flags as the source - a flag added there and forgotten here fails the suite.
-TOKENIZE_TEXT_FLAGS: dict[str, Any] = {
-    "word_transcript_dir": None,
-    "output_dir": None,
-    "text_tokenizer_repo": "kyutai/moshiko-pytorch-bf16",
-    "text_tokenizer_name": "tokenizer_spm_32k_3.model",
-    "no_whitespace_before_word": False,
-    "text_padding_id": 3,
-    "end_of_text_padding_id": 0,
-    "audio_tokenizer_frame_rate": 12.5,
-    "num_workers": 1,
-    "resume": False,
-}
-
-# The two flags with no default: their entry in the table above is None, so the type of
-# the default cannot stand in for the parser's type the way it does for the rest.
-REQUIRED_FLAGS = frozenset({"word_transcript_dir", "output_dir"})
-STORE_TRUE_FLAGS = frozenset({"no_whitespace_before_word", "resume"})
+# Every flag of `tools/tokenize_text.py`, and of the two tools that run either side of it,
+# lives in `tools/tokenize_flags.py`. It moved there when the record grew to cover
+# `tokenize_audio.py --device` - the flag whose loss costs the most, because mps and cpu
+# produce different tokens from the same wav and nothing downstream notices. Re-exported
+# here under the names the existing sidecars, tests and callers already use.
+TOKENIZE_TEXT_FLAGS: dict[str, Any] = tokenize_flags.TOKENIZE_TEXT_FLAGS
+REQUIRED_FLAGS = tokenize_flags.REQUIRED_FLAGS
+STORE_TRUE_FLAGS = tokenize_flags.STORE_TRUE_FLAGS
 
 
 class TokenizerVocabularyError(RuntimeError):
@@ -251,32 +246,21 @@ def summarise_text_stream(
     )
 
 
-def resolve_tokenize_invocation(argv: Sequence[str]) -> dict[str, Any]:
-    """Expand a ``tools/tokenize_text.py`` command line into a complete flag record.
+def resolve_tokenize_invocation(
+    argv: Sequence[str], *, tool: str = tokenize_flags.DEFAULT_TOOL
+) -> dict[str, Any]:
+    """Expand one tokenize command line into a complete flag record.
 
     The point is the expansion. ``--no_whitespace_before_word`` is ``store_true``: a run
     that omits it and a run that was never recorded look identical in a shell history, and
     that is how M3's defect survived. Here every flag is present with its resolved value,
     so omitting it writes ``"no_whitespace_before_word": false`` - a claim a reviewer can
     see and a test can fail on.
-    """
-    parser = argparse.ArgumentParser(prog="tools/tokenize_text.py", add_help=False)
-    for name, default in TOKENIZE_TEXT_FLAGS.items():
-        option = f"--{name}"
-        if name in STORE_TRUE_FLAGS:
-            parser.add_argument(option, action="store_true")
-        elif name in REQUIRED_FLAGS:
-            parser.add_argument(option, type=str, required=True)
-        else:
-            parser.add_argument(option, type=type(default), default=default)
 
-    parsed = vars(parser.parse_args(list(argv)))
-    given = {token.split("=", 1)[0] for token in argv if token.startswith("--")}
-    return {
-        "argv": list(argv),
-        "flags": {name: parsed[name] for name in TOKENIZE_TEXT_FLAGS},
-        "defaults_used": sorted(name for name in TOKENIZE_TEXT_FLAGS if f"--{name}" not in given),
-    }
+    ``tool`` selects the flag table. It defaults to ``tokenize_text`` so that every caller
+    written before the record covered three tools keeps working unchanged.
+    """
+    return tokenize_flags.resolve_invocation(argv, tool=tool)
 
 
 def audit_parquet(
@@ -395,6 +379,18 @@ def counterfactual_shares(
     }
 
 
+def _tools_recorded(invocations: Iterable[dict[str, Any]]) -> str:
+    """The source files a sidecar's invocations describe, in the order they run."""
+    present = {tokenize_flags.invocation_tool(invocation) for invocation in invocations}
+    ordered = [name for name in tokenize_flags.PIPELINE_ORDER if name in present]
+    ordered += sorted(present - set(tokenize_flags.PIPELINE_ORDER))
+    sources = [
+        tokenize_flags.TOOLS[name].source if name in tokenize_flags.TOOLS else name
+        for name in ordered
+    ]
+    return " + ".join(sources) if sources else tokenize_flags.TOKENIZE_TEXT.source
+
+
 def write_tokenize_record(
     path: Path,
     *,
@@ -433,6 +429,10 @@ def write_tokenize_record(
                 )
         record["invocations"] = list(existing.get("invocations", [])) + invocations
         record = {**existing, **record}
+    # Derived after the merge, so a sidecar that has grown an audio or parquet invocation
+    # says so at the top. A record holding tokenize_text alone still reads exactly
+    # "tools/tokenize_text.py", which is what the three existing sidecars say.
+    record["tool"] = _tools_recorded(record["invocations"])
     record.update(extra or {})
     path.write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return record
@@ -477,7 +477,7 @@ def _cmd_counterfactual(args: argparse.Namespace) -> None:
 
 
 def _cmd_record_tokenize(args: argparse.Namespace) -> None:
-    invocation = resolve_tokenize_invocation(args.tokenize_argv)
+    invocation = resolve_tokenize_invocation(args.tokenize_argv, tool=args.tool)
     if args.split:
         invocation = {"split": args.split, **invocation}
     record = write_tokenize_record(
@@ -533,7 +533,17 @@ def build_parser() -> argparse.ArgumentParser:
 
     record = sub.add_parser(
         "record-tokenize",
-        help="expand a tokenize_text.py command line into a manifest sidecar",
+        help="expand a tokenize command line into a manifest sidecar",
+    )
+    record.add_argument(
+        "--tool",
+        default=tokenize_flags.DEFAULT_TOOL,
+        choices=sorted(tokenize_flags.TOOLS),
+        help=(
+            "which tool the argv belongs to. Run this once per tool per split, with "
+            "--append, so all three are reachable from the manifest; --device is the one "
+            "that decides whether the parquet reproduces"
+        ),
     )
     record.add_argument("--dataset_id", required=True)
     record.add_argument("--manifest", required=True, help="repository-relative manifest path")
@@ -549,7 +559,7 @@ def build_parser() -> argparse.ArgumentParser:
     record.add_argument(
         "tokenize_argv",
         nargs="*",
-        help="the tokenize_text.py argv, after a bare --",
+        help="the tool's argv, after a bare --",
     )
     record.set_defaults(func=_cmd_record_tokenize)
 

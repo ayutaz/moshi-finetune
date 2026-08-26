@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "retrieved_at": "2026-08-26",
+  "used_in_experiment": true,
+  "license_id": "tsukuyomi-corpus-custom-terms",
+  "license_url": "https://tyc.rei-yumesaki.net/material/corpus/",
+  "credit": "つくよみちゃんコーパス（CV.夢前黎） https://tyc.rei-yumesaki.net/material/corpus/",
+  "redistribution": "prohibited-derives-from-a-corpus-that-may-not-be-redistributed",
+  "local_data_root": "data/experiments/tsukuyomi_ojousama",
+  "dataset_id": "v-real-v2",
+  "source_url": "local://experiments/tsukuyomi_ojousama/m3r/scripts/dialogues-v2.jsonl",
+  "source_version": "dialogues-v2 + split-map-v2 (inherited unchanged from split-map-v1) + m3/v-real stereo (channel A = tsukuyomi-corpus-v1 train split, channel B = irodori-tts-600m-v3-voicedesign) + m3r/turns-B-backchannel (regenerated 2026-08-25 22:27-22:42) + m3r/roomtone",
+  "generation_method": "assembled-stereo-real-a-with-backchannel-and-roomtone",
+  "derivation": [
+    "tsukuyomi-corpus-v1",
+    "irodori-tts-600m-v3-voicedesign"
+  ],
+  "supersedes": "v-real-v1",
+  "role": "M3-R V-real. Same 80 corpus sentences and the same 72/8 split as v-real-v1, rebuilt with a five-turn shape: speaker B opens, speaker A answers in two parts, B drops a short backchannel inside A's answer, and B closes. Room tone replaces digital silence. This is the dataset M3-R trains on.",
+  "terms": {
+    "inherited_from": "tsukuyomi-corpus-v1",
+    "training_use": "Permitted: the corpus terms allow use for any purpose including commercial model training.",
+    "redistribution": "The corpus itself may not be redistributed, and this dataset embeds its audio, so neither may this.",
+    "credit_on_publication": "本ソフトウェアの音声合成には、フリー素材キャラクター「つくよみちゃん」が無料公開している音声データを使用しています。"
+  },
+  "differs_from_v_real_v1": [
+    "Five turns per dialogue instead of three (4.95 turns/dialogue measured; two dialogues keep three turns because their source sentence is too short to split). Speaker A speaks 1.975 turns per dialogue.",
+    "Speaker B backchannels inside speaker A's answer, so the two channels overlap: 1,204 simultaneous frames, and no dialogue is without overlap. v-real-v1 has 0.",
+    "Silence between turns is room tone lifted from the corpus recordings, not digital zero. In situ the room-tone floor holds 71-81 distinct values against digital silence's 18.",
+    "Tokenized WITH --no_whitespace_before_word. v-real-v1 was not, and 44.6%-46.6% of its emitted text tokens are a bare U+2581; this dataset measures 0.00% on both speakers.",
+    "One dialogue per training row (group_size=1). The four-dialogue concatenation used on 2026-08-25 was withdrawn; see the dataset audit section 2."
+  ],
+  "notes": [
+    "The 72/8 split is split-map-v2.json, inherited byte-for-byte from split-map-v1.json, so v-real-v1 and v-real-v2 stay paired and comparable.",
+    "Only the corpus TRAIN split supplies dialogue speech. The 10 test sentences - the held-out evaluation set in data/experiments/tsukuyomi_ojousama/baseline-input/tsukuyomi-heldout - appear nowhere, checked both by artifact id and by transcript text (longest shared normalised run across all 80x10 pairs: 5 characters).",
+    "Room tone is the one place corpus audio outside the train split is touched: 16 of the 117 segments (1.83 s of 13.25 s) are noise-floor slices from 9 corpus DEV recordings. They carry no speech - selection requires RMS in [0.002, 0.01] and voicing below 0.5 - and the 10 test recordings are excluded by name in roomtone/index.json. Recorded here rather than left implicit, because registry/v-real-v1.json states that the corpus dev sentences never enter the dataset and that sentence no longer covers the room-tone pool.",
+    "Speaker B is the same frozen synthetic voice as in v-real-v1; the backchannel turns were regenerated on 2026-08-25 at 22:27-22:42 with the short two-mora wording, after tools/synthesize_turns.py:95-115 measured that demanding 1.1 s for two morae makes the TTS speak words that are not in the script (0/6).",
+    "Audio, tokenized npz and parquet are gitignored. The scripts, split map, manifest, tokenize sidecar and reports are committed.",
+    "Provenance of the build inputs: data/experiments/tsukuyomi_ojousama/m3r/v-real/provenance.json (244 files), verified with `python -m tools.provenance verify`.",
+    "The superseded stereo built on 2026-08-25 20:27 is kept, unmodified, at data/experiments/tsukuyomi_ojousama/m3r/v-real-stale-20260825/. It was never tokenized."
+  ]
+}

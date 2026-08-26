@@ -1,0 +1,721 @@
+{
+  "schema_version": 1,
+  "milestone": "M3-R",
+  "step": "3rd stage: tokenize the rebuilt group_size=1 dataset and enter it in the ledger",
+  "captured_at": "2026-08-26",
+  "status": "pass",
+  "dataset_id": "v-real-v2",
+  "supersedes": "v-real-v1",
+  "ledger": {
+    "manifest": "experiments/tsukuyomi_ojousama/manifests/v-real-v2.jsonl",
+    "tokenize_sidecar": "experiments/tsukuyomi_ojousama/manifests/v-real-v2-tokenize.json",
+    "registry": "experiments/tsukuyomi_ojousama/registry/v-real-v2.json",
+    "build_report": "experiments/tsukuyomi_ojousama/reports/m3r-timeline.json",
+    "build_provenance": "data/experiments/tsukuyomi_ojousama/m3r/v-real/provenance.json",
+    "tokenize_provenance": "data/experiments/tsukuyomi_ojousama/m3r/v-real/tokenize-provenance.json",
+    "procedure": "experiments/tsukuyomi_ojousama/m3r/TOKENIZE_COMMANDS.md",
+    "build_scripts": "data/experiments/tsukuyomi_ojousama/m3r/v-real/build-scripts/ - the six scripts that made the split directories, the manifest, the measurements and this report. They are under data/, which is gitignored, because this stage was not allowed to add to tools/. build_manifest.py should be promoted to tools/ with a test; until it is, the manifest cannot be rebuilt from the repository alone."
+  },
+  "commands": {
+    "order": [
+      "1. audio  (before text: prepare_dataset trims or pads the text stream to the audio length, so audio is the authority)",
+      "2. text   (--no_whitespace_before_word)",
+      "3. parquet",
+      "4. record the text flags in the manifest sidecar",
+      "5. record and verify the provenance of inputs and outputs"
+    ],
+    "tokenize_audio": {
+      "train": "OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 nice -n 19 uv run --python 3.12 --no-project --with \"torch==2.4.1\" --with \"torchaudio==2.4.1\" --with moshi==0.1.0 --with numpy --with soundfile --with huggingface_hub --with tqdm python -m tools.tokenize_audio --audio_dir data/experiments/tsukuyomi_ojousama/m3r/v-real/train/audio --output_dir data/experiments/tsukuyomi_ojousama/m3r/v-real/train/tok-audio --audio_tokenizer_repo kyutai/moshiko-pytorch-bf16 --audio_tokenizer_name tokenizer-e351c8d8-checkpoint125.safetensors --audio_chunk_size 1200 --device cpu --num_workers 1",
+      "dev": "OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 nice -n 19 uv run --python 3.12 --no-project --with \"torch==2.4.1\" --with \"torchaudio==2.4.1\" --with moshi==0.1.0 --with numpy --with soundfile --with huggingface_hub --with tqdm python -m tools.tokenize_audio --audio_dir data/experiments/tsukuyomi_ojousama/m3r/v-real/dev/audio --output_dir data/experiments/tsukuyomi_ojousama/m3r/v-real/dev/tok-audio --audio_tokenizer_repo kyutai/moshiko-pytorch-bf16 --audio_tokenizer_name tokenizer-e351c8d8-checkpoint125.safetensors --audio_chunk_size 1200 --device cpu --num_workers 1"
+    },
+    "tokenize_text": {
+      "train": "OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 nice -n 19 uv run --python 3.12 --no-project --with numpy --with sentencepiece --with huggingface_hub --with tqdm python -m tools.tokenize_text --word_transcript_dir data/experiments/tsukuyomi_ojousama/m3r/v-real/train/text --output_dir data/experiments/tsukuyomi_ojousama/m3r/v-real/train/tok-text --text_tokenizer_repo nu-dialogue/j-moshi-ext --text_tokenizer_name tokenizer_spm_32k_3.model --no_whitespace_before_word --text_padding_id 3 --end_of_text_padding_id 0 --audio_tokenizer_frame_rate 12.5 --num_workers 1",
+      "dev": "OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 nice -n 19 uv run --python 3.12 --no-project --with numpy --with sentencepiece --with huggingface_hub --with tqdm python -m tools.tokenize_text --word_transcript_dir data/experiments/tsukuyomi_ojousama/m3r/v-real/dev/text --output_dir data/experiments/tsukuyomi_ojousama/m3r/v-real/dev/tok-text --text_tokenizer_repo nu-dialogue/j-moshi-ext --text_tokenizer_name tokenizer_spm_32k_3.model --no_whitespace_before_word --text_padding_id 3 --end_of_text_padding_id 0 --audio_tokenizer_frame_rate 12.5 --num_workers 1"
+    },
+    "prepare_dataset": {
+      "train": "OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 nice -n 19 uv run --python 3.12 --no-project --with numpy --with pandas --with pyarrow --with tqdm python -m tools.prepare_dataset --tokenized_text_dir data/experiments/tsukuyomi_ojousama/m3r/v-real/train/tok-text --tokenized_audio_dir data/experiments/tsukuyomi_ojousama/m3r/v-real/train/tok-audio --output_prefix data/experiments/tsukuyomi_ojousama/m3r/v-real/parquet/train --text_padding_id 3 --num_examples_per_parquet 100000",
+      "dev": "OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 nice -n 19 uv run --python 3.12 --no-project --with numpy --with pandas --with pyarrow --with tqdm python -m tools.prepare_dataset --tokenized_text_dir data/experiments/tsukuyomi_ojousama/m3r/v-real/dev/tok-text --tokenized_audio_dir data/experiments/tsukuyomi_ojousama/m3r/v-real/dev/tok-audio --output_prefix data/experiments/tsukuyomi_ojousama/m3r/v-real/parquet/dev --text_padding_id 3 --num_examples_per_parquet 100000"
+    },
+    "record_tokenize": "nice -n 19 uv run --python 3.12 --no-project python -m tools.text_stream_audit record-tokenize --dataset_id v-real-v2 --manifest experiments/tsukuyomi_ojousama/manifests/v-real-v2.jsonl --out experiments/tsukuyomi_ojousama/manifests/v-real-v2-tokenize.json --split train --provenance recorded --recorded_at 2026-08-26 -- <the tokenize_text argv above>   # then the same with --split dev --append",
+    "provenance_record": "nice -n 19 uv run --python 3.12 --no-project python -m tools.provenance record --out data/experiments/tsukuyomi_ojousama/m3r/v-real/tokenize-provenance.json --artifact-id v-real-v2:tokenized --tool 'tools/tokenize_audio.py + tools/tokenize_text.py + tools/prepare_dataset.py' --captured-at 2026-08-26 --why '...' --input train-audio=data/experiments/tsukuyomi_ojousama/m3r/v-real/train/audio --input train-text=data/experiments/tsukuyomi_ojousama/m3r/v-real/train/text --input dev-audio=data/experiments/tsukuyomi_ojousama/m3r/v-real/dev/audio --input dev-text=data/experiments/tsukuyomi_ojousama/m3r/v-real/dev/text --output train-tok-audio=data/experiments/tsukuyomi_ojousama/m3r/v-real/train/tok-audio --output train-tok-text=data/experiments/tsukuyomi_ojousama/m3r/v-real/train/tok-text --output dev-tok-audio=data/experiments/tsukuyomi_ojousama/m3r/v-real/dev/tok-audio --output dev-tok-text=data/experiments/tsukuyomi_ojousama/m3r/v-real/dev/tok-text --output parquet=data/experiments/tsukuyomi_ojousama/m3r/v-real/parquet",
+    "verify": "nice -n 19 uv run --python 3.12 --no-project python -m tools.provenance verify --record data/experiments/tsukuyomi_ojousama/m3r/v-real/tokenize-provenance.json --quiet"
+  },
+  "flags": {
+    "tokenize_audio": {
+      "audio_dir": "data/experiments/tsukuyomi_ojousama/m3r/v-real/<split>/audio",
+      "output_dir": "data/experiments/tsukuyomi_ojousama/m3r/v-real/<split>/tok-audio",
+      "audio_tokenizer_repo": "kyutai/moshiko-pytorch-bf16",
+      "audio_tokenizer_name": "tokenizer-e351c8d8-checkpoint125.safetensors",
+      "audio_chunk_size": 1200,
+      "device": "cpu",
+      "num_workers": 1,
+      "resume": false,
+      "defaults_used": [
+        "audio_tokenizer_repo",
+        "audio_tokenizer_name",
+        "audio_chunk_size",
+        "num_workers",
+        "resume"
+      ],
+      "note": "Every one of them was passed explicitly anyway except --resume. --device cpu is NOT the default (the default is cuda) and is the flag that matters: mps runs and produces a different parquet from the same wav."
+    },
+    "tokenize_text": {
+      "train": {
+        "word_transcript_dir": "data/experiments/tsukuyomi_ojousama/m3r/v-real/train/text",
+        "output_dir": "data/experiments/tsukuyomi_ojousama/m3r/v-real/train/tok-text",
+        "text_tokenizer_repo": "nu-dialogue/j-moshi-ext",
+        "text_tokenizer_name": "tokenizer_spm_32k_3.model",
+        "no_whitespace_before_word": true,
+        "text_padding_id": 3,
+        "end_of_text_padding_id": 0,
+        "audio_tokenizer_frame_rate": 12.5,
+        "num_workers": 1,
+        "resume": false
+      },
+      "dev": {
+        "word_transcript_dir": "data/experiments/tsukuyomi_ojousama/m3r/v-real/dev/text",
+        "output_dir": "data/experiments/tsukuyomi_ojousama/m3r/v-real/dev/tok-text",
+        "text_tokenizer_repo": "nu-dialogue/j-moshi-ext",
+        "text_tokenizer_name": "tokenizer_spm_32k_3.model",
+        "no_whitespace_before_word": true,
+        "text_padding_id": 3,
+        "end_of_text_padding_id": 0,
+        "audio_tokenizer_frame_rate": 12.5,
+        "num_workers": 1,
+        "resume": false
+      }
+    },
+    "tokenize_text_defaults_used": {
+      "train": [
+        "resume"
+      ],
+      "dev": [
+        "resume"
+      ]
+    },
+    "prepare_dataset": {
+      "tokenized_text_dir": "data/experiments/tsukuyomi_ojousama/m3r/v-real/<split>/tok-text",
+      "tokenized_audio_dir": "data/experiments/tsukuyomi_ojousama/m3r/v-real/<split>/tok-audio",
+      "output_prefix": "data/experiments/tsukuyomi_ojousama/m3r/v-real/parquet/<split>",
+      "text_padding_id": 3,
+      "num_examples_per_parquet": 100000,
+      "defaults_used": [
+        "text_padding_id",
+        "num_examples_per_parquet"
+      ],
+      "note": "The basename of --output_prefix is the dialogue_id namespace, so it must stay train / dev; the ids come out as train/v-001 etc., the same namespace M3 used, which is what lets v-real-v1 and v-real-v2 be joined to the same dialogue."
+    },
+    "not_recorded_by_the_sidecar": "tools/text_stream_audit.py record-tokenize covers tokenize_text.py only. The audio and parquet flags above are recorded here, in this report, and nowhere else. If the sidecar mechanism is extended, extend it to those two tools."
+  },
+  "environment": {
+    "python": "3.12.7",
+    "torch": "2.4.1",
+    "torchaudio": "2.4.1",
+    "moshi": "0.1.0",
+    "numpy": "2.1.3",
+    "device": "cpu",
+    "gpu_used": false,
+    "host": "local Mac (darwin 25.3.0)",
+    "nice": 19,
+    "thread_limit": "OMP_NUM_THREADS=2, MKL_NUM_THREADS=2 -> torch.get_num_threads() == 2",
+    "why_thread_limited": "the user asked that this machine not be loaded; measured below to make no difference to the tokens",
+    "text_tokenizer": {
+      "repo": "nu-dialogue/j-moshi-ext",
+      "name": "tokenizer_spm_32k_3.model",
+      "path": "/Users/inamotoyuuta/.cache/huggingface/hub/models--nu-dialogue--j-moshi-ext/snapshots/c4676f5aae2155bb20c300dd6c71b6115f97ec1f/tokenizer_spm_32k_3.model",
+      "sha256": "b5cbdfa8aa7c54c8c5af85b78c309c54a5f2749a20468bf6f60eee007fe6fec1",
+      "ids": {
+        "pad": {
+          "id": 3,
+          "piece": "[PAD]"
+        },
+        "bare_whitespace": {
+          "id": 9,
+          "piece": "▁"
+        },
+        "end_of_text_padding": {
+          "id": 0,
+          "piece": "<unk>"
+        }
+      }
+    },
+    "audio_tokenizer": {
+      "repo": "kyutai/moshiko-pytorch-bf16",
+      "name": "tokenizer-e351c8d8-checkpoint125.safetensors",
+      "frame_rate_hz": 12.5,
+      "codebooks": 8
+    },
+    "wall_clock": {
+      "tokenize_audio_train_72": "1 min 28 s",
+      "tokenize_audio_dev_8": "13 s",
+      "tokenize_text_train_72": "under 1 s",
+      "prepare_dataset": "under 1 s"
+    }
+  },
+  "inputs": {
+    "how_the_split_directories_were_made": "group_size=1, so each training row is exactly one dialogue. data/experiments/tsukuyomi_ojousama/m3r/v-real/<split>/{audio,text} was materialised by copying each row out of data/experiments/tsukuyomi_ojousama/m3r/v-real/sequences/<split>/ under the dialogue's own name. Every copy was checked against both the sequence file and the dialogue file and against the sha256 the build report recorded: 160 triples, 0 disagreements. Naming them by dialogue is what makes prepare_dataset emit dialogue_id train/v-001 instead of train/train-seq-001.",
+    "verified_triples": 160,
+    "provenance": {
+      "record": "data/experiments/tsukuyomi_ojousama/m3r/v-real/tokenize-provenance.json",
+      "inputs": 160,
+      "outputs": 162,
+      "verify_result": "inputs: match (160 files unchanged) / outputs: match (162 files unchanged), exit 0",
+      "not_covered": "the text tokenizer lives in the Hugging Face cache outside the repository root, so tools/provenance.py cannot fingerprint it; its sha256 is in environment.text_tokenizer above"
+    }
+  },
+  "accounting": {
+    "dialogues": 80,
+    "accepted": 80,
+    "rejected": 0,
+    "skips": 0,
+    "per_split_counts": {
+      "v-real/train": {
+        "wav": 72,
+        "word_transcript": 72,
+        "tok_audio": 72,
+        "tok_text": 72,
+        "parquet_rows": 72
+      },
+      "v-real/dev": {
+        "wav": 8,
+        "word_transcript": 8,
+        "tok_audio": 8,
+        "tok_text": 8,
+        "parquet_rows": 8
+      }
+    },
+    "unaccounted_dialogues": 0,
+    "note": "prepare_dataset raises StemMismatchError rather than writing a partial parquet, so equal counts here are not the only thing standing between a missing dialogue and a silently short dataset."
+  },
+  "parquet": {
+    "files": {
+      "v-real/train": {
+        "path": "data/experiments/tsukuyomi_ojousama/m3r/v-real/parquet/train-001-of-001.parquet",
+        "byte_size": 439186,
+        "sha256": "5cf8d84b1c17b6497d3f9f81c04d6dcd911c722c4cfdd14693e232d7eb4b91ff"
+      },
+      "v-real/dev": {
+        "path": "data/experiments/tsukuyomi_ojousama/m3r/v-real/parquet/dev-001-of-001.parquet",
+        "byte_size": 63772,
+        "sha256": "b80c66ba714963e94d3b57d7e7cbb89128bf58f4f1fe507e2a2f93f881d7943f"
+      }
+    },
+    "train_rows": 72,
+    "dev_rows": 8,
+    "streams_per_example": 17,
+    "streams_per_speaker_column": 9,
+    "frames": {
+      "train": {
+        "min": 195,
+        "max": 299,
+        "median": 241.0,
+        "mean": 240.833,
+        "total": 17340
+      },
+      "dev": {
+        "min": 200,
+        "max": 283,
+        "median": 237.5,
+        "mean": 237.75,
+        "total": 1902
+      }
+    },
+    "seconds": {
+      "train": {
+        "min": 15.6,
+        "max": 23.92,
+        "median": 19.28,
+        "total": 1387.2
+      },
+      "dev": {
+        "min": 16.0,
+        "max": 22.64,
+        "median": 19.0,
+        "total": 152.16
+      }
+    },
+    "dialogue_id_namespace": {
+      "train": "train/v-NNN",
+      "dev": "dev/v-NNN"
+    },
+    "min_length_flag": "omitted, so nothing is dropped by length at training time"
+  },
+  "text_stream": {
+    "measured_on_the_parquet": {
+      "train": {
+        "A": {
+          "text_tokens": 1356,
+          "bare_whitespace": 0,
+          "share_of_text_tokens": 0.0,
+          "frames": 17340,
+          "pad": 14825,
+          "non_pad": 2515,
+          "end_of_text_padding": 1159,
+          "words": 1356
+        },
+        "B": {
+          "text_tokens": 3271,
+          "bare_whitespace": 0,
+          "share_of_text_tokens": 0.0,
+          "frames": 17340,
+          "pad": 11271,
+          "non_pad": 6069,
+          "end_of_text_padding": 2798,
+          "words": 3271
+        }
+      },
+      "dev": {
+        "A": {
+          "text_tokens": 162,
+          "bare_whitespace": 0,
+          "share_of_text_tokens": 0.0,
+          "frames": 1902,
+          "pad": 1600,
+          "non_pad": 302,
+          "end_of_text_padding": 140,
+          "words": 162
+        },
+        "B": {
+          "text_tokens": 367,
+          "bare_whitespace": 0,
+          "share_of_text_tokens": 0.0,
+          "frames": 1902,
+          "pad": 1223,
+          "non_pad": 679,
+          "end_of_text_padding": 312,
+          "words": 367
+        }
+      }
+    },
+    "counterfactual_on_the_same_transcripts": {
+      "train": {
+        "with_flag": {
+          "A": {
+            "text_tokens": 1356,
+            "bare_whitespace": 0,
+            "share": 0.0,
+            "non_pad_frames": 2515
+          },
+          "B": {
+            "text_tokens": 3271,
+            "bare_whitespace": 0,
+            "share": 0.0,
+            "non_pad_frames": 6069
+          }
+        },
+        "without_flag": {
+          "A": {
+            "text_tokens": 3172,
+            "bare_whitespace": 1416,
+            "share": 0.44640605296343,
+            "non_pad_frames": 4330
+          },
+          "B": {
+            "text_tokens": 8500,
+            "bare_whitespace": 3922,
+            "share": 0.46141176470588235,
+            "non_pad_frames": 11106
+          }
+        }
+      },
+      "dev": {
+        "with_flag": {
+          "A": {
+            "text_tokens": 162,
+            "bare_whitespace": 0,
+            "share": 0.0,
+            "non_pad_frames": 302
+          },
+          "B": {
+            "text_tokens": 367,
+            "bare_whitespace": 0,
+            "share": 0.0,
+            "non_pad_frames": 679
+          }
+        },
+        "without_flag": {
+          "A": {
+            "text_tokens": 379,
+            "bare_whitespace": 172,
+            "share": 0.45382585751978893,
+            "non_pad_frames": 507
+          },
+          "B": {
+            "text_tokens": 911,
+            "bare_whitespace": 419,
+            "share": 0.45993413830954993,
+            "non_pad_frames": 1211
+          }
+        }
+      }
+    },
+    "what_the_counterfactual_proves": "The shipped parquet's non-padding counts equal the with_flag pass exactly (train A 1356/2515, B 3271/6069; dev A 162/302, B 367/679) and differ from the without_flag pass at every position. So --no_whitespace_before_word was not merely recorded as true, it is measurable in the artifact. This is the check that would have caught M3 on the day rather than three days later.",
+    "decoded_sample": {
+      "dialogue_id": "train/v-001",
+      "speaker": "A",
+      "frames": 276,
+      "non_pad_frames": 38,
+      "pieces": "<unk>▁また<unk>、東<unk>寺<unk>のように<unk>、五<unk>大<unk>明<unk>王<unk>と呼ばれる<unk>、<unk>主要な<unk>明<unk>王の<unk>中央に<unk>配<unk>される<unk>ことも多い<unk>。",
+      "decoded": "また、東寺のように、五大明王と呼ばれる、主要な明王の中央に配されることも多い。",
+      "bare_whitespace_pieces": 0
+    },
+    "gate_negative_control": {
+      "what": "a parquet tokenized WITHOUT the flag was built from the same tok-audio and placed inside data/experiments/tsukuyomi_ojousama/m3r/, then the repository gate was run",
+      "result": "tests/test_experiment_assets.py::TextStreamGateTests::test_every_shipped_parquet_is_under_the_gate_or_quarantined FAILED with '0.44640605296343 not less than 0.1 : data/experiments/tsukuyomi_ojousama/m3r/_gate-negative-control/train-001-of-001.parquet speaker A'",
+      "cleanup": "the control parquet was removed; the gate passes again and no parquet outside m3/ and m3r/v-real/parquet/ remains on disk",
+      "why": "a gate that has never been seen to fail is a claim, not a measurement. This one runs at any depth under data/experiments/tsukuyomi_ojousama, so it does cover the new dataset's location."
+    }
+  },
+  "reproducibility": {
+    "device": "cpu, as required. mps is not bit-identical (TOKENIZE_COMMANDS.md section 1: 2 of 21,600 tokens differ, in residual codebooks 4 and 6).",
+    "thread_count_probe": {
+      "why": "the run was thread-limited to keep this machine quiet, and a thread count that changed reduction order would change the tokens and quietly void the checksums",
+      "dialogues": [
+        "v-001",
+        "v-019",
+        "v-046"
+      ],
+      "thread_counts": [
+        1,
+        2,
+        4
+      ],
+      "tokens_compared": 37344,
+      "mismatches": 0,
+      "conclusion": "Mimi on cpu is thread-count independent here, and the OMP_NUM_THREADS=2 rerun reproduces the shipped npz byte for byte.",
+      "detail": {
+        "OMP_NUM_THREADS=1": {
+          "v-001": {
+            "shape_A": [
+              8,
+              276
+            ],
+            "tokens": 4416,
+            "mismatches": 0,
+            "identical_to_shipped": true
+          },
+          "v-019": {
+            "shape_A": [
+              8,
+              297
+            ],
+            "tokens": 4752,
+            "mismatches": 0,
+            "identical_to_shipped": true
+          },
+          "v-046": {
+            "shape_A": [
+              8,
+              205
+            ],
+            "tokens": 3280,
+            "mismatches": 0,
+            "identical_to_shipped": true
+          }
+        },
+        "OMP_NUM_THREADS=2": {
+          "v-001": {
+            "shape_A": [
+              8,
+              276
+            ],
+            "tokens": 4416,
+            "mismatches": 0,
+            "identical_to_shipped": true
+          },
+          "v-019": {
+            "shape_A": [
+              8,
+              297
+            ],
+            "tokens": 4752,
+            "mismatches": 0,
+            "identical_to_shipped": true
+          },
+          "v-046": {
+            "shape_A": [
+              8,
+              205
+            ],
+            "tokens": 3280,
+            "mismatches": 0,
+            "identical_to_shipped": true
+          }
+        },
+        "OMP_NUM_THREADS=4": {
+          "v-001": {
+            "shape_A": [
+              8,
+              276
+            ],
+            "tokens": 4416,
+            "mismatches": 0,
+            "identical_to_shipped": true
+          },
+          "v-019": {
+            "shape_A": [
+              8,
+              297
+            ],
+            "tokens": 4752,
+            "mismatches": 0,
+            "identical_to_shipped": true
+          },
+          "v-046": {
+            "shape_A": [
+              8,
+              205
+            ],
+            "tokens": 3280,
+            "mismatches": 0,
+            "identical_to_shipped": true
+          }
+        },
+        "totals": {
+          "tokens_compared": 37344,
+          "mismatches": 0
+        }
+      }
+    }
+  },
+  "training_shape": {
+    "per_device_train_batch_size": 1,
+    "num_processes": 2,
+    "gradient_accumulation_steps": 4,
+    "global_batch_size": 8,
+    "rows": 72,
+    "steps_per_epoch": 9,
+    "num_train_epochs": 5,
+    "total_steps": 45,
+    "save_steps_to_use": 9,
+    "checkpoint_steps": [
+      9,
+      18,
+      27,
+      36,
+      45
+    ],
+    "checkpoint_count": 5,
+    "launch_assertions": {
+      "Num examples": 72,
+      "Total train batch size": 8,
+      "Total optimization steps": 45,
+      "action_if_different": "kill immediately; the dataset is not the one this was computed from"
+    },
+    "matches_m3": "M3 ran the same shape - 72 rows, global batch 8, 9 steps per epoch, 45 total - so a difference between the two runs cannot be attributed to the schedule.",
+    "length_flags": {
+      "max_length": "omitted (default None), as in M3",
+      "min_length": "omitted (default None), as in M3",
+      "num_warmup_steps": "not set here; it belongs to the training launch",
+      "note": "examples/finetune_accelerate.sh:19-24 sets --max_length 2048 --min_length 128 --num_warmup_steps 500 and M3 omitted all three. At 195-299 frames per row, --max_length 2048 would be a no-op and --min_length 128 would drop nothing, so either choice ships the same 72 rows. Recorded so 4th stage does not have to rediscover it."
+    }
+  },
+  "held_out": {
+    "definition": "the 10 corpus test recordings in data/experiments/tsukuyomi_ojousama/baseline-input/tsukuyomi-heldout",
+    "ids": [
+      "tsukuyomi-corpus-v1:VOICEACTRESS100_026",
+      "tsukuyomi-corpus-v1:VOICEACTRESS100_032",
+      "tsukuyomi-corpus-v1:VOICEACTRESS100_047",
+      "tsukuyomi-corpus-v1:VOICEACTRESS100_048",
+      "tsukuyomi-corpus-v1:VOICEACTRESS100_052",
+      "tsukuyomi-corpus-v1:VOICEACTRESS100_069",
+      "tsukuyomi-corpus-v1:VOICEACTRESS100_074",
+      "tsukuyomi-corpus-v1:VOICEACTRESS100_092",
+      "tsukuyomi-corpus-v1:VOICEACTRESS100_095",
+      "tsukuyomi-corpus-v1:VOICEACTRESS100_099"
+    ],
+    "by_artifact_id": {
+      "dialogue_sources_that_are_held_out": [],
+      "dialogue_sources_outside_the_corpus_train_split": []
+    },
+    "by_text": {
+      "scripts": {
+        "hits": [],
+        "longest_shared_normalised_run_chars": 5
+      },
+      "word_transcripts": {
+        "files": 80,
+        "longest_shared_normalised_run_chars": 5,
+        "where": "train/v-036",
+        "against": "tsukuyomi-corpus-v1:VOICEACTRESS100_026",
+        "whole_held_out_sentence_found": false
+      },
+      "decoded_parquet_text_stream": {
+        "longest_shared_normalised_run_chars": 5,
+        "where": "train/v-036",
+        "against": "tsukuyomi-corpus-v1:VOICEACTRESS100_026"
+      }
+    },
+    "method": "text comparison is on NFKC-normalised strings with whitespace and punctuation removed, so a held-out sentence could not hide behind different punctuation. The longest run any dialogue shares with any held-out sentence is 5 characters.",
+    "room_tone_caveat": {
+      "what": "16 of the 117 room-tone segments (1.83 s of 13.25 s) are noise-floor slices taken from 9 corpus DEV recordings; the 10 corpus TEST recordings are excluded by name in roomtone/index.json.",
+      "why_it_is_not_held_out_contamination": "held-out evaluation uses the test split, which is untouched. The dev slices carry no speech - selection requires RMS in [0.002, 0.01] and voicing below 0.5 - so no dev sentence is learnable from them.",
+      "why_it_is_recorded_anyway": "registry/v-real-v1.json states that the corpus dev sentences never enter the dataset. That sentence no longer covers the room-tone pool, and a ledger that is true only if nobody reads it carefully is not a ledger."
+    }
+  },
+  "manifest_validation": {
+    "tool": "tools/experiment_data.validate_manifest",
+    "manifest": "experiments/tsukuyomi_ojousama/manifests/v-real-v2.jsonl",
+    "summary": {
+      "status": "pass",
+      "artifact_count": 80,
+      "coeiroink_artifact_count": 0,
+      "corrupt_audio_count": 0,
+      "cross_split_duplicate_count": 0,
+      "duplicate_artifact_count": 0,
+      "split_counts": {
+        "train": 72,
+        "dev": 8,
+        "test": 0
+      },
+      "errors": [],
+      "audio_metadata_rows_checked_directly": 80,
+      "audio_metadata_mismatches": 0
+    },
+    "what_it_checked": "required fields, unique artifact_id, checksum format, that every path resolves inside the data root and its byte_size and sha256 match the file on disk, no COEIROINK provenance, no exact duplicate across splits, no group_id in two splits, and no near-duplicate text across splits.",
+    "what_it_did_not_check": "the audio-metadata branch fires only on media_type audio/wav, and every manifest in this repository uses audio/x-wav, so it never runs. The 80 rows' audio blocks were therefore compared directly against tools/experiment_data._audio_metadata: 0 mismatches. A validator that silently skips the rows it was pointed at is the same shape of failure as a flag nobody wrote down."
+  },
+  "gates": [
+    {
+      "gate": "train rows",
+      "target": 72,
+      "actual": 72,
+      "passed": true,
+      "evidence": "data/experiments/tsukuyomi_ojousama/m3r/v-real/parquet/train-001-of-001.parquet read with pandas; dialogue_id namespace ['train']"
+    },
+    {
+      "gate": "dev rows",
+      "target": 8,
+      "actual": 8,
+      "passed": true,
+      "evidence": "data/experiments/tsukuyomi_ojousama/m3r/v-real/parquet/dev-001-of-001.parquet"
+    },
+    {
+      "gate": "streams per example",
+      "target": 17,
+      "actual": [
+        17
+      ],
+      "passed": true,
+      "evidence": "utils.data.main_speaker_streams run over every row of both parquets: 9 streams for the main speaker (1 text + 8 audio) plus the other speaker's 8 audio. Counted on the trainer's own function, not asserted from the [9, T] column shape."
+    },
+    {
+      "gate": "bare U+2581 share of emitted text tokens",
+      "target": "< 0.05 (repository gate 0.10)",
+      "actual": {
+        "train": {
+          "A": 0.0,
+          "B": 0.0
+        },
+        "dev": {
+          "A": 0.0,
+          "B": 0.0
+        }
+      },
+      "passed": true,
+      "evidence": "tools.text_stream_audit.audit_parquet with the id looked up from the tokenizer (bare_whitespace id 9 = '▁'), not hardcoded. tests/test_experiment_assets.py::TextStreamGateTests measures the same two files."
+    },
+    {
+      "gate": "total train steps",
+      "target": 45,
+      "actual": 45,
+      "passed": true,
+      "evidence": "ceil(72/8) = 9 steps per epoch x 5 epochs"
+    },
+    {
+      "gate": "held-out contamination",
+      "target": 0,
+      "actual": {
+        "by_artifact_id": 0,
+        "by_text_word_transcripts": 5,
+        "by_text_decoded_parquet": 5
+      },
+      "passed": true,
+      "evidence": "Three independent passes. (1) artifact id: none of the 80 source_artifact_id values is one of the 10 corpus test rows, and all 80 are in the corpus train split. (2) transcript text: the 80 word transcripts that were tokenized share at most a 5-character normalised run with any held-out sentence. (3) the parquet itself: the text stream decoded back through SentencePiece gives the same 5. A renamed or re-derived file would pass (1) and fail (2) and (3)."
+    }
+  ],
+  "differences_from_m3": {
+    "text_tokens_speaker_A_train": {
+      "m3_shipped": 3172,
+      "m3_with_flag": 1356,
+      "m3r": 1356,
+      "note": "identical to M3's with-flag count, because channel A quotes the same 72 corpus sentences"
+    },
+    "text_tokens_speaker_B_train": {
+      "m3_shipped": 7769,
+      "m3_with_flag": 2910,
+      "m3r": 3271,
+      "note": "higher than M3 because speaker B now backchannels inside speaker A's answer"
+    },
+    "frames_per_row": {
+      "m3": {
+        "min": 213,
+        "max": 321
+      },
+      "m3r": {
+        "min": 195,
+        "max": 299,
+        "median": 241.0,
+        "mean": 240.833,
+        "total": 17340
+      }
+    },
+    "turns_per_dialogue": {
+      "m3": 3.0,
+      "m3r": 4.95
+    },
+    "simultaneous_frames": {
+      "m3": 0,
+      "m3r": 1204
+    }
+  },
+  "carried_to_the_4th_stage": [
+    {
+      "what": "5 training rows are below the 200-frame floor in m3/DATASET_SPEC.md:110",
+      "rows": [
+        {
+          "dialogue_id": "train/v-026",
+          "frames": 198,
+          "seconds": 15.84
+        },
+        {
+          "dialogue_id": "train/v-039",
+          "frames": 199,
+          "seconds": 15.92
+        },
+        {
+          "dialogue_id": "train/v-047",
+          "frames": 196,
+          "seconds": 15.68
+        },
+        {
+          "dialogue_id": "train/v-057",
+          "frames": 195,
+          "seconds": 15.6
+        },
+        {
+          "dialogue_id": "train/v-079",
+          "frames": 199,
+          "seconds": 15.92
+        }
+      ],
+      "short_by_frames": [
+        2,
+        1,
+        4,
+        5,
+        1
+      ],
+      "why_it_appeared_now": "the floor was never breached at the row level while four dialogues were concatenated into one row. group_size=1 exposes it. The same 5 dialogues were under the floor in the withdrawn build too.",
+      "decision_not_taken_here": "DATASET_SPEC.md:388 says do not lower the floor, lengthen B's turn. Dropping the 5 rows keeps step 45 (ceil(67/8) x 5 = 45) but changes the split and breaks the pairing with M3. Not this stage's call; nothing was changed."
+    },
+    {
+      "what": "the acoustic loss weight is effectively 0.99%",
+      "detail": "audio_weight = 2x100 + 14x1 = 214, speaker A's acoustic share is 7/214 = 3.27%, and A speaks 30.3% of the time. Measure the breakdown in the 4th stage forward pass before touching it."
+    },
+    {
+      "what": "record-tokenize covers tokenize_text.py only",
+      "detail": "the audio and parquet flags live in this report alone. The flag that would hurt most if lost is --device cpu, because mps produces a different parquet from the same wav and nothing downstream notices."
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "dataset_id": "v-real-v2",
+  "supersedes": "v-real-v1",
+  "manifest": "experiments/tsukuyomi_ojousama/manifests/v-real-v2.jsonl",
+  "registry": "experiments/tsukuyomi_ojousama/registry/v-real-v2.json",
+  "tokenize_sidecar": "experiments/tsukuyomi_ojousama/manifests/v-real-v2-tokenize.json",
+  "data_root": "data/experiments/tsukuyomi_ojousama",
+  "dataset_dir": "m3r/v-real",
+  "splits": ["train", "dev"],
+  "scripts": {
+    "dialogues": "experiments/tsukuyomi_ojousama/m3r/scripts/dialogues-v2.jsonl",
+    "split_map": "experiments/tsukuyomi_ojousama/m3r/scripts/split-map-v2.json"
+  },
+  "build_report": "experiments/tsukuyomi_ojousama/reports/m3r-timeline.json",
+  "backchannel_log": "m3r/turns-B-backchannel/synthesis-log.jsonl",
+  "room_tone_pool": "m3r/roomtone",
+  "metadata": {
+    "retrieved_at": "2026-08-26",
+    "credit": "つくよみちゃんコーパス（CV.夢前黎） https://tyc.rei-yumesaki.net/material/corpus/",
+    "license_id": "tsukuyomi-corpus-custom-terms",
+    "license_url": "https://tyc.rei-yumesaki.net/material/corpus/",
+    "redistribution": "prohibited-derives-from-a-corpus-that-may-not-be-redistributed",
+    "source_url": "local://experiments/tsukuyomi_ojousama/m3r/scripts/dialogues-v2.jsonl",
+    "source_version": "dialogues-v2 + split-map-v2 (inherited unchanged from split-map-v1) + m3/v-real stereo (channel A = tsukuyomi-corpus-v1 train split, channel B = irodori-tts-600m-v3-voicedesign) + m3r/turns-B-backchannel (regenerated 2026-08-25 22:27-22:42) + m3r/roomtone",
+    "generation_method": "assembled-stereo-real-a-with-backchannel-and-roomtone",
+    "extra_derivation": ["irodori-tts-600m-v3-voicedesign"]
+  },
+  "notes": {
+    "retrieved_at": "ビルド日。manifest を作り直したら実際のビルド日に合わせる。",
+    "source_version": "manifest の全行が繰り返す文字列。入力を1つでも差し替えたらここを書き換える。書き換えないと、別の素材から作った dataset が同じ由来を名乗る。",
+    "backchannel_log": "data_root からの相対。wav は同じディレクトリの filename 欄が指す。",
+    "why_this_file_exists": "credit / license / redistribution はデータの権利に関わる宣言であり、tools/ のソースに埋めると変更がレビューされない。ここに置けば公開物として差分が見える。"
+  }
+}
