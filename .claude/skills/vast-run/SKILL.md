@@ -16,12 +16,19 @@ US$102.697. Headroom was US$22.30 when it was raised, and `m0/spend-ledger.json`
 under `cap_raise` exactly what that headroom is for - one V-real re-run and one
 forward-only measurement. Spending it on anything else needs the user, not you.
 
-**`tools/experiment_budget.py` still hardcodes `HARD_CAP = 100.0`, and the ledger's warning
-(US$75), new-run (US$90) and stop (US$95) thresholds still belong to the old cap.** Until
-both are moved, the preflight refuses every run - accrued spend already exceeds the constant
-it tests against - so its non-zero exit is evidence of nothing either way. Align the tool
-and the thresholds with the ledger's `experiment_cap` before the next rent. Do not route
-around the refusal by skipping the check.
+**The preflight works and its answer is binding.** `tools/experiment_budget.py` takes the
+cap as a parameter (default US$125) and derives its thresholds as fractions of it - warning
+at 0.75, new-run at 0.90, stop at 0.95 - so raising the cap moves the whole policy instead
+of leaving old absolutes behind. That was the earlier failure: the tool tested against a
+hardcoded US$100 after the cap moved, refused every possible plan, and a preflight that
+always says no is one nobody reads. The ledger's thresholds (US$93.75 / 112.50 / 118.75)
+are the same fractions.
+
+So a non-zero exit now means something. Against accrued US$102.697 the new-run limit of
+US$112.50 leaves US$9.80, which is under four hours at A100x2 rates - less than one full
+V-real run. **Do not widen a fraction, raise the default, or skip the check to admit a
+plan.** Split the plan, or ask the user for a cap. `tests/test_experiment_budget.py` pins
+the phase-4 verdict as a test for exactly this reason.
 
 ```bash
 uv run --no-sync python -m tools.experiment_budget \

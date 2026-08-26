@@ -170,11 +170,11 @@
     "skips": 0,
     "per_split_counts": {
       "v-real/train": {
-        "wav": 72,
-        "word_transcript": 72,
-        "tok_audio": 72,
-        "tok_text": 72,
-        "parquet_rows": 72
+        "wav": 70,
+        "word_transcript": 70,
+        "tok_audio": 70,
+        "tok_text": 70,
+        "parquet_rows": 70
       },
       "v-real/dev": {
         "wav": 8,
@@ -191,16 +191,16 @@
     "files": {
       "v-real/train": {
         "path": "data/experiments/tsukuyomi_ojousama/m3r/v-real/parquet/train-001-of-001.parquet",
-        "byte_size": 439186,
-        "sha256": "5cf8d84b1c17b6497d3f9f81c04d6dcd911c722c4cfdd14693e232d7eb4b91ff"
+        "byte_size": 431842,
+        "sha256": "adea04749c1d3bd217c8f5db66c1463ae39899aff4d02991128824448830f201"
       },
       "v-real/dev": {
         "path": "data/experiments/tsukuyomi_ojousama/m3r/v-real/parquet/dev-001-of-001.parquet",
-        "byte_size": 63772,
-        "sha256": "b80c66ba714963e94d3b57d7e7cbb89128bf58f4f1fe507e2a2f93f881d7943f"
+        "byte_size": 64169,
+        "sha256": "f21d821eef5211bc67d168d150483365e70bf78bbcc4f18522c4c1683a8a10db"
       }
     },
-    "train_rows": 72,
+    "train_rows": 70,
     "dev_rows": 8,
     "streams_per_example": 17,
     "streams_per_speaker_column": 9,
@@ -483,7 +483,7 @@
     "num_processes": 2,
     "gradient_accumulation_steps": 4,
     "global_batch_size": 8,
-    "rows": 72,
+    "rows": 70,
     "steps_per_epoch": 9,
     "num_train_epochs": 5,
     "total_steps": 45,
@@ -497,7 +497,7 @@
     ],
     "checkpoint_count": 5,
     "launch_assertions": {
-      "Num examples": 72,
+      "Num examples": 70,
       "Total train batch size": 8,
       "Total optimization steps": 45,
       "action_if_different": "kill immediately; the dataset is not the one this was computed from"
@@ -564,7 +564,7 @@
       "cross_split_duplicate_count": 0,
       "duplicate_artifact_count": 0,
       "split_counts": {
-        "train": 72,
+        "train": 70,
         "dev": 8,
         "test": 0
       },
@@ -717,5 +717,11 @@
       "what": "record-tokenize covers tokenize_text.py only",
       "detail": "the audio and parquet flags live in this report alone. The flag that would hurt most if lost is --device cpu, because mps produces a different parquet from the same wav and nothing downstream notices."
     }
-  ]
+  ],
+  "corrected_2026_08_27": {
+    "what": "出荷前（72 行）の値を 10 フィールドで保持していたので、出荷実体（70 行）から測り直した。",
+    "why": "200 frame の床を割った v-047 と v-057 が出荷から外れた。reports/m3r-timeline.json の min_frames_floor.decision を参照。",
+    "most_dangerous": "training_shape.launch_assertions.'Num examples' が 72 のままだった。起動時 assertion は違えば即 kill と定めた値なので、正しい dataset で kill していた。",
+    "verified_by": "parquet を pandas で読んだ行数と、ファイルの sha256・byte_size を実測して置換した。"
+  }
 }

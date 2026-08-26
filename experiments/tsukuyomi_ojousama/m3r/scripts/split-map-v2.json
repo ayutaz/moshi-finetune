@@ -95,5 +95,21 @@
     "v-078": "train",
     "v-079": "train",
     "v-080": "train"
+  },
+  "counts_note": "counts は assignment の内訳であって、出荷 dataset の行数ではない。v-047 と v-057 は 200 frame の床（m3/DATASET_SPEC.md:110,388）を割ったため出荷から外れており、実際の出荷は train 70 / dev 8 である。assignment 側は M3 から継承した正本なので変えない —— 対話が train と dev の間で移ると、rebuild とは無関係な理由で 2 つの run が比較できなくなる。",
+  "excluded_from_dataset": {
+    "dialogues": [
+      "v-047",
+      "v-057"
+    ],
+    "both_were": "train",
+    "why": "組み上げ後の frame 数が 198 で、200 frame の床を 2 frame 割った",
+    "rule": "m3/DATASET_SPEC.md:110 と :388。床は下げない",
+    "recorded_in": "experiments/tsukuyomi_ojousama/reports/m3r-timeline.json の min_frames_floor.decision",
+    "shipped_counts": {
+      "train": 70,
+      "dev": 8
+    },
+    "steps_unchanged": "ceil(70/8) x 5 = 45。M3 と同一"
   }
 }

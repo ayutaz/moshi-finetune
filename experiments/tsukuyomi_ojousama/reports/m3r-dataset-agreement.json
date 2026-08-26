@@ -1,0 +1,652 @@
+{
+  "schema_version": 1,
+  "milestone": "M3-R",
+  "dataset_id": "v-real-v2",
+  "checks": {
+    "channel_mismatches": 0,
+    "timestamp_violations": 0,
+    "text_mismatches": 0,
+    "non_stereo": 0,
+    "wrong_sample_rate": 0,
+    "zero_length": 0,
+    "below_min_frames": 0,
+    "text_frames_exceeding_audio": 0,
+    "saturated_files": 0
+  },
+  "scope": {
+    "dialogues": 78,
+    "turns": 386,
+    "turns_judgeable_for_channel": 377,
+    "turns_compared_against_the_script": 386,
+    "text_streams": 156,
+    "splits": {
+      "dev": {
+        "dialogues": 8,
+        "frames": {
+          "n": 8,
+          "min": 202.0,
+          "median": 240.0,
+          "mean": 240.25,
+          "max": 285.0
+        },
+        "seconds": {
+          "n": 8,
+          "min": 16.14,
+          "median": 19.160020833333334,
+          "mean": 19.181265625,
+          "max": 22.79
+        }
+      },
+      "train": {
+        "dialogues": 70,
+        "frames": {
+          "n": 70,
+          "min": 201.0,
+          "median": 244.0,
+          "mean": 244.57142857142858,
+          "max": 302.0
+        },
+        "seconds": {
+          "n": 70,
+          "min": 16.02,
+          "median": 19.5,
+          "mean": 19.532367261904763,
+          "max": 24.1
+        }
+      }
+    }
+  },
+  "parquet": {
+    "train": {
+      "sha256": "adea04749c1d3bd217c8f5db66c1463ae39899aff4d02991128824448830f201",
+      "byte_size": 431842,
+      "rows": 70,
+      "frames": {
+        "min": 201,
+        "max": 302,
+        "median": 244.0,
+        "mean": 244.571,
+        "total": 17120
+      },
+      "bare_whitespace_pieces": 0,
+      "text_frames": 34240,
+      "streams_per_speaker_column": [
+        9
+      ]
+    },
+    "dev": {
+      "sha256": "f21d821eef5211bc67d168d150483365e70bf78bbcc4f18522c4c1683a8a10db",
+      "byte_size": 64169,
+      "rows": 8,
+      "frames": {
+        "min": 202,
+        "max": 285,
+        "median": 240.0,
+        "mean": 240.25,
+        "total": 1922
+      },
+      "bare_whitespace_pieces": 0,
+      "text_frames": 3844,
+      "streams_per_speaker_column": [
+        9
+      ]
+    }
+  },
+  "negative_control": {
+    "what": "the two channels are swapped and the same check is run again",
+    "why": "A verdict that never fails is not a verdict. Swapping is the exact defect the channel check exists for and it changes no absolute level, so it separates 'the channels are right' from 'the check cannot tell'.",
+    "counts": {
+      "channel_mismatches": 752,
+      "timestamp_violations": 0,
+      "text_mismatches": 0,
+      "non_stereo": 0,
+      "wrong_sample_rate": 0,
+      "zero_length": 0,
+      "below_min_frames": 0,
+      "text_frames_exceeding_audio": 0,
+      "saturated_files": 0
+    },
+    "dialogues_with_a_channel_mismatch": 78,
+    "backchannel_ncc": {
+      "n": 76,
+      "min": 0.08700835548106507,
+      "median": 0.18413679083276005,
+      "mean": 0.19159666796609123,
+      "max": 0.37659840227837577
+    }
+  },
+  "channel_margin_db": {
+    "definition": "20*log10(median frame RMS of the speaking channel / of the other channel), over the frames of the turn that no other speaker's turn covers",
+    "shipped": {
+      "n": 377,
+      "min": 9.55581605455775,
+      "median": 53.26216877612981,
+      "mean": 47.88608242906113,
+      "max": 75.25985873026707
+    },
+    "channels_swapped": {
+      "n": 377,
+      "min": -75.25985873026707,
+      "median": -53.26216877612981,
+      "mean": -47.88608242906113,
+      "max": -9.55581605455775
+    },
+    "shipped_turns_at_or_below_zero": 0,
+    "swapped_turns_above_zero": 0,
+    "narrowest_shipped": [
+      {
+        "dialogue": "v-065",
+        "turn": 2,
+        "speaker": "B",
+        "role": "backchannel",
+        "margin_db": 9.55581605455775
+      },
+      {
+        "dialogue": "v-039",
+        "turn": 2,
+        "speaker": "B",
+        "role": "backchannel",
+        "margin_db": 13.881983787149645
+      },
+      {
+        "dialogue": "v-063",
+        "turn": 3,
+        "speaker": "A",
+        "role": "body",
+        "margin_db": 24.709144295501474
+      },
+      {
+        "dialogue": "v-001",
+        "turn": 2,
+        "speaker": "B",
+        "role": "backchannel",
+        "margin_db": 25.508527103655524
+      },
+      {
+        "dialogue": "v-054",
+        "turn": 1,
+        "speaker": "A",
+        "role": "body",
+        "margin_db": 25.673130581809293
+      }
+    ],
+    "separation_db": 19.1116321091155
+  },
+  "m3r_additions": {
+    "excluded_dialogues": {
+      "dialogues": [
+        "v-047",
+        "v-057"
+      ],
+      "sightings": [
+        {
+          "dialogue": "v-047",
+          "place": "split-map",
+          "found": [
+            "v-047"
+          ]
+        },
+        {
+          "dialogue": "v-047",
+          "place": "dialogue-scripts",
+          "found": [
+            "v-047"
+          ]
+        },
+        {
+          "dialogue": "v-047",
+          "place": "staging-audio",
+          "found": [
+            "v-047"
+          ]
+        },
+        {
+          "dialogue": "v-047",
+          "place": "staging-text",
+          "found": [
+            "v-047"
+          ]
+        },
+        {
+          "dialogue": "v-057",
+          "place": "split-map",
+          "found": [
+            "v-057"
+          ]
+        },
+        {
+          "dialogue": "v-057",
+          "place": "dialogue-scripts",
+          "found": [
+            "v-057"
+          ]
+        },
+        {
+          "dialogue": "v-057",
+          "place": "staging-audio",
+          "found": [
+            "v-057"
+          ]
+        },
+        {
+          "dialogue": "v-057",
+          "place": "staging-text",
+          "found": [
+            "v-057"
+          ]
+        }
+      ],
+      "blocking": [
+        {
+          "dialogue": "v-047",
+          "place": "split-map",
+          "found": [
+            "v-047"
+          ]
+        },
+        {
+          "dialogue": "v-057",
+          "place": "split-map",
+          "found": [
+            "v-057"
+          ]
+        }
+      ],
+      "places_scanned": [
+        "dialogue-scripts",
+        "manifest",
+        "parquet",
+        "split-audio",
+        "split-map",
+        "split-text",
+        "staging-audio",
+        "staging-text",
+        "tok-audio",
+        "tok-text"
+      ]
+    },
+    "backchannel": {
+      "checked": 78,
+      "with_audio": 76,
+      "absent_and_absent_from_the_script": 2,
+      "ncc": {
+        "n": 76,
+        "min": 0.9999999972304712,
+        "median": 0.9999999984326065,
+        "mean": 0.9999999983991489,
+        "max": 0.9999999988608634
+      },
+      "lag_error_seconds": {
+        "n": 76,
+        "min": 0.0,
+        "median": 0.040000000000000036,
+        "mean": 0.03789473684210537,
+        "max": 0.07000000000000028
+      },
+      "turn_median_rms": {
+        "n": 76,
+        "min": 0.002238167875522864,
+        "median": 0.14861388085795027,
+        "mean": 0.14329644138017072,
+        "max": 0.23602648303202262
+      },
+      "failures": []
+    },
+    "room_tone": {
+      "channels_checked": 156,
+      "failures": [],
+      "median_rms": {
+        "n": 156,
+        "min": 0.00016867117240103327,
+        "median": 0.00021163498184376142,
+        "mean": 0.00021836650122237838,
+        "max": 0.000475185841050349
+      },
+      "longest_all_zero_seconds": {
+        "n": 156,
+        "min": 0.0,
+        "median": 0.0,
+        "mean": 0.0,
+        "max": 0.0
+      }
+    }
+  },
+  "observed_not_gated": {
+    "counts": {
+      "turns_never_alone": 9
+    },
+    "turns_never_alone": [
+      {
+        "count": "turns_never_alone",
+        "kind": "no_exclusive_frames",
+        "dialogue": "v-015",
+        "turn": 2,
+        "speaker": "B"
+      },
+      {
+        "count": "turns_never_alone",
+        "kind": "no_exclusive_frames",
+        "dialogue": "v-019",
+        "turn": 2,
+        "speaker": "B"
+      },
+      {
+        "count": "turns_never_alone",
+        "kind": "no_exclusive_frames",
+        "dialogue": "v-027",
+        "turn": 3,
+        "speaker": "A"
+      },
+      {
+        "count": "turns_never_alone",
+        "kind": "no_exclusive_frames",
+        "dialogue": "v-031",
+        "turn": 2,
+        "speaker": "B"
+      },
+      {
+        "count": "turns_never_alone",
+        "kind": "no_exclusive_frames",
+        "dialogue": "v-036",
+        "turn": 2,
+        "speaker": "B"
+      },
+      {
+        "count": "turns_never_alone",
+        "kind": "no_exclusive_frames",
+        "dialogue": "v-045",
+        "turn": 2,
+        "speaker": "B"
+      },
+      {
+        "count": "turns_never_alone",
+        "kind": "no_exclusive_frames",
+        "dialogue": "v-069",
+        "turn": 2,
+        "speaker": "B"
+      },
+      {
+        "count": "turns_never_alone",
+        "kind": "no_exclusive_frames",
+        "dialogue": "v-070",
+        "turn": 2,
+        "speaker": "B"
+      },
+      {
+        "count": "turns_never_alone",
+        "kind": "no_exclusive_frames",
+        "dialogue": "v-073",
+        "turn": 2,
+        "speaker": "B"
+      }
+    ],
+    "speaker_levels": {
+      "unit": "median frame RMS over the turn, linear full scale",
+      "turns": 386,
+      "per_speaker": {
+        "A": {
+          "n": 154,
+          "min": 0.007469016934870469,
+          "median": 0.01384463377520171,
+          "mean": 0.014689815571583798,
+          "max": 0.03496442337795466
+        },
+        "B": {
+          "n": 232,
+          "min": 0.002238167875522864,
+          "median": 0.12573534705839742,
+          "mean": 0.12938659120846813,
+          "max": 0.23602648303202262
+        }
+      },
+      "a_minus_b_db": -19.16351825621384,
+      "turns_below_speech_threshold": 22,
+      "note": "The turns under the speech threshold are all speaker A. They sit 30-40 times above the room tone on the same channel, so they are quiet speech, not silence."
+    },
+    "text_stream_length_difference": {
+      "n": 156,
+      "min": -141.0,
+      "median": -17.0,
+      "mean": -37.81410256410256,
+      "max": 12.0
+    },
+    "non_padding_tokens_truncated": 0
+  },
+  "problems": [
+    {
+      "count": "turns_never_alone",
+      "kind": "no_exclusive_frames",
+      "dialogue": "v-015",
+      "turn": 2,
+      "speaker": "B"
+    },
+    {
+      "count": "turns_never_alone",
+      "kind": "no_exclusive_frames",
+      "dialogue": "v-019",
+      "turn": 2,
+      "speaker": "B"
+    },
+    {
+      "count": "turns_never_alone",
+      "kind": "no_exclusive_frames",
+      "dialogue": "v-027",
+      "turn": 3,
+      "speaker": "A"
+    },
+    {
+      "count": "turns_never_alone",
+      "kind": "no_exclusive_frames",
+      "dialogue": "v-031",
+      "turn": 2,
+      "speaker": "B"
+    },
+    {
+      "count": "turns_never_alone",
+      "kind": "no_exclusive_frames",
+      "dialogue": "v-036",
+      "turn": 2,
+      "speaker": "B"
+    },
+    {
+      "count": "turns_never_alone",
+      "kind": "no_exclusive_frames",
+      "dialogue": "v-045",
+      "turn": 2,
+      "speaker": "B"
+    },
+    {
+      "count": "turns_never_alone",
+      "kind": "no_exclusive_frames",
+      "dialogue": "v-069",
+      "turn": 2,
+      "speaker": "B"
+    },
+    {
+      "count": "turns_never_alone",
+      "kind": "no_exclusive_frames",
+      "dialogue": "v-070",
+      "turn": 2,
+      "speaker": "B"
+    },
+    {
+      "count": "turns_never_alone",
+      "kind": "no_exclusive_frames",
+      "dialogue": "v-073",
+      "turn": 2,
+      "speaker": "B"
+    }
+  ],
+  "nine_counts_status": "pass",
+  "status": "fail",
+  "step": "3-3 新 dataset の一致検査",
+  "captured_at": "2026-08-27",
+  "condition": "1. dataset 検証で channel・時刻・テキスト不一致が0件",
+  "compares_with": "experiments/tsukuyomi_ojousama/reports/m3-dataset-agreement.json",
+  "tool": "tools/dataset_agreement.py",
+  "procedure": "experiments/tsukuyomi_ojousama/m3r/AGREEMENT_CHECK.md",
+  "status_note": "9 種の一致検査はすべて 0 で通った（nine_counts_status: pass）。全体の status が fail なのは M3-R 固有の追加検査 1 件、除外対話 v-047 / v-057 が split-map-v2.json に残っていることによる。mismatches_found を参照。",
+  "how_each_check_was_taken": {
+    "channel_mismatches": {
+      "m3_wording": "ターンごとに、話者のチャンネルがエネルギーを持ち、もう一方が持たないこと",
+      "why_it_had_to_change": "M3-R では非発話チャンネルにルームトーンが敷かれ、相槌は話者 A のターンに重ねて置かれる。どちらも設計どおりであり、M3 の文言ではどちらも不合格になる。",
+      "now": "(a) そのターンが排他的に占めるフレーム（他話者のターンが重ならないフレーム）で、話者のチャンネルの中央値 RMS がもう一方を上回ること。(b) その同じフレームで、もう一方のチャンネルが speech 閾値を超えないこと。",
+      "why_a_comparison_and_not_a_level": "この検査が捕まえる事象は左右の入れ替えであり、それはエネルギーをチャンネル間で移すだけで絶対値を変えない。比較には調整すべき閾値がなく、入れ替えを必ず捕まえる。",
+      "an_absolute_floor_was_tried_first_and_discarded": "最初は (a) を「中央値 RMS >= speech 閾値 0.01」と書いた。出荷 dataset の話者 A の 154 ターン中 22 件が落ちた。同じ対話のルームトーン（中央値 0.00021）と比べると、その 22 件は床の 30〜40 倍上にある。この閾値が見つけたのは無音ではなく、話者 A が話者 B より約 19 dB 静かだという dataset 全体の性質である。閾値ではなく測るものを直した。これは M3 が「チャンネル全体の RMS 比 1.5 倍」を「ターンごと」に直したときと同じ訂正であり、緩和ではない。絶対値は observed_not_gated.speaker_levels に残してある。",
+      "threshold_source": "reports/m3r-timeline.json timeline.speech_threshold_rms = 0.01。assembler がターンを置くときに使った値であり、この検査のために選んだ値ではない。",
+      "frames": "1 フレーム = 1920 サンプル（24 kHz / 12.5 Hz）。ウィンドウに完全に含まれるフレームだけを取る。境界をまたぐフレームは両側を含むのでどちらの証言にもならない。"
+    },
+    "timestamp_violations": {
+      "what": "語の時刻が音声の外に出る・start > end になる・同一話者の中で時刻が逆行する",
+      "measured_on": "出荷された語 transcript（tokenize されたのと同じファイル）と、書き出された wav の実長"
+    },
+    "text_mismatches": {
+      "what": "台本 dialogues-v2.jsonl の各ターンと、語 transcript から復元したターンを比較する",
+      "how_turns_are_recovered": "語 transcript は start 時刻でソートされた 1 本のリストで、重なりのある区間では話者が交互に現れる。話者ごとの連続実行でまとめると 5 ターンの対話が 11 断片になる。ターンを分けているのは時間であり、ターン内は語の end と次の語の start がビット単位で一致し、同一話者の中の不連続がターン境界になる。",
+      "compared_by": "表層ではなく pyopenjtalk の読み（カタカナ）。frontend は数詞を展開するため、v-063 の台本 1931年 は transcript では 千九百三十一年 になる。M3 も同じ 1 件で表層比較を捨てた。",
+      "surface_disagreements": 1,
+      "reading_disagreements": 0,
+      "which": "v-063 のみ。表層は不一致、読みは一致する。"
+    },
+    "non_stereo": "wav ヘッダのチャンネル数。tokenize_audio が assert で落ちる条件。",
+    "wrong_sample_rate": "wav ヘッダの sample rate。24000 以外を数える。",
+    "zero_length": "wav のサンプル数が 0。",
+    "below_min_frames": {
+      "floor": 200,
+      "source": "m3/DATASET_SPEC.md。下回る対話は script のバグであり、床は下げない。",
+      "measured_on": "tok-audio npz のフレーム数（parquet の行幅と一致することを別途確認した）",
+      "note": "第2段が床を割った 2 対話（v-047 198 / v-057 198）を dataset から外している。出荷物の最短は train 201 / dev 202 で、床を満たす。"
+    },
+    "text_frames_exceeding_audio": {
+      "m3_wording": "text stream が音声より長い",
+      "why_it_had_to_change": "字義どおりに取ると M3 のものを含めどの dataset でも全対話が落ちる。tokenize_text.py は text stream を (最終トークンの end + 1 秒) × frame rate まで pad するので、末尾に約 12.5 フレームの padding が必ず付く。prepare_dataset.merge_text_audio が切り落とすのはその padding である。",
+      "now": "audio のフレーム数を超えた位置に padding 以外のトークンがあるものを数える。すなわち、切り落とされて学習に入らない語トークンの数。",
+      "raw_length_difference_is_reported_not_gated": "observed_not_gated.text_stream_length_difference"
+    },
+    "saturated_files": {
+      "what": "フルスケールのサンプルが 3 個以上連続するファイル",
+      "source": "tools/tts_audio_report.py --max-clipped-run 既定 2。孤立した飽和は書き出し時のもので可聴でないことを M2 で確認済み。"
+    }
+  },
+  "m3r_addition_notes": {
+    "excluded_dialogues": {
+      "what": "第2段が 200 フレームの床で外した v-047 / v-057 が、出荷経路のどこにも残っていないこと",
+      "places_that_must_not_contain_them": [
+        "manifest",
+        "parquet",
+        "tok-audio",
+        "tok-text",
+        "split-audio",
+        "split-text",
+        "split-map"
+      ],
+      "places_scanned_but_not_gated": {
+        "dialogue-scripts": "dialogues-v2.jsonl は 80 対話の台本プールであり、出荷物ではない。除外は台本の否定ではなく床の適用なので、ここに残っていること自体は誤りではない。",
+        "staging-audio / staging-text": "m3r/v-real/audio・text は split を切り出す前の材料置き場で、80 本ある。train/ と dev/ の下に 70 + 8 しかコピーされていないことを別に確認した。"
+      },
+      "matching": "パス成分または語として一致するときだけ検出する。train/v-047 は当たり、v-0470 は当たらない。"
+    },
+    "backchannel": {
+      "what": "相槌ターンが台本と音声で一致すること",
+      "three_separate_questions": [
+        "manifest が名指す wav がその wav か（sha256）",
+        "その wav のテキストが台本のターンのテキストか（正規化文字列）",
+        "その wav が語 transcript の言う位置に置かれているか（最良ラグ NCC のラグと transcript のターン開始の差）"
+      ],
+      "why_ncc_alone_is_not_enough": "相互相関が 1.0 でも、それはクリップがチャンネルの「どこかに」あることしか言わない。text stream は transcript の時刻に合わせて作られているので、音声が別の位置に落ちていれば text と音がずれる。ラグを transcript のターン開始と突き合わせて初めて位置が保証される。",
+      "lag_tolerance_seconds": 0.08,
+      "lag_tolerance_why": "1 フレーム。text stream の分解能そのもの。",
+      "two_dialogues_have_no_backchannel": "v-011 と v-042。元の文に読点がなく分割できなかったため、台本が 3 ターン（open / body / close）の M3 形状のままである。manifest 側にも台本側にも相槌がないので、これは一致であって欠落ではない。出荷 78 対話のうち 76 が 5 ターン形状、2 が 3 ターン形状である。",
+      "turn_median_rms_is_not_a_level_gate": "相槌「はい、はい。」は 2 つの短い破裂の間に約 0.3 秒の内部休止を持つ。ターン全体の中央値はその休止に落ちることがあり、v-061 で 0.00224 になる。同じクリップ自体の RMS は 0.1256（76 本の最小）で正常であり、NCC も 1.0000 である。中央値が低いのはクリップが静かだからではなく、統計が休止を拾うからである。判定は排他フレームでの比較で行い、この中央値は記録にとどめる。"
+    },
+    "room_tone": {
+      "what": "ルームトーンが全対話の非発話チャンネルに入っていること",
+      "measured_on": "そのチャンネルの話者がどのターンにも入っていないフレーム",
+      "gate": "digital silence（フレーム内の全サンプルが厳密に 0）の連続が 1.0 秒未満で、かつ中央値 RMS が 0 より大きいこと",
+      "why_one_second": "tools/room_tone.py が記録した機序は、Mimi が長い厳密ゼロの区間を 1 つのコードに写像し（60 秒床の 96.8% が token 1316）、pad と『話者 A が黙っている』が同じ事象になったことである。1 秒はそれを起こしうる最短の長さとして取った。",
+      "not_a_channel_check": "チャンネルを入れ替えてもルームトーンは両チャンネルにあるので、negative control ではこの検査は落ちない。落ちないことが正しい。"
+    }
+  },
+  "mismatches_found": [
+    {
+      "n": 1,
+      "severity": "blocking",
+      "what": "除外した v-047 / v-057 が experiments/tsukuyomi_ojousama/m3r/scripts/split-map-v2.json に train として残っている。同ファイルの counts も {train: 72, dev: 8} のままである。",
+      "shipped_truth": "train 70 / dev 8",
+      "why_it_matters": "v-real-v2-dataset.json は split-map-v2.json を scripts.split_map として指しており、dataset の split の正本である。72 を信じた読者は出荷物と違う行数を得る。",
+      "not_fixed_here": "検査の役目は報告であり、データを直すことではない。第2段の担当が直す。"
+    },
+    {
+      "n": 2,
+      "severity": "blocking",
+      "what": "experiments/tsukuyomi_ojousama/reports/m3r-tokenize.json が出荷前の 72 行 parquet を記録したままである。",
+      "stale_fields": {
+        "parquet.train_rows": {
+          "recorded": 72,
+          "measured": 70
+        },
+        "parquet.files.v-real/train.sha256": {
+          "recorded": "5cf8d84b1c17b6497d3f9f81c04d6dcd911c722c4cfdd14693e232d7eb4b91ff",
+          "measured": "adea04749c1d3bd217c8f5db66c1463ae39899aff4d02991128824448830f201"
+        },
+        "parquet.files.v-real/train.byte_size": {
+          "recorded": 439186,
+          "measured": 431842
+        },
+        "parquet.files.v-real/dev.sha256": {
+          "recorded": "b80c66ba714963e94d3b57d7e7cbb89128bf58f4f1fe507e2a2f93f881d7943f",
+          "measured": "f21d821eef5211bc67d168d150483365e70bf78bbcc4f18522c4c1683a8a10db"
+        },
+        "parquet.files.v-real/dev.byte_size": {
+          "recorded": 63772,
+          "measured": 64169
+        },
+        "parquet.frames.train.min": {
+          "recorded": 195,
+          "measured": 201
+        },
+        "parquet.frames.dev.min": {
+          "recorded": 200,
+          "measured": 202
+        },
+        "accounting.per_split_counts.v-real/train": {
+          "recorded": "wav / word_transcript / tok_audio / tok_text / parquet_rows すべて 72",
+          "measured": 70
+        },
+        "training_shape.rows": {
+          "recorded": 72,
+          "measured": 70
+        },
+        "training_shape.launch_assertions.Num examples": {
+          "recorded": 72,
+          "measured": 70
+        }
+      },
+      "measured_by": "tools/dataset_agreement.py report --parquet（parquet を直接読んだ値）",
+      "why_it_matters": "これは記録の齟齬にとどまらない。m3r-plan の 4-2 のゲートは「起動 assertion が Num examples 72 / batch 8 / steps 45」であり、m3r-tokenize.json は「違えば即 kill」と書いている。出荷 parquet で学習を始めると trainer は 70 と印字する。正しい run が、古い台帳を根拠に kill される。",
+      "steps_are_unaffected": "ceil(70/8) = 9、9 × 5 = 45。総 step は 72 行のときと同じ 45 である。齟齬は行数の側にしかない。",
+      "not_fixed_here": "第3段の担当ファイルではない。第4段に入る前に直すこと。correct_launch_assertion を参照。"
+    }
+  ],
+  "correct_launch_assertion": {
+    "Num examples": 70,
+    "Total train batch size": 8,
+    "Total optimization steps": 45,
+    "derived_from": "出荷 parquet の実測行数 70（tools/dataset_agreement.py が読んだもの）と global batch 8、5 epoch",
+    "action_if_different": "kill immediately"
+  },
+  "differences_from_m3": {
+    "dialogues": "M3 160 ペア（80 対話 × 2 dataset）、M3-R 78 対話（V-real のみ、床で 2 件除外）",
+    "turns_per_dialogue": "M3 3.0、M3-R 4.95（78 対話中 76 が 5 ターン、2 が 3 ターン）",
+    "non_speaking_channel": "M3 デジタル無音、M3-R ルームトーン（中央値 RMS 0.00021、厳密ゼロの連続 0 秒）",
+    "overlap": "M3 なし、M3-R あり（相槌が話者 A のターンに重なる）",
+    "channel_check": "M3 は絶対量、M3-R は排他フレームでの比較と negative control",
+    "text_check": "どちらも読み比較。M3-R も v-063 の 1 件で表層が食い違う。"
+  },
+  "limits": [
+    "語の時刻は forced alignment ではなく mora 比例配分である。平均としては正しく、細部では誤る。ターンの区切りは語の時刻の不連続から取っているので、この誤差はターン境界にも乗る。床と一致検査はその帰結を抑えるが、alignment 誤差そのものは測っていない。",
+    "channel_mismatches の判定は、排他フレームを持たない 9 ターンについては下せない。8 件は assembler が意図的に話者 A のターンの内側に埋めた相槌であり、1 件（v-027 turn 3）は話者 A の 1.05 秒の body ターンで、B が端から端まで重なっている。この 9 ターンは observed_not_gated に数え、ゲートには入れていない。",
+    "話者 A が話者 B より 19.16 dB 静かであることは測っただけで、良し悪しの判定はしていない。M3 も M3-R も水準の基準を事前登録していないので、いま作った基準は既にある候補を判定するために作った基準と区別がつかない。第4段より前に、これを基準にするかどうかを候補を見ずに決めること。",
+    "negative control はチャンネルの入れ替えだけを試した。時刻のずれ、話者の取り違え、別の対話の音声といった他の誤りに対する検出力は測っていない。"
+  ]
+}

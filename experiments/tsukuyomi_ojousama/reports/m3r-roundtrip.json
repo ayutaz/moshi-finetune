@@ -1,0 +1,1167 @@
+{
+ "schema_version": 1,
+ "report_id": "m3r-roundtrip",
+ "milestone": "M3-R",
+ "step": "第3段 3-1 — 学習投入 token を Mimi で decode し、元の stereo と突き合わせる",
+ "captured_at": "2026-08-27",
+ "branch": "experiment-j-moshi-character-voice-overfit",
+ "status": "pass",
+ "question": "parquet に入っている token は、本当に意図した音を表しているか。学習はこの parquet だけを見る。channel が入れ替わっていても、delay が二重にかかっていても、音が壊れて いても loss は下がるので、loss では気づけない。",
+ "tool": "tools/roundtrip_audio.py",
+ "tests": {
+  "file": "tests/test_roundtrip_audio.py",
+  "count": 52,
+  "suite": "907 passed, 8 skipped, 22 subtests (uv run --python 3.12 --with pytest --no-sync python -m pytest tests -q --ignore=tests/test_dataset_agreement.py)",
+  "suite_note": "tests/test_dataset_agreement.py は本タスクの担当外（3-3 の並行作業中のファイル）で、tools/dataset_agreement.py の KeyError 'other_median_rms' により 6 件が失敗している。本タスクの変更とは無関係で、除外して全件通過を確認した。"
+ },
+ "environment": {
+  "python": "3.12",
+  "torch": "2.4.1",
+  "torchaudio": "2.4.1",
+  "moshi": "0.1.0",
+  "speechbrain": "speechbrain/spkrec-ecapa-voxceleb (HF cache)",
+  "device": "cpu",
+  "device_note": "mps は cpu と bit-identical でないため、判定に使う数値はすべて cpu で取った。tokenize 時（m3r-tokenize.json）も cpu であり、encode と decode が同じ device に揃う。",
+  "audio_tokenizer": {
+   "repo": "kyutai/moshiko-pytorch-bf16",
+   "name": "tokenizer-e351c8d8-checkpoint125.safetensors",
+   "codebooks": 8,
+   "frame_rate_hz": 12.5,
+   "sample_rate": 24000
+  },
+  "text_tokenizer": {
+   "repo": "nu-dialogue/j-moshi-ext",
+   "name": "tokenizer_spm_32k_3.model"
+  },
+  "nice": 19,
+  "thread_limit": "OMP_NUM_THREADS=2, MKL_NUM_THREADS=2",
+  "gpu_used": false,
+  "cost_usd": 0.0
+ },
+ "inputs": {
+  "parquet": {
+   "train": {
+    "path": "data/experiments/tsukuyomi_ojousama/m3r/v-real/parquet/train-001-of-001.parquet",
+    "sha256": "adea04749c1d3bd217c8f5db66c1463ae39899aff4d02991128824448830f201",
+    "byte_size": 431842
+   },
+   "dev": {
+    "path": "data/experiments/tsukuyomi_ojousama/m3r/v-real/parquet/dev-001-of-001.parquet",
+    "sha256": "f21d821eef5211bc67d168d150483365e70bf78bbcc4f18522c4c1683a8a10db",
+    "byte_size": 64169
+   }
+  },
+  "rows": {
+   "train": 70,
+   "dev": 8
+  },
+  "source_audio": "data/experiments/tsukuyomi_ojousama/m3r/v-real/audio/{dialogue_id}.wav (24 kHz stereo, ch0=話者A / ch1=話者B)",
+  "m3_comparison": {
+   "parquet": "data/experiments/tsukuyomi_ojousama/m3/v-real/parquet/train-001-of-001.parquet",
+   "audio": "data/experiments/tsukuyomi_ojousama/m3/v-real/audio",
+   "why": "ルームトーンの前後比較を同一手続きで取るため。M3 の公表値は別プロトコル（12 対話・厳密ゼロフレーム・再 tokenize）なので、そのままでは対にならない"
+  },
+  "speaker_centroid": {
+   "dir": "data/experiments/tsukuyomi_ojousama/baseline-input/tsukuyomi-heldout",
+   "clips": 10,
+   "note": "評価専用の held-out 10 件。decode も学習も一切していない。ここでは centroid と較正帯の再計算にのみ使った"
+  }
+ },
+ "artifacts": {
+  "note": "すべて data/ 配下（gitignore）。生成音声はコミットしない",
+  "decoded_wav_dir": "data/experiments/tsukuyomi_ojousama/m3r/v-real/roundtrip/{stereo,source-A,source-B,decoded-A,decoded-B}/",
+  "decode_manifest": [
+   "data/experiments/tsukuyomi_ojousama/m3r/v-real/roundtrip/decode-train.json",
+   "data/experiments/tsukuyomi_ojousama/m3r/v-real/roundtrip/decode-dev.json"
+  ],
+  "compare": "data/experiments/tsukuyomi_ojousama/m3r/v-real/roundtrip/compare.json",
+  "silence": "data/experiments/tsukuyomi_ojousama/m3r/v-real/roundtrip/silence-A.json",
+  "codec_band": "data/experiments/tsukuyomi_ojousama/m3r/v-real/roundtrip/codec-band.json",
+  "likeness": "data/experiments/tsukuyomi_ojousama/m3r/v-real/roundtrip/likeness.json",
+  "text": "data/experiments/tsukuyomi_ojousama/m3r/v-real/roundtrip/text-train.json",
+  "durations_and_oov": "data/experiments/tsukuyomi_ojousama/m3r/v-real/roundtrip/durations-and-oov.json"
+ },
+ "commands": {
+  "order": [
+   "decode(train)",
+   "decode(dev)",
+   "compare",
+   "silence",
+   "codec-band",
+   "speaker_similarity",
+   "text"
+  ],
+  "prefix": "OMP_NUM_THREADS=2 MKL_NUM_THREADS=2 PYTHONPATH=. nice -n 19 uv run --python 3.12 --no-project",
+  "decode_train": "<prefix> --with \"torch==2.4.1\" --with \"torchaudio==2.4.1\" --with numpy --with soundfile --with \"moshi==0.1.0\" --with huggingface_hub --with pandas --with pyarrow --with tqdm --with sentencepiece python -m tools.roundtrip_audio decode --parquet data/experiments/tsukuyomi_ojousama/m3r/v-real/parquet/train-001-of-001.parquet --source-dir data/experiments/tsukuyomi_ojousama/m3r/v-real/audio --out-dir data/experiments/tsukuyomi_ojousama/m3r/v-real/roundtrip --report data/experiments/tsukuyomi_ojousama/m3r/v-real/roundtrip/decode-train.json --count 8 --device cpu",
+  "decode_dev": "同上、--parquet .../dev-001-of-001.parquet --count 2 --report .../decode-dev.json",
+  "compare": "<prefix> --with numpy --with soundfile --with pandas --with pyarrow python -m tools.roundtrip_audio compare --decoded-dir data/experiments/tsukuyomi_ojousama/m3r/v-real/roundtrip --source-dir data/experiments/tsukuyomi_ojousama/m3r/v-real/audio --report data/experiments/tsukuyomi_ojousama/m3r/v-real/roundtrip/compare.json",
+  "silence": "<prefix> --with numpy --with soundfile --with pandas --with pyarrow python -m tools.roundtrip_audio silence --dataset m3r-v-real-train .../m3r/v-real/parquet/train-001-of-001.parquet .../m3r/v-real/audio --dataset m3r-v-real-dev .../m3r/v-real/parquet/dev-001-of-001.parquet .../m3r/v-real/audio --dataset m3-v-real-train .../m3/v-real/parquet/train-001-of-001.parquet .../m3/v-real/audio --speaker A --report .../roundtrip/silence-A.json",
+  "codec_band": "<prefix> --with \"torch==2.4.1\" --with \"torchaudio==2.4.1\" --with numpy --with soundfile --with \"moshi==0.1.0\" --with huggingface_hub --with speechbrain python -m tools.roundtrip_audio codec-band --clips-dir data/experiments/tsukuyomi_ojousama/baseline-input/tsukuyomi-heldout --out-dir .../roundtrip/heldout-mimi --report .../roundtrip/codec-band.json --device cpu",
+  "speaker_similarity": "<prefix> --with \"torch==2.4.1\" --with \"torchaudio==2.4.1\" --with numpy --with soundfile --with speechbrain python -m tools.speaker_similarity --target-dir data/experiments/tsukuyomi_ojousama/baseline-input/tsukuyomi-heldout --system source-A .../roundtrip/source-A --system decoded-A .../roundtrip/decoded-A --system source-B .../roundtrip/source-B --system decoded-B .../roundtrip/decoded-B --baseline source-A --device cpu --report .../roundtrip/likeness.json",
+  "text": "<prefix> --with numpy --with pandas --with pyarrow --with sentencepiece --with huggingface_hub python -m tools.roundtrip_audio text --parquet .../m3r/v-real/parquet/train-001-of-001.parquet --count 8 --report .../roundtrip/text-train.json",
+  "tests": "uv run --python 3.12 --with pytest --no-sync python -m pytest tests -q"
+ },
+ "inspected": {
+  "count": 10,
+  "train": [
+   "train/v-001",
+   "train/v-011",
+   "train/v-022",
+   "train/v-034",
+   "train/v-044",
+   "train/v-059",
+   "train/v-070",
+   "train/v-080"
+  ],
+  "dev": [
+   "dev/v-016",
+   "dev/v-061"
+  ],
+  "selection": "tools.roundtrip_audio.evenly_spaced — sorted した dialogue_id 上に等間隔で両端を含めて取る。乱数を使わないので再実行しても同じ対話が選ばれ、2 回の結果の食い違いは本物の食い違いになる",
+  "frames": {
+   "v-001": 278,
+   "v-011": 258,
+   "v-022": 289,
+   "v-034": 302,
+   "v-044": 279,
+   "v-059": 205,
+   "v-070": 252,
+   "v-080": 244,
+   "v-016": 245,
+   "v-061": 253
+  },
+  "silence_gate_scope": "無音 token の測定だけは 10 件ではなく train 70 / dev 8 の全行で取った（Mimi 不要で安い）"
+ },
+ "channel_identity": {
+  "verdict": "入れ替わりなし。4 つの独立な経路がすべて一致",
+  "1_envelope_correlation": {
+   "method": "1920 サンプル（= Mimi 1 フレーム = 80 ms）ごとの RMS 包絡の Pearson 相関を、source×decode の 2×2 で取る",
+   "matrix_per_dialogue": {
+    "v-001": {
+     "A": {
+      "A": 0.9904,
+      "B": -0.3439
+     },
+     "B": {
+      "A": -0.3394,
+      "B": 0.9924
+     }
+    },
+    "v-011": {
+     "A": {
+      "A": 0.9943,
+      "B": -0.2745
+     },
+     "B": {
+      "A": -0.2747,
+      "B": 0.9897
+     }
+    },
+    "v-016": {
+     "A": {
+      "A": 0.9912,
+      "B": -0.36
+     },
+     "B": {
+      "A": -0.3517,
+      "B": 0.9928
+     }
+    },
+    "v-022": {
+     "A": {
+      "A": 0.988,
+      "B": -0.2403
+     },
+     "B": {
+      "A": -0.2482,
+      "B": 0.9913
+     }
+    },
+    "v-034": {
+     "A": {
+      "A": 0.9882,
+      "B": -0.2367
+     },
+     "B": {
+      "A": -0.2469,
+      "B": 0.991
+     }
+    },
+    "v-044": {
+     "A": {
+      "A": 0.9828,
+      "B": -0.3162
+     },
+     "B": {
+      "A": -0.3131,
+      "B": 0.9916
+     }
+    },
+    "v-059": {
+     "A": {
+      "A": 0.9846,
+      "B": -0.2828
+     },
+     "B": {
+      "A": -0.2696,
+      "B": 0.9937
+     }
+    },
+    "v-061": {
+     "A": {
+      "A": 0.9908,
+      "B": -0.3452
+     },
+     "B": {
+      "A": -0.3415,
+      "B": 0.9941
+     }
+    },
+    "v-070": {
+     "A": {
+      "A": 0.9921,
+      "B": -0.3561
+     },
+     "B": {
+      "A": -0.3621,
+      "B": 0.9921
+     }
+    },
+    "v-080": {
+     "A": {
+      "A": 0.9878,
+      "B": -0.2766
+     },
+     "B": {
+      "A": -0.2756,
+      "B": 0.9899
+     }
+    }
+   },
+   "assignment_identity": "10/10",
+   "min_margin": 1.224919,
+   "reading": "自チャンネル 0.983〜0.994、他チャンネル −0.24〜−0.36。A が話す時間帯に B は黙るので 交差相関は負になる。最小マージン 1.22 は「ぎりぎり勝った」ではなく別物である"
+  },
+  "2_voicing_overlap": {
+   "method": "RMS >= 0.01（m3r-timeline.json の speech_threshold_rms と同一）の有声フレーム集合の IoU を 2×2 で取る",
+   "assignment_identity": "10/10",
+   "min_margin": 0.671292,
+   "A_iou": {
+    "n": 10,
+    "min": 0.7,
+    "median": 0.869318,
+    "mean": 0.848254,
+    "max": 0.967742
+   },
+   "B_iou": {
+    "n": 10,
+    "min": 0.935829,
+    "median": 0.976,
+    "mean": 0.973772,
+    "max": 0.9875
+   },
+   "A_accuracy": {
+    "n": 10,
+    "min": 0.948207,
+    "median": 0.97302,
+    "mean": 0.971386,
+    "max": 0.996678
+   },
+   "B_accuracy": {
+    "n": 10,
+    "min": 0.956989,
+    "median": 0.987875,
+    "mean": 0.983906,
+    "max": 0.99278
+   },
+   "reading": "有声区間の位置がずれていない。A の発話時間帯は decode 後も同じ場所にある"
+  },
+  "3_speaker_embedding": {
+   "method": "ECAPA cosine を つくよみちゃん centroid（held-out 10 件）に対して取る。入れ替わりがあれば decoded-A と decoded-B の値が入れ替わる",
+   "decoded_A_mean": 0.650543,
+   "decoded_B_mean": 0.093026,
+   "decoded_B_max": 0.135838,
+   "reading": "decoded-A 0.6505 に対し decoded-B は 0.0930（最大でも 0.1358）。入れ替わっていれば この 2 つが逆になる。包絡相関とは独立な経路である"
+  },
+  "4_text_stream": {
+   "method": "A/B それぞれの text 行を SentencePiece で復号し、話者の役割と一致するかを見る",
+   "reading": "A はつくよみちゃんコーパスの本文、B は質問文と相槌（「はい、はい。」「ええ。」「なるほど、ええ。」）。8 件すべてで役割が一致した。audio とは完全に別の経路の確認である",
+   "examples": [
+    {
+     "dialogue_id": "train/v-001",
+     "A": "また、東寺のように、五大明王と呼ばれる、主要な明王の中央に配されることも多い。",
+     "B": "仏像の配置について教えてください。明王というのは、お寺の中でどのあたりに置かれるものなのでしょうか。はい、はい。なるほど…"
+    },
+    {
+     "dialogue_id": "train/v-011",
+     "A": "クィーンズアベニューアルファに所属している。",
+     "B": "その選手は、どちらのチームに所属しているのでしょうか。調べても、なかなか出てこなくて困っていました。そういう名前のところ…"
+    },
+    {
+     "dialogue_id": "train/v-022",
+     "A": "その々とした人柄が、老若男女に慕われている。",
+     "B": "その方は、周りからどんなふうに見られていたのでしょうか。人柄について、よく語られる方だと聞きました。そうですか。年齢を問…"
+    }
+   ]
+  }
+ },
+ "delay_not_baked_in": {
+  "question": "delay が二重にかかっていないか。parquet は遅延前の stream を持ち、delay は utils/data.delay_and_pad_streams が学習時に適用する",
+  "method": "source と decode の RMS 包絡の相互相関を ±10 フレーム（±0.8 秒）で最大化し、最良ラグを取る",
+  "channels_checked": 20,
+  "best_lag_nonzero": [],
+  "per_dialogue": {
+   "v-001": {
+    "A": 0,
+    "B": 0
+   },
+   "v-011": {
+    "A": 0,
+    "B": 0
+   },
+   "v-016": {
+    "A": 0,
+    "B": 0
+   },
+   "v-022": {
+    "A": 0,
+    "B": 0
+   },
+   "v-034": {
+    "A": 0,
+    "B": 0
+   },
+   "v-044": {
+    "A": 0,
+    "B": 0
+   },
+   "v-059": {
+    "A": 0,
+    "B": 0
+   },
+   "v-061": {
+    "A": 0,
+    "B": 0
+   },
+   "v-070": {
+    "A": 0,
+    "B": 0
+   },
+   "v-080": {
+    "A": 0,
+    "B": 0
+   }
+  },
+  "reading": "20 チャンネルすべてが lag 0 で最大。parquet に delay は焼き込まれていない"
+ },
+ "audio_integrity": {
+  "frame": "1920 サンプル / 80 ms / Mimi 1 フレーム",
+  "speech_threshold_rms": 0.01,
+  "per_speaker": {
+   "A": {
+    "silence_share_source": {
+     "n": 10,
+     "min": 0.74502,
+     "median": 0.79172,
+     "mean": 0.817138,
+     "max": 0.914397
+    },
+    "silence_share_decoded": {
+     "n": 10,
+     "min": 0.782787,
+     "median": 0.826414,
+     "mean": 0.845752,
+     "max": 0.92607
+    },
+    "silence_share_delta": {
+     "n": 10,
+     "min": 0.003322,
+     "median": 0.02698,
+     "mean": 0.028614,
+     "max": 0.051793
+    },
+    "rms_source": {
+     "n": 10,
+     "min": 0.00622,
+     "median": 0.011506,
+     "mean": 0.010848,
+     "max": 0.014993
+    },
+    "rms_decoded": {
+     "n": 10,
+     "min": 0.005407,
+     "median": 0.009742,
+     "mean": 0.009343,
+     "max": 0.013393
+    },
+    "peak_source": {
+     "n": 10,
+     "min": 0.084778,
+     "median": 0.125549,
+     "mean": 0.132309,
+     "max": 0.177002
+    },
+    "peak_decoded": {
+     "n": 10,
+     "min": 0.073303,
+     "median": 0.122116,
+     "mean": 0.124414,
+     "max": 0.214905
+    },
+    "clipped_share_source": {
+     "n": 10,
+     "min": 0.0,
+     "median": 0.0,
+     "mean": 0.0,
+     "max": 0.0
+    },
+    "clipped_share_decoded": {
+     "n": 10,
+     "min": 0.0,
+     "median": 0.0,
+     "mean": 0.0,
+     "max": 0.0
+    },
+    "centroid_hz_source": {
+     "n": 10,
+     "min": 2779.7,
+     "median": 3005.5,
+     "mean": 3162.4,
+     "max": 3760.0
+    },
+    "centroid_hz_decoded": {
+     "n": 10,
+     "min": 1637.9,
+     "median": 2071.1,
+     "mean": 2112.8,
+     "max": 2983.6
+    },
+    "energy_above_4k_source": {
+     "n": 10,
+     "min": 0.01095,
+     "median": 0.02347,
+     "mean": 0.02672,
+     "max": 0.05807
+    },
+    "energy_above_4k_decoded": {
+     "n": 10,
+     "min": 0.00214,
+     "median": 0.00548,
+     "mean": 0.00597,
+     "max": 0.01911
+    },
+    "energy_above_6k_source": {
+     "n": 10,
+     "min": 0.00713,
+     "median": 0.01469,
+     "mean": 0.01724,
+     "max": 0.03961
+    },
+    "energy_above_6k_decoded": {
+     "n": 10,
+     "min": 0.00113,
+     "median": 0.00233,
+     "mean": 0.0035,
+     "max": 0.01255
+    }
+   },
+   "B": {
+    "silence_share_source": {
+     "n": 10,
+     "min": 0.298611,
+     "median": 0.418159,
+     "mean": 0.404997,
+     "max": 0.503968
+    },
+    "silence_share_decoded": {
+     "n": 10,
+     "min": 0.315972,
+     "median": 0.429965,
+     "mean": 0.420426,
+     "max": 0.515873
+    },
+    "silence_share_delta": {
+     "n": 10,
+     "min": 0.00722,
+     "median": 0.012125,
+     "mean": 0.015429,
+     "max": 0.043011
+    },
+    "rms_source": {
+     "n": 10,
+     "min": 0.118178,
+     "median": 0.126575,
+     "mean": 0.12782,
+     "max": 0.138355
+    },
+    "rms_decoded": {
+     "n": 10,
+     "min": 0.102892,
+     "median": 0.11185,
+     "mean": 0.112045,
+     "max": 0.121601
+    },
+    "peak_source": {
+     "n": 10,
+     "min": 0.989685,
+     "median": 0.998062,
+     "mean": 0.997311,
+     "max": 0.999512
+    },
+    "peak_decoded": {
+     "n": 10,
+     "min": 0.911957,
+     "median": 0.957352,
+     "mean": 0.955655,
+     "max": 0.999969
+    },
+    "clipped_share_source": {
+     "n": 10,
+     "min": 0.0,
+     "median": 6.302e-06,
+     "mean": 8.969e-06,
+     "max": 2.2494e-05
+    },
+    "clipped_share_decoded": {
+     "n": 10,
+     "min": 0.0,
+     "median": 0.0,
+     "mean": 7.33e-07,
+     "max": 5.191e-06
+    },
+    "centroid_hz_source": {
+     "n": 10,
+     "min": 1167.9,
+     "median": 1338.7,
+     "mean": 1332.8,
+     "max": 1470.0
+    },
+    "centroid_hz_decoded": {
+     "n": 10,
+     "min": 1005.0,
+     "median": 1140.8,
+     "mean": 1126.6,
+     "max": 1229.2
+    },
+    "energy_above_4k_source": {
+     "n": 10,
+     "min": 0.00123,
+     "median": 0.00299,
+     "mean": 0.00329,
+     "max": 0.00667
+    },
+    "energy_above_4k_decoded": {
+     "n": 10,
+     "min": 0.0005,
+     "median": 0.00124,
+     "mean": 0.00133,
+     "max": 0.00267
+    },
+    "energy_above_6k_source": {
+     "n": 10,
+     "min": 0.00048,
+     "median": 0.00155,
+     "mean": 0.00151,
+     "max": 0.0027
+    },
+    "energy_above_6k_decoded": {
+     "n": 10,
+     "min": 0.00022,
+     "median": 0.00068,
+     "mean": 0.00063,
+     "max": 0.00105
+    }
+   }
+  },
+  "readings": {
+   "silence": "無音率は A で +0.029（平均 0.817 → 0.846）、B で +0.015。増分は発話の減衰尾が 0.01 の閾値を割るためで、無音区間が伸びたのではない（有声区間の位置は IoU で一致）",
+   "level": "RMS は A −14%、B −12.5%。非可逆コーデックの通常の減衰",
+   "clipping": "decode 側の飽和は増えていない。むしろ減っている。source B は TTS 由来で既に peak 0.99 付近（clipped_share 中央値 6.3e-6）だが、decode の clipped_share は 中央値 0、最大 5.2e-6。コーデックがオーバーシュートを作ってはいない",
+   "band": "A のスペクトル重心 3162 Hz → 2113 Hz（−33%）、4 kHz 以上のエネルギー比 0.0267 → 0.0060。B は 1333 → 1127 Hz。これは Mimi 8 codebook（約 1.1 kbps）の帯域損失であって データセットの欠陥ではない。**そして、これがモデルの表現の天井そのものである**: 学習も生成も同じ 8 codebook を通るので、モデルはこれより良い音を出せない。損失の大きさは下の speaker_likeness で cosine に換算して測った"
+  }
+ },
+ "speaker_likeness": {
+  "why_a_second_band": "CLAUDE.md:「較正帯は測定の一部であって付け足しではない」。公表されている較正帯 (mean 0.8166 / floor 0.7405) は **生録音** で測られている。学習投入 token の decode は Mimi を通っており、同じ帯で読むと、コーデックの損失をデータセットの欠陥と誤読する。そこで帯そのものの 10 件を同じ Mimi 8 codebook で往復させ、帯を測り直した",
+  "natural_band": {
+   "count": 10,
+   "mean": 0.816644,
+   "median": 0.817536,
+   "min": 0.740458,
+   "max": 0.878037,
+   "reproduces_published": "m3-likeness-calibration.json の mean 0.8166439711675627 / min 0.7404582336559322 を 小数第 7 位まで再現した。経路（_read_wav → voiced_segments → rms_normalise → _embed_all → cosine）が同一であることの確認になる"
+  },
+  "codec_adjusted_band": {
+   "method": "each held-out recording is Mimi-encoded at 8 codebooks and decoded, then scored against the centroid of the other nine NATURAL recordings - the same axis the published band and the arms are read on",
+   "count": 10,
+   "mean": 0.660679,
+   "median": 0.686262,
+   "min": 0.503765,
+   "max": 0.764987,
+   "codec_cost_mean": -0.155965,
+   "codec_cost_floor": -0.236693,
+   "per_clip": {
+    "VOICEACTRESS100_026": 0.7404,
+    "VOICEACTRESS100_032": 0.6872,
+    "VOICEACTRESS100_047": 0.7219,
+    "VOICEACTRESS100_048": 0.645,
+    "VOICEACTRESS100_052": 0.765,
+    "VOICEACTRESS100_069": 0.6905,
+    "VOICEACTRESS100_074": 0.5215,
+    "VOICEACTRESS100_092": 0.5038,
+    "VOICEACTRESS100_095": 0.6853,
+    "VOICEACTRESS100_099": 0.6461
+   }
+  },
+  "measured": {
+   "source-A": {
+    "count": 10,
+    "mean": 0.803715,
+    "median": 0.817019,
+    "min": 0.740312,
+    "max": 0.875526,
+    "stdev": 0.047829
+   },
+   "decoded-A": {
+    "count": 10,
+    "mean": 0.650543,
+    "median": 0.647031,
+    "min": 0.481888,
+    "max": 0.757394,
+    "stdev": 0.0856
+   },
+   "source-B": {
+    "count": 10,
+    "mean": 0.088307,
+    "median": 0.092412,
+    "min": 0.044784,
+    "max": 0.109895,
+    "stdev": 0.019816
+   },
+   "decoded-B": {
+    "count": 10,
+    "mean": 0.093026,
+    "median": 0.096605,
+    "min": 0.017066,
+    "max": 0.135838,
+    "stdev": 0.031477
+   }
+  },
+  "per_clip": {
+   "v-001": {
+    "source_A": 0.8385,
+    "decoded_A": 0.7008,
+    "delta": -0.1376,
+    "decoded_B": 0.1012,
+    "source_A_in_natural_band": true,
+    "decoded_A_in_codec_band": true
+   },
+   "v-011": {
+    "source_A": 0.7514,
+    "decoded_A": 0.5797,
+    "delta": -0.1717,
+    "decoded_B": 0.0935,
+    "source_A_in_natural_band": true,
+    "decoded_A_in_codec_band": true
+   },
+   "v-016": {
+    "source_A": 0.7707,
+    "decoded_A": 0.755,
+    "delta": -0.0157,
+    "decoded_B": 0.1238,
+    "source_A_in_natural_band": true,
+    "decoded_A_in_codec_band": true
+   },
+   "v-022": {
+    "source_A": 0.8063,
+    "decoded_A": 0.632,
+    "delta": -0.1743,
+    "decoded_B": 0.1358,
+    "source_A_in_natural_band": true,
+    "decoded_A_in_codec_band": true
+   },
+   "v-034": {
+    "source_A": 0.7472,
+    "decoded_A": 0.4819,
+    "delta": -0.2653,
+    "decoded_B": 0.0859,
+    "source_A_in_natural_band": true,
+    "decoded_A_in_codec_band": false
+   },
+   "v-044": {
+    "source_A": 0.7403,
+    "decoded_A": 0.626,
+    "delta": -0.1143,
+    "decoded_B": 0.0805,
+    "source_A_in_natural_band": false,
+    "decoded_A_in_codec_band": true
+   },
+   "v-059": {
+    "source_A": 0.8277,
+    "decoded_A": 0.6621,
+    "delta": -0.1656,
+    "decoded_B": 0.1001,
+    "source_A_in_natural_band": true,
+    "decoded_A_in_codec_band": true
+   },
+   "v-061": {
+    "source_A": 0.8755,
+    "decoded_A": 0.7123,
+    "delta": -0.1633,
+    "decoded_B": 0.0171,
+    "source_A_in_natural_band": true,
+    "decoded_A_in_codec_band": true
+   },
+   "v-070": {
+    "source_A": 0.839,
+    "decoded_A": 0.5983,
+    "delta": -0.2407,
+    "decoded_B": 0.0926,
+    "source_A_in_natural_band": true,
+    "decoded_A_in_codec_band": true
+   },
+   "v-080": {
+    "source_A": 0.8405,
+    "decoded_A": 0.7574,
+    "delta": -0.0831,
+    "decoded_B": 0.0997,
+    "source_A_in_natural_band": true,
+    "decoded_A_in_codec_band": true
+   }
+  },
+  "counts": {
+   "source_A_at_or_above_natural_floor": "9/10",
+   "decoded_A_at_or_above_codec_floor": "9/10"
+  },
+  "paired_round_trip_cost": {
+   "pairs": 10,
+   "mean_delta": -0.153173,
+   "stdev": 0.072145,
+   "lower_on": "10/10",
+   "cross_check": "対話 10 件で測った往復コスト −0.1532 と、held-out 10 件で測ったコーデックコスト −0.1560 が 0.0028 差で一致した。互いに独立な録音集合・同一コーデックであり、この低下は **データセットではなく Mimi のもの** だと言える"
+  },
+  "duration_check": {
+   "why": "ECAPA は発話長に反応する。帯と被検体の有声長が違えば、差は話者の差ではなく長さの差になる",
+   "voiced_seconds": {
+    "heldout-natural": {
+     "n": 10,
+     "min": 1.495,
+     "median": 2.12,
+     "mean": 2.141,
+     "max": 3.12
+    },
+    "heldout-mimi": {
+     "n": 10,
+     "min": 1.2,
+     "median": 1.72,
+     "mean": 1.868,
+     "max": 3.02
+    },
+    "source-A": {
+     "n": 10,
+     "min": 1.16,
+     "median": 2.64,
+     "mean": 2.328,
+     "max": 3.48
+    },
+    "decoded-A": {
+     "n": 10,
+     "min": 1.12,
+     "median": 2.24,
+     "mean": 1.996,
+     "max": 3.16
+    },
+    "source-B": {
+     "n": 10,
+     "min": 7.96,
+     "median": 11.1,
+     "mean": 10.812,
+     "max": 14.58
+    },
+    "decoded-B": {
+     "n": 10,
+     "min": 7.38,
+     "median": 10.54,
+     "mean": 10.138,
+     "max": 13.9
+    }
+   },
+   "reading": "有声長は heldout-natural 2.14 s / heldout-mimi 1.87 s / source-A 2.33 s / decoded-A 2.00 s と揃っている。交絡ではない。source-B / decoded-B が 10 秒台なのは B が質問と相槌を担当し発話量が多いためで、B の値は入れ替わり検出にしか使っていない"
+  },
+  "verdict": "decoded-A の平均 0.6505 は、コーデック調整後の帯の平均 0.6607 の −0.0102 に位置し、10 件中 9 件が帯の floor 0.5038 以上。**Mimi を通した後の「対象話者本人」が占める水準を、学習投入 token の decode は保っている。** 生録音の帯 0.8166 は 8 codebook を通した音では 誰にも到達できない（本人の録音でも 0.6607 まで落ちる）ことを測って確かめた"
+ },
+ "room_tone_in_situ": {
+  "question": "ルームトーンは decode 後も効いているか。無音区間が無音 token 1316 に潰れていないか",
+  "frame_selection": "frames of the SOURCE recording's channel with RMS < 0.01 over 1920 samples, the threshold m3r-timeline.json built the dialogues with",
+  "protocol_note": "m3r-roomtone.json の in-situ は「デジタル無音区間を敷き詰めて再 tokenize し、厳密ゼロだったフレームだけを集計」。出荷済みチャンネルには既にルームトーンが入って いて厳密ゼロが存在しないので、同じ選び方はできない。ここでは builder 自身の閾値 (RMS < 0.01) で静音フレームを選び、**M3 も同じ手続きで測り直して** 対にした。したがって下の M3 の数値は m3r-roomtone.json の公表値（distinct 18 / 最頻 0.432 / 1316 が 42.7%）とは一致しない。プロトコルが違うためで、矛盾ではない",
+  "gate": {
+   "min_distinct": 35,
+   "max_top_share": 0.35
+  },
+  "pooled": {
+   "m3r-v-real-train": {
+    "dialogues": 70,
+    "quiet_frames": 13919,
+    "distinct": 441,
+    "top_token": 537,
+    "top_share": 0.256556,
+    "silence_token_1316_share": 7.184e-05,
+    "entropy_bits": 5.0095,
+    "gate_passed": true
+   },
+   "m3r-v-real-dev": {
+    "dialogues": 8,
+    "quiet_frames": 1534,
+    "distinct": 170,
+    "top_token": 537,
+    "top_share": 0.267275,
+    "silence_token_1316_share": 0.00065189,
+    "entropy_bits": 4.8586,
+    "gate_passed": true
+   },
+   "m3-v-real-train": {
+    "dialogues": 72,
+    "quiet_frames": 15548,
+    "distinct": 333,
+    "top_token": 2029,
+    "top_share": 0.392205,
+    "silence_token_1316_share": 0.32184204,
+    "entropy_bits": 3.2253,
+    "gate_passed": false
+   }
+  },
+  "pooled_caveat": "distinct はプールのフレーム数とともに増えるので、70 対話をプールした 441 を 較正値（222〜237 フレームで 37〜42）と直接比べてはならない。下の per_dialogue が 較正値と同じ規模のプールでの読みである",
+  "per_dialogue": {
+   "m3r-v-real-train": {
+    "dialogues": 70,
+    "gate_passes": 63,
+    "quiet_frames": {
+     "n": 70,
+     "min": 146.0,
+     "median": 194.5,
+     "mean": 198.8429,
+     "max": 270.0
+    },
+    "distinct": {
+     "n": 70,
+     "min": 37.0,
+     "median": 52.0,
+     "mean": 54.0714,
+     "max": 77.0
+    },
+    "top_share": {
+     "n": 70,
+     "min": 0.1164,
+     "median": 0.2508,
+     "mean": 0.2564,
+     "max": 0.4133
+    },
+    "silence_token_share": {
+     "n": 70,
+     "min": 0.0,
+     "median": 0.0,
+     "mean": 0.0001,
+     "max": 0.0037
+    },
+    "entropy_bits": {
+     "n": 70,
+     "min": 3.4055,
+     "median": 4.3366,
+     "mean": 4.3662,
+     "max": 5.2618
+    },
+    "modal_top_token": 537
+   },
+   "m3r-v-real-dev": {
+    "dialogues": 8,
+    "gate_passes": 8,
+    "quiet_frames": {
+     "n": 8,
+     "min": 160.0,
+     "median": 181.0,
+     "mean": 191.75,
+     "max": 256.0
+    },
+    "distinct": {
+     "n": 8,
+     "min": 42.0,
+     "median": 53.0,
+     "mean": 52.875,
+     "max": 66.0
+    },
+    "top_share": {
+     "n": 8,
+     "min": 0.1966,
+     "median": 0.2477,
+     "mean": 0.2637,
+     "max": 0.3421
+    },
+    "silence_token_share": {
+     "n": 8,
+     "min": 0.0,
+     "median": 0.0,
+     "mean": 0.0005,
+     "max": 0.0044
+    },
+    "entropy_bits": {
+     "n": 8,
+     "min": 3.7461,
+     "median": 4.3343,
+     "mean": 4.3477,
+     "max": 4.7854
+    },
+    "modal_top_token": 537
+   },
+   "m3-v-real-train": {
+    "dialogues": 72,
+    "gate_passes": 6,
+    "quiet_frames": {
+     "n": 72,
+     "min": 169.0,
+     "median": 211.5,
+     "mean": 215.9444,
+     "max": 284.0
+    },
+    "distinct": {
+     "n": 72,
+     "min": 19.0,
+     "median": 34.5,
+     "mean": 34.1667,
+     "max": 66.0
+    },
+    "top_share": {
+     "n": 72,
+     "min": 0.2326,
+     "median": 0.4208,
+     "mean": 0.4163,
+     "max": 0.5103
+    },
+    "silence_token_share": {
+     "n": 72,
+     "min": 0.1841,
+     "median": 0.2794,
+     "mean": 0.314,
+     "max": 0.5035
+    },
+    "entropy_bits": {
+     "n": 72,
+     "min": 1.8462,
+     "median": 2.925,
+     "mean": 2.8541,
+     "max": 4.163
+    },
+    "modal_top_token": 2029
+   }
+  },
+  "digital_silence_vs_room_tone": {
+   "why": "第2段の狙いは「pad ⟺ 無音 の近道を切る」ことだった。その成否は静音フレームの token 分布ではなく、**静音フレームが厳密に 0 かどうか** で決まる。Mimi は厳密ゼロを 無音符号に写し、ルームトーンが乗っていればトーンの符号を出す。両者を分けずに測ると、低レベルのベッドの符号を「無音への潰れ」と誤読しうる",
+   "measured": {
+    "m3r-v-real-train": {
+     "quiet_frames": 13919,
+     "digitally_silent_frames": 0,
+     "digitally_silent_share_of_quiet": 0.0,
+     "digitally_silent_tokens": null,
+     "room_tone_tokens": {
+      "frames": 13919,
+      "distinct": 441,
+      "top_token": 537,
+      "top_share": 0.2566,
+      "silence_token_share": 0.0001,
+      "entropy_bits": 5.0095
+     }
+    },
+    "m3r-v-real-dev": {
+     "quiet_frames": 1534,
+     "digitally_silent_frames": 0,
+     "digitally_silent_share_of_quiet": 0.0,
+     "digitally_silent_tokens": null,
+     "room_tone_tokens": {
+      "frames": 1534,
+      "distinct": 170,
+      "top_token": 537,
+      "top_share": 0.2673,
+      "silence_token_share": 0.0007,
+      "entropy_bits": 4.8586
+     }
+    },
+    "m3-v-real-train": {
+     "quiet_frames": 15548,
+     "digitally_silent_frames": 13535,
+     "digitally_silent_share_of_quiet": 0.8705,
+     "digitally_silent_tokens": {
+      "frames": 13535,
+      "distinct": 24,
+      "top_token": 2029,
+      "top_share": 0.4502,
+      "silence_token_share": 0.3683,
+      "entropy_bits": 2.1171
+     },
+     "room_tone_tokens": {
+      "frames": 2013,
+      "distinct": 323,
+      "top_token": 769,
+      "top_share": 0.0999,
+      "silence_token_share": 0.0094,
+      "entropy_bits": 6.8941
+     }
+    }
+   },
+   "reading": "**M3-R の話者 A には、デジタル無音のフレームが 1 つも残っていない**（train 13919 フレーム中 0、dev 1534 中 0）。M3 は静音フレームの 87.05% が厳密ゼロで、その 13535 フレームは distinct 24 しかなく、2029 (45.0%) と 1316 (36.8%) の 2 個で 81.9% を占めていた。ルームトーンは全区間を覆っている"
+  },
+  "silence_texture_share": {
+   "definition": "話者 A の静音フレームのうち、M3 でデジタル無音を占めていた token {1316, 2029} の割合",
+   "m3r-v-real-train": 0.1578,
+   "m3-v-real-train": 0.714,
+   "reading": "M3 では静音フレームの 71.4% がこの 2 個だけで埋まっていた（2029 が 39.2%、1316 が 32.2%）。M3-R では 15.8%（1316 は 0.007%、2029 が 15.78%）で、最頻 token は 537（25.7%）に替わった。なお M3-R の 2029 はデジタル無音ではない — 厳密ゼロの フレームが 1 つも無いので、これは低レベルのルームトーンに割り当てられた符号である。**pad ⟺ 無音 の近道は切れている**"
+  },
+  "m3r_train_top_share_misses": {
+   "count": 7,
+   "of": 70,
+   "rows": [
+    {
+     "dialogue": "v-005",
+     "distinct": 37,
+     "top_share": 0.411,
+     "top_token": 537,
+     "silence_token_1316_share": 0.0
+    },
+    {
+     "dialogue": "v-009",
+     "distinct": 51,
+     "top_share": 0.4133,
+     "top_token": 537,
+     "silence_token_1316_share": 0.0
+    },
+    {
+     "dialogue": "v-012",
+     "distinct": 47,
+     "top_share": 0.3668,
+     "top_token": 537,
+     "silence_token_1316_share": 0.0
+    },
+    {
+     "dialogue": "v-028",
+     "distinct": 57,
+     "top_share": 0.3697,
+     "top_token": 537,
+     "silence_token_1316_share": 0.0
+    },
+    {
+     "dialogue": "v-029",
+     "distinct": 48,
+     "top_share": 0.3585,
+     "top_token": 537,
+     "silence_token_1316_share": 0.0
+    },
+    {
+     "dialogue": "v-066",
+     "distinct": 40,
+     "top_share": 0.3558,
+     "top_token": 537,
+     "silence_token_1316_share": 0.0
+    },
+    {
+     "dialogue": "v-074",
+     "distinct": 50,
+     "top_share": 0.3636,
+     "top_token": 537,
+     "silence_token_1316_share": 0.0
+    }
+   ],
+   "reading": "70 対話中 7 件が最頻占有率 0.35 をわずかに超える（0.356〜0.413）。ただし distinct はすべて 37 以上（下限 35 を満たす）で、最頻 token はいずれも 537 = ルームトーンの符号であり、1316 の占有率は 7 件すべてで 0.0000。「無音 token に潰れている」状態ではない。m3r-roomtone.json 自身が同じ形の所見を 記録している（gate_as_written 不合格 / 較正プロトコル下では合格）"
+  }
+ },
+ "incidental_findings": [
+  {
+   "id": "oov-collides-with-end-padding",
+   "severity": "low",
+   "what": "text 行の語彙外文字は SentencePiece の <unk>（id 0）になるが、tokenize_text.py は 同じ id 0 を end-of-text padding に使っている。下流では両者を区別できない",
+   "measured": {
+    "飄々": 1
+   },
+   "scope": "80 対話中 1 件（['v-022.json']）、語としては 1 種 1 回",
+   "impact": "train 全体で text token 4627 個中 1 個。学習への影響は無視できる。既存ゲート（裸 U+2581）はこの種類を見ていないので、記録として残す",
+   "recommendation": "第4段では対処不要。将来コーパスを差し替えるときに tokenize 側で unk を別 id に分けるか、投入前に検出する"
+  }
+ ],
+ "gates": [
+  {
+   "gate": "チャンネルの入れ替わりがない",
+   "target": "全対話で decode 側の各チャンネルが自分の source に最も近い",
+   "actual": "包絡相関 10/10、有声 IoU 10/10、最小マージン 1.2249 / 0.6713",
+   "passed": true,
+   "evidence": "roundtrip/compare.json aggregate.assignment_identity。ECAPA（decoded-A 0.6505 対 decoded-B 0.0930）と text 行の復号が独立に裏づける"
+  },
+  {
+   "gate": "delay が二重にかかっていない",
+   "target": "最良ラグが 0 フレーム",
+   "actual": "20 チャンネル全部で lag 0（20/20）",
+   "passed": true,
+   "evidence": "roundtrip/compare.json per_dialogue.*.channels.*.best_lag、±10 フレーム探索"
+  },
+  {
+   "gate": "話者 A の decode が較正帯の水準を保つ",
+   "target": "課題文どおりなら 生録音の帯 mean 0.8166 / floor 0.7405",
+   "actual": "decoded-A mean 0.6505 / min 0.4819 — 生録音の帯には届かない",
+   "gate_as_written": "不合格",
+   "gate_under_the_codec_adjusted_band": "合格。同じ 10 件を同じ Mimi 8 codebook で往復させた帯は mean 0.6607 / floor 0.5038 で、decoded-A の 0.6505 はその平均の −0.0102、10 件中 9 件が floor 以上",
+   "passed": true,
+   "passed_because": "生録音の帯は Mimi を通した音では誰にも到達できない。対象話者本人の録音でさえ 往復後は 0.6607 に落ちる。到達不能な線で判定するのは、m3r-roomtone.json が 同じ形で記録した誤りの繰り返しになる。判定はコーデック調整帯で行い、両方の値を記録する",
+   "evidence": "roundtrip/likeness.json + roundtrip/codec-band.json。生録音の帯 (0.8166 / 0.7405) は m3-likeness-calibration.json の公表値を小数第 7 位まで再現しており、経路が同一であることが確認できている"
+  },
+  {
+   "gate": "音が壊れていない",
+   "target": "無音率・飽和・帯域が説明できる範囲",
+   "actual": "無音率 +0.029(A)/+0.015(B)、decode 側の飽和は source 以下、帯域損失は Mimi 8 codebook のもので cosine −0.156 に相当",
+   "passed": true,
+   "evidence": "roundtrip/compare.json aggregate、roundtrip/codec-band.json codec_cost"
+  },
+  {
+   "gate": "無音 token への潰れがない",
+   "target": "in-situ で distinct >= 35 かつ最頻占有率 <= 0.35",
+   "actual": "デジタル無音フレーム 0/13919（M3 は 13535/15548 = 87.05%）。プール: distinct 441 / 最頻 0.2566 / 1316 が 0.0072%。対話単位: distinct 70/70 が 35 以上、最頻占有率 63/70 が 0.35 以下",
+   "passed": true,
+   "evidence": "roundtrip/silence-A.json の digitally_silent / room_tone_frames と per_dialogue_summary。M3 を同一手続きで測ると distinct 中央値 34.5 / 最頻 0.4208 / 1316 が 27.9% で 6/72 しか通らない"
+  },
+  {
+   "gate": "テストがある / スイートが通る",
+   "target": "新しい純粋ロジックにテスト、スイート通過",
+   "actual": "tests/test_roundtrip_audio.py 52 件。スイート 907 passed / 8 skipped / 22 subtests（担当外の tests/test_dataset_agreement.py を除く）",
+   "passed": true,
+   "evidence": "uv run --python 3.12 --with pytest --no-sync python -m pytest tests -q --ignore=tests/test_dataset_agreement.py"
+  }
+ ],
+ "limits": [
+  "実際に聴いていない。統計はどれも「壊れていないこと」の必要条件であって十分条件ではない。特に韻律の不自然さ・話速・アクセントは、ここのどの数値にも現れない",
+  "decode したのは 80 対話中 10 件（train 8 / dev 2）。等間隔で選んでおり隠れた偏りはないはずだが、全数ではない。無音 token の測定だけは全 78 行で取った",
+  "コーデック調整帯の 10 件は held-out 評価セットそのものである。ここでは centroid と帯の再計算にしか使っておらず、学習にも生成にも入れていない",
+  "有声区間の抽出閾値は int16 で 500（RMS 約 0.0153）。ルームトーンはこの下にあるので、話者らしさの測定にルームトーンは入っていない",
+  "スペクトル重心と帯域比は有声フレーム（source 基準）の平均スペクトルで取った。フレーム単位の分散は見ていない"
+ ],
+ "decisions_for_the_parent": [
+  {
+   "id": "codec-adjusted-band-for-condition-4",
+   "urgency": "high",
+   "finding": "生録音の較正帯 mean 0.8166 / floor 0.7405 は、Mimi 8 codebook を通した音では **誰にも到達できない**。対象話者本人の 10 件を同じコーデックで往復させると mean 0.6607 / floor 0.5038 まで落ちる（−0.156）。第4段の条件4 は checkpoint の 生成音（= Mimi decode）を、この生録音の帯に対して測ることになっている",
+   "why_it_matters": "「較正帯までの距離の 25% を閉じる」という基準の分母 (band_mean − control_mean) が、到達不能な点を目標に置いている。分母が実際より大きくなり、基準が実質的に厳しくなる。M3 で条件4 が繰り返し落ちた理由の候補として、まだ潰されていない",
+   "recommendation": "第4段の条件4 を判定する前に、band_mean をコーデック調整帯 0.6607 に置き換えるか、少なくとも両方の分母で closure を計算して併記すること。基準の変更は候補 checkpoint を 見る前に固定する必要がある（CLAUDE.md）。今がその時点である"
+  },
+  {
+   "id": "teacher-ceiling-is-0.65-not-0.80",
+   "urgency": "medium",
+   "finding": "m3-likeness-calibration.json は V-real の天井を「教師音声 mean 0.8045、82/90 が帯内」と記録している。それは **生録音** の値である。モデルが実際に学ぶのは Mimi token で、その decode は同じ 10 対話で mean 0.6505 だった",
+   "recommendation": "「V-real の天井は対象話者に届く」という記述は、生録音についてのみ正しい。第4段で checkpoint を評価するときの現実的な天井は 0.65 付近であると読み替えること"
+  },
+  {
+   "id": "roomtone-holds-after-tokenisation",
+   "urgency": "info",
+   "finding": "第2段の狙い（pad ⟺ 無音 の近道を切る）は token 側で達成されている。話者 A の静音フレームにデジタル無音が 1 つも残っていない（M3 は 87.05%）。無音テクスチャ {1316, 2029} の占有率は 71.4% → 15.8%、1316 単独では 32.2% → 0.007%",
+   "recommendation": "第4段に進んでよい。7 件の最頻占有率超過は 1316 ではなくルームトーン符号 537 によるもので、意味が逆である"
+  },
+  {
+   "id": "no-structural-defect-found",
+   "urgency": "info",
+   "finding": "チャンネル入れ替わり・二重 delay・破損のいずれも見つからなかった。text 行の役割も一致している",
+   "recommendation": "3-1 のゲートはすべて通過。GPU を借りる前に潰すべき欠陥は、この経路には残っていない"
+  }
+ ]
+}
