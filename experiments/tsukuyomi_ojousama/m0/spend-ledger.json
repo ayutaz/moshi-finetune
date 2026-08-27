@@ -136,6 +136,18 @@
       "stop_line": "2026-08-27T03:15:06Z（1.50 h）。実績 0.382 h で 25%",
       "outcome": "成功。evaluation_loss/audio_semantic=2.57052, audio_semantic_user=13.14448, audio_acoustic=2.97663, audio_acoustic_user=7.03738 を取得。内訳の重み付き和が報告値 7.67102 と小数第5位まで一致した。",
       "destroyed": "2026-08-27。破棄済みで課金は US$0.00/日"
+    },
+    {
+      "date": "2026-08-27",
+      "instance_id": 48911444,
+      "label": "moshi-tsukuyomi-m3r-run1（破棄・再選定）",
+      "stage": "M3-R 4-2 の 1 回目の選定",
+      "hours": 0.06,
+      "hourly_rate": 3.332666666666667,
+      "usd": 0.2,
+      "why_destroyed": "検索が示した US$2.0896/h に対し実請求が US$3.3327/h だった。差は storage_cost US$1.00/GB/月 x 900 GB = +US$1.23/h。この率だと budget_line が 2.91 h となり work_line 3.376 h を下回る —— 学習 2.674 h の後、変換に 0.24 h しか残らず、M3 の変換実績 0.5 h に足りない。**変換の途中で打ち切ることになるので、走らせる前に破棄した。**",
+      "lesson": "`vastai search offers` の dph_total は disk 代を含まない。storage_cost（US$/GB/月）x disk_space/730 を足して初めて実請求になる。M3-R では 900 GB を要求していたが、逐次回収するので同時に存在する ZeRO state は最大 2 本、必要量は約 328 GB である。",
+      "destroyed": "2026-08-27（走らせずに）"
     }
   ],
   "status": "CAP EXCEEDED",
@@ -146,11 +158,12 @@
     "method": "48004205 GPU 6.56 h * 2.64 + observed storage 13.223 h * 0.1389 + network 0.090; 48178589 invoiced 1.641 + network 0.090; plus instance 48187958 invoiced 0.219 for M2 T1; plus 2 days of stopped-disk on 48178589 (120 GB) and 48187958 (80 GB) at US$2.22/day = US$4.44; plus instance 48370306 at 25.21 h x 3.0566666666666666 = 77.059",
     "instance_48004205": 19.248,
     "instance_48178589": 1.731,
-    "total": 102.812,
+    "total": 103.012,
     "instance_48838452": 0.115,
     "method_appendix": [
       "2026-08-27: instance 48838452 を 0.382 h x $0.30167 = $0.115 で追加。累計 102.697 -> 102.812"
-    ]
+    ],
+    "instance_48911444": 0.2
   },
   "stopped_state_cost_per_hour": 0.1389,
   "stopped_state_note": "A stopped instance still bills the 300 GiB disk at US$0.1389/h (about US$3.33/day). Destroying the instance deletes /workspace, so artifacts must be exported first.",
@@ -362,6 +375,38 @@
       "what_it_buys": "base の loss/audio_semantic と loss/audio_semantic_user を分離して実測する。M3 では 10 回計算されながら --with_tracking の内側でしか出ず全部破棄された。acoustic 損失重みが実効 0.99% である事実に対し、重みを触るべきかを推測でなく数値で決める。",
       "why_a_cheap_box": "forward のみなので optimizer state は不要。fp16 で 15.59 GiB、単一 24GB 級カードに載る。M3 と同じ fp16（ds_configs/zero3-fp16-offload-act_ckpt.json）で測る。",
       "host_ram_constraint": "finetune.py は CPU 上で fp32 でロードするため 31.19 GiB 必要。RAM 64GB 以上の offer に限定した。"
+    },
+    {
+      "recorded_at": "2026-08-28",
+      "stage": "M3-R 第4段 4-2（run1: V-real 学習 45 step + 変換）",
+      "command": "uv run --no-sync python -m tools.experiment_budget --spent 102.812 --hourly-rate 2.0896 --planned-hours 2.876",
+      "result": {
+        "status": "allow-with-warning",
+        "predicted_spend": 108.82169,
+        "exit_code": 0
+      },
+      "spent_input": 102.812,
+      "hourly_rate": 2.0896,
+      "planned_hours": 2.876,
+      "offer": {
+        "id": 47239987,
+        "gpu": "A100 SXM4 80GB x2",
+        "cpu_ram_gb": 252,
+        "disk_gb": 1173,
+        "inet_down_mbps": 9360,
+        "reliability": 0.991,
+        "note": "見積もりの US$3.0567/h より安い。US$6.01 で済み、US$2.78 の余裕ができる"
+      },
+      "stop_line_basis": "work_line = 2.876 h（見積もり）+ 0.5 h（予備）= 3.376 h。budget_line = (112.5 - 102.812) / 2.0896 = 4.64 h。STOP = min の 3.376 h。",
+      "settings": {
+        "lr": "tempformer 2e-6 / depformer 4e-6",
+        "warmup": "0 を明示（DeepSpeed が実効 2 step にクランプ）",
+        "acoustic_loss_weight": "1.0（既定のまま。control に変数を足さない）",
+        "max_length": 2048,
+        "min_length": 128,
+        "seed": "固定",
+        "export": "全 epoch"
+      }
     }
   ],
   "offer_surveys": [

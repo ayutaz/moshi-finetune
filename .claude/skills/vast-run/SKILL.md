@@ -69,6 +69,25 @@ stopped against US$0.033/h for 120 GB).
 **`--disk` cannot be changed after create.** Undersizing it is not a cost saving, it is a
 run that dies partway through and has to be paid for twice.
 
+**`dph_total` in a search result does not include the disk.** It is the compute rate; the
+disk bills separately at `storage_cost` US$/GB/month. Multiply it out before you believe a
+price:
+
+```
+rate = dph_total + storage_cost * disk_gb / 730
+```
+
+M3-R 4-2 rented at an advertised US$2.0896/h and was billed US$3.3327/h - the offer charged
+US$1.00/GB/month and 900 GB added US$1.23/h. At that rate the budget line fell to 2.91 h
+against a 3.376 h plan, leaving 0.24 h for a conversion that M3 measured at 0.5 h. **The
+instance was destroyed before the training started**, at a cost of US$0.20, rather than
+discovering it with a half-converted checkpoint on the clock. The replacement charged
+US$0.20/GB/month and billed US$2.4936/h.
+
+Size the disk for what is resident at once, not for the total written. Five ZeRO states are
+502 GB, but a run that converts and reclaims each checkpoint holds at most two - about
+328 GB with the fp32 intermediate, the base model and the exports.
+
 The API returns an `instance_api_key`. **Never write it to a file or a commit.**
 
 ### Sizing a full-parameter Moshi training run
