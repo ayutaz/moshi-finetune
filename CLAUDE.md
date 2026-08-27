@@ -28,21 +28,29 @@ first. Progress and completion are judged in
 matrix lives in [the plan](docs/experiments/j-moshi-tsukuyomi-ojousama-plan.md). A milestone
 is complete only when each condition points at a file that proves it.
 
-M0, M1 and M2 are complete. M3 (Voice control) is in progress and has its own step-by-step
-plan with gates and costs: [the M3 plan](docs/experiments/j-moshi-tsukuyomi-ojousama-m3-plan.md).
-Its unpaid local steps all come before anything bills, because a run whose result cannot be
-judged is a run that has to be repeated.
+M0, M1 and M2 are complete. M3 (Voice control) is **complete and failed**: the verdict was
+right, the diagnosis was not, and the diagnosis has been retracted - see
+[the M3 verification record](docs/experiments/j-moshi-tsukuyomi-ojousama-m3-verification.md).
+The work now runs under **M3-R**, which repairs the record, the instruments and the data
+before re-taking the control:
+[the M3-R plan](docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-plan.md). Phases 0 to 3 are
+done and cost nothing; phase 4 is the only part that bills, and its first step - 4-1, the
+base-loss forward - is done. The unpaid steps come first on purpose, because a run whose
+result cannot be judged is a run that has to be repeated. M4 stays blocked until M3-R hands
+it a control checkpoint.
 
 Two skills cover the recurring work: `vast-run` for GPU jobs on Vast.ai, `experiment-log`
 for writing a result into the record.
 
 ## Rules that cost money or rights if broken
 
-**GPU spend is capped at US$100**, approved 2026-08-18. Run
-`tools/experiment_budget.py` before starting an instance and record the decision in
-`m0/spend-ledger.json`. **Stop the instance when the run ends** - a stopped instance still
-bills for its disk, and Vast.ai's invoice lags real runtime badly, so budget against
-`accrued_estimate`, not `invoiced_to_date`.
+**GPU spend is capped at US$125**, raised from US$100 on 2026-08-24 after the M3 session
+breached the old cap at US$102.697. Run `tools/experiment_budget.py` before starting an
+instance **and again at every progress check while it runs** - M3 was authorised 14.0 hours,
+ran 25.21, and called the preflight exactly once - then record the decision in
+`experiments/tsukuyomi_ojousama/m0/spend-ledger.json`. **Stop the instance when the run ends**
+- a stopped instance still bills for its disk, and Vast.ai's invoice lags real runtime badly,
+so budget against `accrued_estimate`, not `invoiced_to_date`.
 
 **Never commit** raw tsukuyomi audio, generated audio, checkpoints that have not passed a
 publication review, API keys, or instance tokens. They belong in `data/`, which is
@@ -68,17 +76,28 @@ the suite runs without torch.
 
 ## Measure the premise before building on it
 
-Three of this experiment's costliest corrections came from assumptions that a few minutes
-of measurement would have settled, so measure first and record the number:
+Every costly correction in this experiment came from an assumption a few minutes of
+measurement would have settled, so measure first and record the number. Reports live in
+`experiments/tsukuyomi_ojousama/reports/`.
 
 - The neutral speaker B was to be generated per utterance from a caption. Measured, that
   produces a different voice nearly every line - below the band ten recordings of one real
   human occupy - which would have made one channel of every training dialogue a crowd.
-  Nothing in a loss curve shows this. `reports/m3-speaker-b-probe.json`.
+  Nothing in a loss curve shows this. `m3-speaker-b-probe.json`.
 - Mimi was assumed to need a GPU because the tools hardcoded CUDA. It tokenises 160
-  dialogues in 1.2 minutes on this Mac. `reports/m3-local-compute-probe.json`.
+  dialogues in 1.2 minutes on this Mac. `m3-local-compute-probe.json`.
 - An intelligibility gate scored Whisper's choice of orthography rather than the model's
   pronunciation, and failed a working checkpoint 26/30 until readings were compared instead.
+- A 60-second sequence length was a premise I set without checking it. Both citations were
+  mine and both were wrong; the one run that has ever worked here is 19.02 s at one dialogue
+  per example. Cite this project's own record before an upstream README.
+  `docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-dataset-audit.md`.
+- A high base audio loss was not evidence about the target speaker. 80.1% of it sits on the
+  untrained head `models/utils.py` deepcopies for the user stream. A total says nothing until
+  it is split. M3 computed that split ten times and kept none. `m3r-forward-breakdown.json`.
+- Room tone was not "collect the silences and lay them down" - the corpus holds none, and
+  every cheap substitute moved the shortcut rather than removing it. What makes natural
+  silence varied is the decay tails and breath, not the quiet. `m3r-roomtone.json`.
 
 A calibration band is part of the measurement, not an extra: a within-group similarity of
 0.74 means nothing until you know one real human scores 0.70.
@@ -88,6 +107,16 @@ A calibration band is part of the measurement, not an extra: a within-group simi
 Loss alone never decides anything. Voice quality, intelligibility, persona and full-duplex
 behaviour are judged separately, and a checkpoint that collapses in live dialogue is
 rejected whatever its loss.
+
+Some measurements invert when the model fails, so they are never published alone. Transcript
+perplexity is the sharp case: a voice stuck on one mora scores 13.9 where a real sentence
+scores 91.3, so `tools/intelligibility.py` has no function that returns a perplexity without
+the repetition beside it, and condition 5 is judged on clean transcripts over a fixed
+denominator (control 0.80). Conditions 3 and 4 interlock for the same reason
+(`tools/likeness_guard.py`): an arm that fell silent must not read as more speaker-like. And
+the collapse detector reads the audio row, not only the text row - the control everything was
+measured against was itself collapsed in 17 of its 30 general30 generations, and nothing on
+the text side could see it.
 
 When a gate keeps rejecting plausible results, question the gate. An absolute-NLL gate on
 the persona metric rejected a working paired comparison three times before the real problem

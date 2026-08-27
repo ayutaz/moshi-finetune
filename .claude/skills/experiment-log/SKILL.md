@@ -15,7 +15,8 @@ it. This skill is how that rule gets followed.
 | Artifact | Holds |
 | --- | --- |
 | `docs/.../milestones.md` | State, completion checkboxes, evidence links, why a gate failed and where it sends you back |
-| `docs/.../plan.md` | Technical conditions and the run matrix. Change this *first* when a run condition changes, then sync the milestone |
+| `docs/.../plan.md` | Technical conditions and the overall run matrix. Change this *first* when a run condition changes, then sync the milestone |
+| `docs/.../<milestone>-plan.md` | A milestone with its own step plan (M3, M3-R) keeps its gates, costs and revised run conditions there, and that plan is what binds. M3-R's `2e-6` / `4e-6`, its single V-real arm and the retracted concatenation are in `-m3r-plan.md` and reached `plan.md` nowhere - check which document the milestone names as authority before editing either |
 | `experiments/tsukuyomi_ojousama/reports/*.json` | The measured numbers, per run, with the commit that produced them |
 | `experiments/tsukuyomi_ojousama/m0/spend-ledger.json` | Invoice lines, accrued estimate, preflight decisions, instance state |
 | `experiments/tsukuyomi_ojousama/registry/*.json` | Any dataset touched: source, version, terms, and whether it is used |
@@ -33,6 +34,13 @@ need to diagnose it. `tools/persona_perplexity.py` writes its report and then fa
 
 **Record the commit.** Artifacts from different commits in one report need
 `artifact_provenance` saying which produced what.
+
+**Re-measure the report when the artifact it describes changes.** `m3r-tokenize.json` was
+written against a 72-row build and kept ten of those fields after two dialogues fell below
+the frame floor and the shipped parquet became 70 rows. One of them was the launch assertion
+`Num examples`, which the same report defines as "kill immediately if different" - the ledger
+would have killed the correct run on its own stale number. Read every figure back off the
+shipped file, rather than patching the ones you happen to remember.
 
 **Never record a secret.** No API keys, no instance tokens, no account balance. The ledger
 tracks charges per instance; `starting_account_balance` is the only balance figure and it is

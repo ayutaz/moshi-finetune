@@ -113,6 +113,12 @@ M3-R は M3 から倍増しているが、成功 run にはまだ届かない。
 A が実際に話すのは全フレームの 30.3%（`m3r-timeline.json` の `a_silence_share_speech`）なので、
 **「つくよみちゃんの声の質」に当たる実効重みは 0.99%** である。
 
+> **2026-08-27 追記（4-1 の実測）**: この 0.99% は名目重みと A の発話率からの概算だった。
+> forward 測定では **A-acoustic は audio_total の 1.3%** である
+> （[`m3r-forward-breakdown.json`](../../experiments/tsukuyomi_ojousama/reports/m3r-forward-breakdown.json)）。
+> 概算より小さいのは、未学習の複製ヘッドが audio_total の 83.1% を占めて押しのけるためで、
+> **結論の向きは変わらない —— 声を運ぶトークンに載っている重みは 1% 台である。**
+
 `--semantic_loss_weight 100` / `--acoustic_loss_weight 1` は `finetune.py:396-405` の既定値で、
 **M3 でも M3-R 計画でも一度も振っていない。**
 

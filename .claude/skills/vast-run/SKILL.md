@@ -12,9 +12,9 @@ exists because skipping it cost time or money at least once.
 
 Run the budget preflight and record the decision. **The cap is US$125, approved
 2026-08-24.** It replaced the US$100 cap of 2026-08-18, which the M3 session breached at
-US$102.697. Headroom was US$22.30 when it was raised, and `m0/spend-ledger.json` records
-under `cap_raise` exactly what that headroom is for - one V-real re-run and one
-forward-only measurement. Spending it on anything else needs the user, not you.
+US$102.697; 4-1 has since taken it to US$102.812. Headroom was US$22.30 when the cap moved,
+and `m0/spend-ledger.json` records under `cap_raise` exactly what that headroom is for - one
+V-real re-run and one forward-only measurement. Spending it elsewhere needs the user, not you.
 
 **The preflight works and its answer is binding.** `tools/experiment_budget.py` takes the
 cap as a parameter (default US$125) and derives its thresholds as fractions of it - warning
@@ -24,9 +24,10 @@ hardcoded US$100 after the cap moved, refused every possible plan, and a preflig
 always says no is one nobody reads. The ledger's thresholds (US$93.75 / 112.50 / 118.75)
 are the same fractions.
 
-So a non-zero exit now means something. Against accrued US$102.697 the new-run limit of
-US$112.50 leaves US$9.80, which is under four hours at A100x2 rates - less than one full
-V-real run. **Do not widen a fraction, raise the default, or skip the check to admit a
+So a non-zero exit now means something. Against accrued US$102.812 the new-run limit of
+US$112.50 leaves US$9.688 - under four hours at A100x2 rates, less than one full V-real run.
+Read `accrued_estimate` from the ledger rather than this line; it moves with every run.
+**Do not widen a fraction, raise the default, or skip the check to admit a
 plan.** Split the plan, or ask the user for a cap. `tests/test_experiment_budget.py` pins
 the phase-4 verdict as a test for exactly this reason.
 
@@ -58,9 +59,12 @@ vastai create instance <offer_id> --image pytorch/pytorch:2.4.1-cuda12.1-cudnn9-
   --disk 120 --label <label> --ssh --direct
 ```
 
-Prefer a high `inet_down`: bootstrap re-downloads 31 GB of checkpoints. Disk costs money
-per hour, so size it for the job (120 GB is enough for generation and baselines; the
-retired 300 GB instance billed US$0.139/h while stopped against US$0.033/h for 120 GB).
+Prefer a high `inet_down`, but size that requirement to the bootstrap you are actually
+running: `m0/bootstrap_instance.sh` re-downloads both published checkpoints (about 31 GB),
+while `m3/bootstrap_m3_instance.sh` pulls j-moshi-ext alone - the ledger's preflight for
+that run recorded 15.76 GB. Disk costs money per hour, so size it for the job (120 GB is
+enough for generation and baselines; the retired 300 GB instance billed US$0.139/h while
+stopped against US$0.033/h for 120 GB).
 
 **`--disk` cannot be changed after create.** Undersizing it is not a cost saving, it is a
 run that dies partway through and has to be paid for twice.
@@ -95,6 +99,25 @@ If checkpoints have to accumulate faster than they can be converted, run a recla
 alongside the training that converts each closed checkpoint and deletes the ZeRO state -
 but start it **after** the startup assertion passes, never at launch, when 67 GB of fp32
 CPU copies are still live.
+
+### Sizing a forward-only measurement
+
+`m3/bootstrap_m3_instance.sh` stops on anything smaller than 2 GPUs of 80 GB with 80 GiB of
+host RAM available. That gate is right for training and far too large for a forward pass.
+**Do not loosen a gate to admit a job it was not written for - give the different job its
+own gate.** The 4-1 gate refuses under a 20 GiB card or 40 GiB of available RAM - a floor,
+set just above the 31.19 GiB the fp32 CPU load needs. Ask an offer for 64 GB so the floor is
+not the thing you are betting on; the box 4-1 actually ran on reported 720 GiB.
+
+| Constraint | Forward-only | Why |
+| --- | --- | --- |
+| GPU | one card, **20 GiB** | fp16 weights are 15.59 GiB. No optimiser state, no gradients, no ZeRO partitioning to pay for. |
+| Host RAM | **31.19 GiB**, so ask for 64 GB | `finetune.py` still loads the model on CPU in float32 before anything is partitioned. This, not the GPU, is what a cheap offer fails. |
+| Launcher | DeepSpeed anyway | the launcher refuses without it even on one GPU - see below. |
+
+4-1 measured the base-loss breakdown on a single V100-SXM2-32GB at US$0.3017/h: 0.382 h,
+US$0.115, a quarter of its 1.50 h stop line. The 2× A100 box the training gate demands
+bills US$3.0567/h and would have returned the same numbers.
 
 ## Connecting
 
@@ -142,6 +165,24 @@ not have. `run_baseline.sh` handles this itself, but ad-hoc commands do not.
 Watch the log with a filter that covers **failure as well as progress**. A filter matching
 only success markers stays silent through a crash, and silence looks like "still running".
 Include `Traceback`, `Error`, `assert`, `OOM`, `Killed`.
+
+### `finetune.py` runs only under DeepSpeed
+
+`finetune.py:425-426` raises `NotImplementedError: Only DeepSpeed is supported for now.`
+when `--use_deepspeed` is absent, and errors again if `--deepspeed_config_file` does not
+come with it. That holds on a single GPU and for a forward-only pass, not just for
+distributed training: the first 4-1 launch died on exactly this.
+
+```bash
+accelerate launch --use_deepspeed \
+  --deepspeed_config_file ds_configs/zero3-fp16-offload-act_ckpt.json \
+  finetune.py <args>
+```
+
+`ds_configs/` holds the configs the runs have used and `examples/finetune_accelerate.sh`
+shows the full argument list. When the point of a run is to compare against an earlier one,
+reuse that run's config: 4-1 kept M3's fp16 offload config so the losses were comparable,
+even though one GPU has no need to offload an optimiser it never allocates.
 
 ## The stop line
 
@@ -197,6 +238,15 @@ rsync -az -e "ssh -p <port>" --include='*/' --include='*.json' --include='*.log'
 
 Export into `data/`, which is gitignored. Generated audio and any checkpoint that has not
 passed a publication review are non-public - see `DATA_CREDITS.md`.
+
+**The export is limited by your own link, not by the instance - so do not wait it out on the
+expensive machine.** The phase-4 estimate has 84 GB coming down at 8.56 MB/s: 2.718 hours,
+39% of the whole run, spent watching a US$3.0567/h box do nothing. Push the converted
+checkpoints to a cheap instance, destroy the expensive one, then pull at your leisure. Live
+`vastai search offers` found an RTX 3060 12GB at US$0.0525/h and a GTX 1070 at US$0.0481/h -
+five cents an hour to hold the files, about an eighth of the US$0.45/h that
+`m3r/STOP_LINE.md` §6 had assumed when it costed the split. Search for the real rate rather
+than carrying an assumed one into a plan.
 
 ## Stopping - do not skip this
 

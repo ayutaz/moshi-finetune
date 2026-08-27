@@ -363,5 +363,62 @@
       "why_a_cheap_box": "forward のみなので optimizer state は不要。fp16 で 15.59 GiB、単一 24GB 級カードに載る。M3 と同じ fp16（ds_configs/zero3-fp16-offload-act_ckpt.json）で測る。",
       "host_ram_constraint": "finetune.py は CPU 上で fp32 でロードするため 31.19 GiB 必要。RAM 64GB 以上の offer に限定した。"
     }
+  ],
+  "offer_surveys": [
+    {
+      "surveyed_at": "2026-08-27",
+      "why": "第3段の案B（export を安い箱へ逃がす）は『安いインスタンスの率 US$0.45/h』を未検証の仮定として置いていた。案Bの必要上限がその仮定に依存するので、実勢を測った。",
+      "command": "vastai search offers 'num_gpus=1 disk_space>=120' -o 'dph' --raw",
+      "cheapest_with_120gb_disk": [
+        {
+          "gpu": "GTX 1070",
+          "vram_gb": 8.0,
+          "usd_per_hour": 0.0481,
+          "inet_down_mbps": 585,
+          "inet_up_mbps": 525
+        },
+        {
+          "gpu": "GTX 1080",
+          "vram_gb": 8.0,
+          "usd_per_hour": 0.0507,
+          "inet_down_mbps": 415,
+          "inet_up_mbps": 410
+        },
+        {
+          "gpu": "RTX 3060",
+          "vram_gb": 12.0,
+          "usd_per_hour": 0.0525,
+          "inet_down_mbps": 1062,
+          "inet_up_mbps": 684
+        },
+        {
+          "gpu": "GTX TITAN X",
+          "vram_gb": 12.0,
+          "usd_per_hour": 0.0547,
+          "inet_down_mbps": 437,
+          "inet_up_mbps": 407
+        }
+      ],
+      "effect_on_option_b": "仮定の US$0.45/h では必要上限 US$126.70 で現行 US$125 を超えていた。実勢 US$0.0525/h なら US$124.42 で内側に収まり、追加承認なしで完走できる。",
+      "caveat": "offer は時々刻々変わる。この表は 2026-08-27 のスナップショットであり、4-3 を実行する時点で取り直すこと。また 12GB / 8GB のカードには dq16（fp16 15.59 GiB）が載らないので、この箱で買えるのは export だけである。生成をどこで走らせるかは別の未決事項。",
+      "single_card_20gb_plus": [
+        {
+          "gpu": "Tesla V100 32GB",
+          "usd_per_hour": 0.2614,
+          "cpu_ram_gb": 94,
+          "note": "4-1 で実際に借りた。実請求は $0.3017/h"
+        },
+        {
+          "gpu": "RTX 3090",
+          "vram_gb": 24.0,
+          "usd_per_hour": 0.2663
+        },
+        {
+          "gpu": "Q RTX 8000",
+          "vram_gb": 48.0,
+          "usd_per_hour": 0.2801
+        }
+      ]
+    }
   ]
 }
