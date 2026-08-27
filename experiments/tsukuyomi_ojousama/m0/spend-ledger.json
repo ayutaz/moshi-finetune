@@ -419,6 +419,34 @@
           "usd_per_hour": 0.2801
         }
       ]
+    },
+    {
+      "surveyed_at": "2026-08-27（第2回）",
+      "why": "未決3（生成をどの箱で走らせるか）が『20 GiB 級カードの実勢価格が未取得』で止まっていた。選択肢(b) が成立するには US$0.19/h 以下が要ると計画が書いている。",
+      "command": "vastai search offers 'num_gpus=1 disk_space>=120' --raw → gpu_ram>=20000 かつ cpu_ram>=40000 で絞り込み",
+      "matched": 24,
+      "under_0_19_per_hour": [
+        {
+          "gpu": "Tesla P40",
+          "vram_gb": 24.0,
+          "cpu_ram_gb": 63,
+          "disk_gb": 726,
+          "usd_per_hour": 0.1067,
+          "inet_down_mbps": 638,
+          "inet_up_mbps": 874
+        },
+        {
+          "gpu": "Q RTX 6000",
+          "vram_gb": 22.5,
+          "cpu_ram_gb": 47,
+          "disk_gb": 299,
+          "usd_per_hour": 0.1343,
+          "inet_down_mbps": 811,
+          "inet_up_mbps": 850
+        }
+      ],
+      "resolves": "未決3の選択肢(b)（20 GiB 級 1 本で生成と転送を兼ねる）が成立する。所要 4.76 h（生成 1.597 + 転送 2.718 + bootstrap 0.45）で、Tesla P40 なら US$0.508。run1 後の preflight 残余 US$0.897 に収まる（残 US$0.389）。",
+      "caveat": "生成 1.597 h と転送 2.718 h はどちらも M3 計画由来の見積もりで、単独の実測はない。run1 の実測で置き換えること。offer は時々刻々変わるので借りる直前に取り直すこと。"
     }
   ]
 }
