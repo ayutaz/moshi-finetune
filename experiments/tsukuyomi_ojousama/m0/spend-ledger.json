@@ -327,5 +327,23 @@
       "Invoke tools/experiment_budget.py during the run, not only before renting."
     ]
   },
-  "threshold_note": "Fractions of experiment_cap (0.75 / 0.90 / 0.95), not absolutes. They were left at the US$100 values when the cap moved to US$125, which made tools/experiment_budget.py return non-zero for every possible plan - a preflight that always says no is one nobody reads. tools/experiment_budget.py holds the same fractions and takes --cap."
+  "threshold_note": "Fractions of experiment_cap (0.75 / 0.90 / 0.95), not absolutes. They were left at the US$100 values when the cap moved to US$125, which made tools/experiment_budget.py return non-zero for every possible plan - a preflight that always says no is one nobody reads. tools/experiment_budget.py holds the same fractions and takes --cap.",
+  "preflight_decisions": [
+    {
+      "recorded_at": "2026-08-27",
+      "stage": "M3-R 第4段 4-1（forward 測定）",
+      "command": "uv run --no-sync python -m tools.experiment_budget --spent 102.697 --hourly-rate 0.2614 --planned-hours 1.5",
+      "result": {
+        "status": "allow-with-warning",
+        "predicted_spend": 103.0891,
+        "exit_code": 0
+      },
+      "spent_input": 102.697,
+      "hourly_rate": 0.2614,
+      "planned_hours": 1.5,
+      "what_it_buys": "base の loss/audio_semantic と loss/audio_semantic_user を分離して実測する。M3 では 10 回計算されながら --with_tracking の内側でしか出ず全部破棄された。acoustic 損失重みが実効 0.99% である事実に対し、重みを触るべきかを推測でなく数値で決める。",
+      "why_a_cheap_box": "forward のみなので optimizer state は不要。fp16 で 15.59 GiB、単一 24GB 級カードに載る。M3 と同じ fp16（ds_configs/zero3-fp16-offload-act_ckpt.json）で測る。",
+      "host_ram_constraint": "finetune.py は CPU 上で fp32 でロードするため 31.19 GiB 必要。RAM 64GB 以上の offer に限定した。"
+    }
+  ]
 }
