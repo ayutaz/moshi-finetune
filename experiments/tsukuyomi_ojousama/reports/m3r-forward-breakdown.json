@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "milestone": "M3-R",
+  "step": "第4段 4-1 — base loss の内訳を forward で測る",
+  "captured_at": "2026-08-27",
+  "question": "M3 の base audio loss 7.03 のうち、話者A側と、models/utils.py が deepcopy で作った未学習の user head 側の内訳。M3 ではこの4項目が 2 arm x 5 epoch = 10 回計算されながら --with_tracking の内側でしか出ず、すべて破棄された。",
+  "instance": {
+    "id": 48838452,
+    "gpu": "Tesla V100-SXM2-32GB x1",
+    "rate_usd_per_hour": 0.3016666666666667,
+    "hours": 0.382,
+    "usd": 0.115,
+    "stop_line": "2026-08-27T03:15:06Z (1.50 h)",
+    "destroyed": true
+  },
+  "how": {
+    "launcher": "accelerate launch --use_deepspeed --deepspeed_config_file ds_configs/zero3-fp16-offload-act_ckpt.json",
+    "why_deepspeed": "finetune.py:425-426 が DeepSpeed 必須。単一 GPU では optimizer offload は不要だが、測定条件を M3 と揃えるため同じ config を使った。",
+    "lr": "tempformer 0.0 / depformer 0.0。重みは動いていない。",
+    "steps": "--max_train_steps 1 --eval_steps 1。step 1 の直後に dev 8 行で eval。",
+    "dtype": "float16（M3 と同じ。ds_config が fp16）",
+    "base_model": "tools.init_moshi_for_ft --extend_modules_for_user_stream --model_dtype float16。--init_text_embeddings は付けていないので乱数は入らない。16,742,873,520 bytes",
+    "determinism": "eval_dataloader は shuffle=False (finetune.py:886) で dev 8 行を全件通す。LR=0 なので重みも動かない。seed 未指定だが eval の結果は決定的である。",
+    "data": {
+      "train_sha256": "adea04749c1d3bd217c8f5db66c1463ae39899aff4d02991128824448830f201",
+      "dev_sha256": "f21d821eef5211bc67d168d150483365e70bf78bbcc4f18522c4c1683a8a10db",
+      "verified": "手元と instance で sha256 一致"
+    }
+  },
+  "measured_eval": {
+    "loss/audio_semantic": 2.57052,
+    "loss/audio_acoustic": 2.97663,
+    "loss/audio_semantic_user": 13.14448,
+    "loss/audio_acoustic_user": 7.03738,
+    "loss/audio_total": 7.67102,
+    "loss/text_non_pad": 5.18883,
+    "loss/text_pad": 0.34235,
+    "loss/text_total": 5.36,
+    "loss/total": 13.03102,
+    "accuracy/audio_semantic": 0.37551,
+    "accuracy/audio_acoustic": 0.30002,
+    "accuracy/audio_semantic_user": 0.01607,
+    "accuracy/audio_acoustic_user": 0.06652,
+    "accuracy/text_non_pad": 0.36956,
+    "accuracy/text_pad": 0.87972
+  },
+  "breakdown": [
+    {
+      "metric": "audio_semantic",
+      "speaker": "A",
+      "weight_share": 0.46729,
+      "loss": 2.57052,
+      "contribution": 1.201178,
+      "share_of_audio_total": 0.156586,
+      "vs_chance": 0.3371
+    },
+    {
+      "metric": "audio_acoustic",
+      "speaker": "A",
+      "weight_share": 0.03271,
+      "loss": 2.97663,
+      "contribution": 0.097366,
+      "share_of_audio_total": 0.012693,
+      "vs_chance": 0.3904
+    },
+    {
+      "metric": "audio_semantic_user",
+      "speaker": "B",
+      "weight_share": 0.46729,
+      "loss": 13.14448,
+      "contribution": 6.14228,
+      "share_of_audio_total": 0.800712,
+      "vs_chance": 1.724
+    },
+    {
+      "metric": "audio_acoustic_user",
+      "speaker": "B",
+      "weight_share": 0.03271,
+      "loss": 7.03738,
+      "contribution": 0.230195,
+      "share_of_audio_total": 0.030008,
+      "vs_chance": 0.923
+    }
+  ],
+  "reconstruction_check": {
+    "sum_of_contributions": 7.67102,
+    "reported_audio_total": 7.67102,
+    "difference": 1e-06,
+    "note": "重み付き和が報告値と小数第5位まで一致する。内訳の解釈は算術的に確認された。"
+  },
+  "chance": {
+    "ln_2048": 7.6246,
+    "reading": "A-semantic 2.5705 は chance の 33.7%。B-semantic 13.1445 は chance の 172.4% で chance を大きく超える。一様分布より悪いのは、未学習の複製ヘッドが自信を持って外しているためである。"
+  },
+  "findings": [
+    "base audio loss の 80.1% は話者B側の semantic が占める。話者A側は semantic 15.7% + acoustic 1.3% = 17.0% にすぎない。",
+    "M3 検証記録が未確定として残した『audio 重みの 46.7% が手術由来の未学習ヘッドに乗る』は、実測で確認された。B 側の寄与は 83.1%（semantic 80.1 + acoustic 3.0）である。",
+    "したがって M3 の base audio loss 6.82-7.09 を『j-moshi-ext の予測能力』として読むことはできない。A 側だけを見れば semantic 2.57 で chance の 33.7%、accuracy 37.6% であり、モデルは話者Aの音声をよく予測できている。",
+    "acoustic の実効重みは A 側 1.3%。声の質を運ぶトークンに、audio 目的関数の 1.3% しか載っていない。",
+    "B 側 semantic の accuracy は 1.6%（A 側は 37.6%）。未学習ヘッドは実質何も予測できていない。"
+  ]
+}
