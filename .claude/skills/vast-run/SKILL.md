@@ -104,7 +104,7 @@ vastai create instance <offer_id> --image pytorch/pytorch:2.4.1-cuda12.1-cudnn9-
 
 | Constraint | Value | Why it bites |
 | --- | --- | --- |
-| GPUs | **2× A100 80GB minimum** | ZeRO-3 + fp16 + AdamW is 16 bytes/param resident = 133.94 GB against 85.90 GB on one card. One GPU is 48 GB short before any activation memory. |
+| GPUs | **2× A100 80GB SXM4** | ZeRO-3 + fp16 + AdamW is 16 bytes/param resident = 133.94 GB against 85.90 GB on one card. One GPU is 48 GB short before any activation memory. **Ask for SXM4 by name.** M3-R 4-2 rented A100 **PCIe** and hung in a collective right after the dataset load - NCCL initialised, then both ranks spun at 100% CPU with no I/O for 75 minutes across two attempts. M3 ran the same code on SXM4 without trouble. NCCL P2P over PCIe is the hypothesis and it is untested, but the run cost US$4.29 and produced nothing. |
 | Host RAM | **80 GB available, 85 GiB+ allocated** | `finetune.py` loads the model on CPU in float32 *per rank* before accelerate partitions anything: 2 × 33.49 GB. `zero_to_fp32` peaks near 67 GB separately. Too little RAM OOM-kills at load, and no GPU is large enough to fix it. |
 | Disk | **900 GB** | A ZeRO-3 `save_state` is 12 bytes/param = 100.46 GB, and `finetune.py` has **no rotation at all** - no `--save_total_limit`, and accelerate's own rotation is never enabled. Five epochs accumulate 502 GB. |
 
@@ -180,6 +180,16 @@ nohup setsid bash -c "bash <script> <args>; echo EXIT_CODE=\$? > /workspace/run.
 
 `export PATH` matters: uv installs to `~/.local/bin`, which a non-interactive shell does
 not have. `run_baseline.sh` handles this itself, but ad-hoc commands do not.
+
+**Smoke-test before the real launch.** M3's plan had a smoke-test stage; M3-R's 4-2 launched
+straight into the run and spent US$4.29 discovering that the collective hangs. Two steps with
+`--max_train_steps 2` costs minutes and answers whether this box can train at all. When
+distributed init is the suspect, add `NCCL_DEBUG=INFO`, and `NCCL_P2P_DISABLE=1` to test
+whether P2P is what is stuck.
+
+And run the CPU-only stages at home first. `preprocess_function` on the shipped 70-row
+parquet takes 0.01 s on a laptop - it was suspected for an hour of paid time before anyone
+ran it for free.
 
 Watch the log with a filter that covers **failure as well as progress**. A filter matching
 only success markers stays silent through a crash, and silence looks like "still running".
