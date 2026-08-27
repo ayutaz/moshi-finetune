@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "milestone": "M3-R",
+  "step": "第4段 4-2 run1 — 未完了",
+  "captured_at": "2026-08-27",
+  "outcome": "学習に到達せず。起動 assertion にも届いていない。US$4.289 を使い成果ゼロ。",
+  "where_it_hung": {
+    "log_position": "`Generating train split: 70 examples` の直後。次に出るはずの `Loading eval dataset from ...` が出ない",
+    "code": "finetune.py:820-827 の `with accelerator.main_process_first():` を抜ける地点",
+    "symptom": "両ランクが CPU 100%、utime は増加し続ける（10 秒で 10 秒分）。デッドロックではなく collective の spin-wait",
+    "no_io": "45 秒間、HF datasets キャッシュにも /workspace にも書き込みなし"
+  },
+  "ruled_out": [
+    {
+      "hypothesis": "num_proc=16 の並列 map が原因",
+      "test": "--dataset_processing_workers 1 で再起動",
+      "result": "同じ地点で 19 分停止。**否定**"
+    },
+    {
+      "hypothesis": "preprocess_function が重い（split_streams / filter_out_short_streams は M3 が通っていない新経路）",
+      "test": "出荷 parquet 70 行を手元で preprocess_function に通した（課金ゼロ）",
+      "result": "max_length/min_length の有無にかかわらず **0.01 秒**で完了。出力は 70 例・shape (17,280)。**否定**"
+    },
+    {
+      "hypothesis": "futex_wait_queue だからデッドロック",
+      "test": "実処理ランクの utime を 10 秒間隔で比較",
+      "result": "増加している。futex は親プロセスのものだった。**私の誤診**"
+    }
+  ],
+  "leading_hypothesis": {
+    "what": "NCCL の P2P が A100 **PCIe** で成立せず、collective がハングしている",
+    "evidence": [
+      "M3（成功）は **A100-SXM4-80GB**（NVLink）。reports/m3-instance-bootstrap.json",
+      "M3-R run1（失敗）は **A100 80GB PCIe**。run1-diag/nvidia-smi.txt",
+      "NCCL は init まで到達している（`Initializing TorchBackend in DeepSpeed with backend nccl`）。その後の collective で止まる",
+      "両ランクの CPU 100% + utime 増加は NCCL の busy-wait と整合する"
+    ],
+    "status": "**未検証**。GPU を借りないと確かめられない",
+    "cheap_test": "次に借りるとき NCCL_P2P_DISABLE=1 NCCL_DEBUG=INFO を付け、smoke test で 2 step だけ回す。数分で判る"
+  },
+  "why_m3_did_not_hit_it": "M3 のログには train の前処理行が無く validation だけがある。M3 は train 側をキャッシュから読んでおり、この load 経路の所要が違った。ただし M3 も同じ main_process_first を通っており、**キャッシュの有無だけで説明できるとは限らない**。GPU 種別の差の方が説明力がある。",
+  "cost": {
+    "hours": 1.72,
+    "usd": 4.289,
+    "stop_line": "3.376 h。1.72 h で自主中断",
+    "why_stopped": "残り 1.78 h に対し学習 1.07 + 変換 0.5 = 1.57 h。猶予 0.21 h では単一 GPU への切替を試して失敗すると変換に届かない"
+  },
+  "budget_after": {
+    "accrued": 107.301,
+    "new_run_limit": 112.5,
+    "next_run1_preflight": "reject-new-run（予測 115.718 > 112.5）",
+    "meaning": "現行の上限では run1 を再挑戦できない"
+  },
+  "what_to_do_differently": [
+    "**smoke test を先に走らせる。** M3 の計画には smoke test の段があったが、M3-R の run1 は本番を直接起動した。2 step で止めていれば US$0.5 で判っていた",
+    "**GPU 種別を M3 と揃える。** control の再現に PCIe/SXM4 の差を持ち込んだのは私の選定ミスである。offer 検索で SXM4 を明示すること",
+    "**前処理は借りる前に手元で通す。** CPU だけで完結し、実測 0.01 秒だった"
+  ],
+  "artifacts": "data/experiments/tsukuyomi_ojousama/m3r/run1-diag/（train.log, run1.nohup, procinfo.txt, nvidia-smi.txt）"
+}
