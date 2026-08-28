@@ -59,5 +59,11 @@
     "**GPU 種別を M3 と揃える。** control の再現に PCIe/SXM4 の差を持ち込んだのは私の選定ミスである。offer 検索で SXM4 を明示すること",
     "**前処理は借りる前に手元で通す。** CPU だけで完結し、実測 0.01 秒だった"
   ],
-  "artifacts": "data/experiments/tsukuyomi_ojousama/m3r/run1-diag/（train.log, run1.nohup, procinfo.txt, nvidia-smi.txt）"
+  "artifacts": "data/experiments/tsukuyomi_ojousama/m3r/run1-diag/（train.log, run1.nohup, procinfo.txt, nvidia-smi.txt）",
+  "evidence_i_failed_to_collect": {
+    "what": "run1 の bootstrap ログ（/workspace/logs/bootstrap-m3.log）を回収していない。回収したのは train.log / run1.nohup / procinfo.txt / nvidia-smi.txt の 4 件だけ。",
+    "why_it_matters": "CLAUDE.md は「`uv.lock` は gitignore なのでホストごとに依存解決が変わる」と警告している。M3 と run1 で deepspeed / torch / accelerate / transformers の版が違えば、それだけでハングを説明できる。**いま手元にある版の記録は 4-1 のもの（accelerate 1.1.1 / deepspeed 0.15.4 / torch 2.4.1 / transformers 4.48.3）だけで、run1 の版は分からない。**",
+    "what_the_logs_do_show": "M3 のログには `DeepSpeed info: version=0.15.4` があるが run1 には無い。ただしこの行は `accelerator.prepare()` の時点で出るもので、run1 はそこへ到達していないだけである。**版の差の証拠にはならない。**",
+    "next_time": "借りた直後に `uv pip freeze` を保存し、export に含めること。数秒で済み、この不明は消える。"
+  }
 }

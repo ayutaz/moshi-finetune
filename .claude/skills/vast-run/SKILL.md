@@ -165,7 +165,12 @@ ssh -o StrictHostKeyChecking=accept-new -p <port> root@<ip>
 ```bash
 scp -P <port> experiments/tsukuyomi_ojousama/m0/bootstrap_instance.sh root@<ip>:/workspace/
 ssh -p <port> root@<ip> 'bash /workspace/bootstrap_instance.sh'
+ssh -p <port> root@<ip> 'cd /workspace/moshi-finetune && uv pip freeze > /workspace/logs/pip-freeze.txt'
 ```
+
+`uv.lock` is gitignored, so every instance resolves its own versions - freeze them while the
+box is still alive. M3-R 4-2 hung and there is no way to tell whether its dependency set
+differed from the run that worked, because only the training log was exported.
 
 It installs uv, clones the branch, syncs the environment, and re-downloads both published
 checkpoints, **failing loudly if either SHA-256 does not match** the values in
