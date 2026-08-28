@@ -1,6 +1,6 @@
 # つくよみちゃん系の声 × お嬢様口調 実験マイルストーン
 
-更新日: 2026-08-27
+更新日: 2026-08-28
 
 作業ブランチ: `experiment-j-moshi-character-voice-overfit`
 
@@ -39,7 +39,7 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と、自然�
 | M1 | 権利・データ確定 | 学習可能で再現可能な入力を確定 | データ台帳、分割、固定評価セットを完成 | 完了 | なし（M0と並行可） |
 | M2 | Tsukuyomi TTS | 対話音声を生成できる対象話者TTSを作る | 未学習30文のTTS Gateを通過 | 完了 | M0, M1 |
 | M3 | Voice control | 過去成功条件をつくよみちゃんで再現 | V0/V1の少なくとも一方で声質改善と対話維持を両立 | **完了（不合格）** | M2 |
-| M3-R | [Voice control 再走](./j-moshi-tsukuyomi-ojousama-m3r-plan.md) | 計器・データ・記録を直し、壊れていない基準線を取り直す | 第0〜3段（課金ゼロ）と第4段4-1が通過済み。残る4-2〜4-5でV-real 1腕のcontrolを取得 | **進行中** | M3（完了・不合格） |
+| M3-R | [Voice control 再走](./j-moshi-tsukuyomi-ojousama-m3r-plan.md) | 計器・データ・記録を直し、壊れていない基準線を取り直す | 第0〜3段（課金ゼロ）と第4段4-1は通過。**4-2 run1は起動段でハングし学習に到達せず失敗**（`US$4.289`、成果ゼロ）。現行の上限では完走を買い直せない | **進行中** | M3（完了・不合格） |
 | M4 | Voice overfit | 声質をcontrolより強く適応 | V2/V3から品質を壊さない最良checkpointを選定 | **Blocked** | M3-R（比較対象になるcontrol checkpointが存在しない。計器3件はM3-R第1段で修復済み） |
 | M5 | お嬢様口調 | 声を保持しながら話し方を転移 | S0/S1で口調改善、声質・対話品質を維持 | 未着手 | M4 |
 | M6 | 最終検証 | 全条件を満たす再現可能な成果物へ統合 | final-overfitと全Gateを完了しrelease candidateを固定 | 未着手 | M5 |
@@ -86,7 +86,9 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と、自然�
   だった件は解消済み。`DEFAULT_HARD_CAP = 125.0`、警告`US$93.75`（0.75）・新規run予測`US$112.5`（0.90）・
   稼働停止`US$118.75`（0.95）で、`m0/spend-ledger.json`の記録と一致する。
   **拘束するのは上限`US$125`ではなく、preflightが判定する`US$112.5`である。**
-  現在の累計は`US$102.812`（M3-R 4-1まで精算済み）。
+- **2026-08-28 更新（M3-R 4-2 run1 の失敗後）**: 現在の累計は**`US$107.301`**（M3-R 4-2 run1 まで精算済み）。
+  `new_run_limit US$112.5`までの残余は**`US$5.199`**しかなく、**run1 の再挑戦は preflightが reject する**。
+  内訳は下の「M3-R」節の予算欄を正本とする。
 
 ### 成果物
 
@@ -546,7 +548,8 @@ mean_delta_full_set **+0.0321**（10件中9件採点可能）である。落ち�
 超過の3つの原因への対策は`vast-run`スキルに反映済み — 打ち切り線をUTC時刻で固定する、
 export時間を見積もりに含める、`tools/experiment_budget.py`を実行中にも呼ぶ。
 
-**現在の累計は`US$102.812`**（M3-R 4-1の`US$0.115`を精算済み）。以後の予算の正本は下の
+**現在の累計は`US$107.301`**（M3-R 4-1の`US$0.115`と、4-2の`US$4.489`＝失敗したrun1 `US$4.289` ＋
+走らせずに破棄したinstance `US$0.20`を精算済み）。以後の予算の正本は下の
 「M3-R」節の予算欄と[`m0/spend-ledger.json`](../../experiments/tsukuyomi_ojousama/m0/spend-ledger.json)であり、
 この節の`US$102.70`はM3終了時点の値として残す。
 
@@ -597,7 +600,8 @@ M3は「データ構造・学習率・更新範囲」の3つを同時に振り�
 | 第2段 | データを作り直す。`--no_whitespace_before_word`、ターン数、重なり、ルームトーン、系列長 | US$0 | **完了**（2026-08-26） |
 | 第3段 | ローカルで測り切る。投入tokenのdecode確認、明瞭度の数値化、打ち切り線のUTC確定 | US$0 | **完了**（2026-08-27） |
 | 第4段 4-1 | base loss の内訳をforward 1回で測る | 実測`US$0.115` | **完了**（2026-08-27、instance破棄済み） |
-| 第4段 4-2〜4-5 | V-real 1腕をtempformer `2e-6` / depformer `4e-6`・warmupあり・全epoch export・seed固定で再走 | 見積`US$11.34`（案B）| **未着手** |
+| 第4段 4-2 | V-real 1腕をtempformer `2e-6` / depformer `4e-6`・warmupあり・全epoch export・seed固定で再走 | 実測`US$4.489` | **実行・失敗**（2026-08-27。学習に到達せず、instance破棄済み） |
+| 第4段 4-3〜4-5 | export・生成・判定 | 見積`US$11.34`（案B）| **未着手**。4-2が成立していないので着手できない |
 
 ### 成果物
 
@@ -605,7 +609,8 @@ M3は「データ構造・学習率・更新範囲」の3つを同時に振り�
 - **作成済み**: 候補を見る前に固定した条件4の新基準（較正帯・絶対cosine・per-clip σを必須出力）
 - **作成済み**: 作り直したV-real dataset（`v-real-v2`）、manifest、registry
 - **作成済み**: 学習投入tokenのround-trip検証、明瞭度のcontrol値、UTC打ち切り線、base lossの内訳
-- **未作成**: V-real再走の全epoch checkpointと固定生成音声
+- **作成済み**: 4-2 run1の失敗記録と診断ログ（学習成果ではない。次の1回を無駄にしないための材料）
+- **未作成**: V-real再走の全epoch checkpointと固定生成音声。**4-2 run1では1本も作られていない**
 
 ### 完了条件
 
@@ -616,8 +621,14 @@ M3は「データ構造・学習率・更新範囲」の3つを同時に振り�
   **未達**。0.907（M3出荷）から0.809（作り直し、転写区間基準）までしか下がらない。
   この条件が代理していた「lossを下げる最短経路が無音」の方は、pad率ではなく
   **話者A静音フレームのデジタル無音率 87.05% → 0** で断った（下の第2段・第3段の記録）
-- [ ] 再走の全epochがexportされ、seedと生成条件が記録されている。 → 4-2〜4-4が未実行
+- [ ] 再走の全epochがexportされ、seedと生成条件が記録されている。
+  **未達**。4-2 run1を**実行したが学習に到達しなかった**（起動assertionにも届いていない）ため、
+  exportされたepochは**0本**である。seedは`20260828`で起動コマンドごと記録されている
+  （`run1-diag/procinfo.txt`）が、記録できた生成条件は**投入した設定だけ**で、結果は無い。
+  4-3〜4-4は未実行
 - [ ] M4へ渡せる壊れていないcontrol checkpointが1本ある、または渡せない理由が記録されている。
+  **未達**。checkpointは0本。いま記録されているのは「M4へ渡せない理由」ではなく
+  「run1が起動段で失敗した理由（未確定）」であり、この項目を満たしたことにはしない
 
 ### 次へ進む条件
 
@@ -626,14 +637,23 @@ M3は「データ構造・学習率・更新範囲」の3つを同時に振り�
 第4段が不合格でも、それは「原因が特定できた」ことにはならない。その場合の次の変数は
 更新範囲を狭めること（`--parameters_to_finetune tempformer`）である。
 
+**4-2を本番の学習コマンドから直接起動してはならない。** run1はそれをやって`US$4.289`を失い、
+不合格ですらない「判定できない」結果に終わった。借りた直後に`--max_train_steps 2`のsmoke testを通し、
+起動assertion（`Num examples` / batch / steps）が出ることを確認してから本番へ移る。
+借りる箱は**A100-SXM4-80GB**を名指しで指定し、offerは[`tools/offer_check.py`](../../tools/offer_check.py)に
+かけてから借りる。
+
 ### 完了記録
 
-- 状態: **進行中**（2026-08-24開始）。第0〜3段と第4段4-1が完了、残るは4-2〜4-5
+- 状態: **進行中**（2026-08-24開始）。第0〜3段と第4段4-1が完了。**4-2 run1は実行して失敗**し、
+  4-3〜4-5は未着手。**Blockedにはしていない** —— 残余`US$5.199`の内側でNCCL仮説を潰すsmoke testは
+  買えるので「進められない」状態ではない。ただし**4-2の完走は現行の上限では買えず、上限の判断待ちである**
 - 依存先: M3（完了・不合格）
 - 承認済みの決定（2026-08-24）: **V-realのみ再走する**（V-ttsの教師音声が較正帯の外にあり、
   この腕の天井は対象話者に届かない）。**寄せ集めコーパスは申請しない**（「データ量が主因」は撤回済み）
-- テスト: **958 passed / 8 skipped / 22 subtests**（commit `50af5d7`。
-  `uv run --python 3.12 --with pytest --no-sync python -m pytest tests -q`）
+- テスト: **974 passed / 8 skipped / 22 subtests**（commit `5351d11`、2026-08-28に実測。
+  `uv run --python 3.12 --with pytest --no-sync python -m pytest tests -q`）。
+  4-2の失敗を受けて追加した`tests/test_offer_check.py`の16件を含む（commit `50af5d7`時点は958件）
 
 #### 第0段: 記録を直す — 完了（2026-08-24、US$0）
 
@@ -801,27 +821,113 @@ semantic 2.571（chanceの33.7%）、accuracy 37.6%で、**モデルは対象話
 - 証拠: [`m3r-forward-breakdown.json`](../../experiments/tsukuyomi_ojousama/reports/m3r-forward-breakdown.json)、
   [`m0/spend-ledger.json`](../../experiments/tsukuyomi_ojousama/m0/spend-ledger.json)の`accrued_estimate`と`preflight_decisions`
 
+#### 第4段 4-2 run1: V-real再走 — **実行・失敗**（2026-08-27、US$4.289、成果ゼロ）
+
+**学習に到達しなかった。起動assertion（`Num examples` / batch / steps）にも届いていない。**
+exportされたcheckpointも生成音声も無く、**`US$4.289`に対する成果はゼロである。**
+
+instance `48911872`（**A100 80GB PCIe ×2**、RAM 1898 GiB、disk 500 GB、実請求`US$2.4936/h`）。**破棄済み。**
+
+| 項目 | 実測 |
+| --- | --- |
+| 停止位置 | ログの`Generating train split: 70 examples`の直後。次に出るはずの`Loading eval dataset from ...`が出ない。コードでは`finetune.py:820-827`の`with accelerator.main_process_first():`を抜ける地点 |
+| プロセス | 両ランクとも`State: R (running)`、CPU 100%、utimeは増加し続ける（10秒で10秒分） |
+| I/O | 45秒間、HF datasetsキャッシュにも`/workspace`にも書き込みなし |
+| GPU | 両カードともUtil 100%だがメモリは597 MiB / 81920 MiB。モデルは載っていない |
+| NCCL | initまでは到達（`Initializing TorchBackend in DeepSpeed with backend nccl`） |
+| 打ち切り | 打ち切り線3.376時間に対し**1.72時間で自主中断**。残り1.78 hに対し学習1.07 + 変換0.5 = 1.57 hで、猶予0.21 hでは単一GPUへの切替を試して失敗すると変換に届かないため |
+
+**否定された仮説3件。うち2件は私の誤診である。**
+
+| 仮説 | 検証 | 結果 |
+| --- | --- | --- |
+| `num_proc=16`の並列mapが原因 | `--dataset_processing_workers 1`で再起動 | 同じ地点で19分停止。**否定** |
+| `futex_wait_queue`だからデッドロック | 実処理ランクのutimeを10秒間隔で比較 | 増加していた。見ていたのは親プロセスの値だった。**誤診** |
+| `preprocess_function`が重い（`--max_length` / `--min_length`はM3が通っていない新経路） | 出荷parquet 70行を**手元で**通した（課金ゼロ） | **0.01秒**で完了。出力70例・shape (17,280)。フラグの有無で差なし。**否定** |
+
+**残った仮説（未検証）: NCCLのP2PがA100 PCIeで成立していない。**
+
+| | GPU | 結果 |
+| --- | --- | --- |
+| M3（学習は完走した） | **A100-SXM4-80GB**（NVLink）。[`m3-instance-bootstrap.json`](../../experiments/tsukuyomi_ojousama/reports/m3-instance-bootstrap.json) | 45 step完走 |
+| M3-R 4-2 run1 | **A100 80GB PCIe**。`run1-diag/nvidia-smi.txt` | collectiveでハング |
+
+検索結果はどちらも「A100」としか表示しない。**GPU種別の選定ミスである。**
+確かめる安い方法は、次に借りるとき`NCCL_P2P_DISABLE=1 NCCL_DEBUG=INFO`を付けて
+`--max_train_steps 2`のsmoke testを回すこと。数分で判る。**GPUを借りないと確かめられない。**
+
+**run1から得た教訓3件。**
+
+1. **smoke testを飛ばした。** M3の実行計画にはsmoke testの段があったが、4-2は本番の学習コマンドを直接起動した。
+   2 stepで止めていれば`US$0.5`前後で判っていた。対策は[`vast-run`スキル](../../.claude/skills/vast-run/SKILL.md)に反映済み
+2. **GPU種別をM3と揃えなかった。** controlの再現に PCIe/SXM4 という新しい変数を持ち込んだ。
+   offer検索でSXM4を名指しする。判定は[`tools/offer_check.py`](../../tools/offer_check.py)に実装済みで、
+   `48911872`のofferは「PCIeは多GPUで動いた実績がない」で警告になる（[`tests/test_offer_check.py`](../../tests/test_offer_check.py)）
+3. **CPUだけで済む診断を、借りてから1時間かけて行った。** `preprocess_function`の検証は
+   出荷parquetと手元のCPUで足り、実測**0.01秒**だった。`CLAUDE.md`の「前提を先に測れ」は、
+   GPUを借りた後ではなく借りる前に適用する
+
+- 証拠: [`m3r-run1-failure.json`](../../experiments/tsukuyomi_ojousama/reports/m3r-run1-failure.json)、
+  [`m0/spend-ledger.json`](../../experiments/tsukuyomi_ojousama/m0/spend-ledger.json)の`charges`の
+  instance `48911872`（`outcome` / `what_was_tried` / `rate_reconciliation`）
+- 診断ログ: `data/experiments/tsukuyomi_ojousama/m3r/run1-diag/`（`train.log`、`run1.nohup`、
+  `procinfo.txt`、`nvidia-smi.txt`。`data/`はgitignore対象なのでローカルのみ）
+
 #### 予算
 
 | 項目 | 値 |
 | --- | ---: |
-| accrued（実績） | **US$102.812** |
+| accrued（実績） | **US$107.301** |
 | cap | US$125.0 |
 | new_run_limit（preflightが判定する線） | US$112.5 |
 | warning / stop | US$93.75 / US$118.75 |
+| `new_run_limit`までの残余 | **US$5.199** |
 
-- 4-1で`US$0.115`が発生し、累計は`US$102.697` → **`US$102.812`**になった
-- **4-2 run1**（A100×2、2.876時間）のpreflight: 予測累計 **US$111.603**、
-  `allow-with-warning`、**exit 0**。現行の上限のまま開始できる
-- **案B（変換まで終えたら安い箱へ移してexportする）が実測で裏づけられた。**
-  RTX 3060 12GBが**US$0.0525/h**、GTX 1070が**US$0.0481/h**で実在する。
-  案Bの必要上限は**US$124.42**で**現行のUS$125の内側**であり、**追加承認は不要**である
-- **案A（単箱7.041時間）は必要上限US$138.02で通らない。** 案Cはexportするepochを減らす案だが、
-  M3が最良のepoch 2を失ったことへの対策そのものを削ることになるので採らない
+第4段の内訳。**3件ともinstanceは破棄済みで、課金は`US$0.00/日`である。**
+
+| instance | 用途 | 時間 | 実請求率 | 額 | 結果 |
+| --- | --- | ---: | ---: | ---: | --- |
+| `48838452` | 4-1 forward測定 | 0.382 h | US$0.3017/h | US$0.115 | **成功** |
+| `48911444` | 4-2の1回目の選定 | 0.06 h | US$3.3327/h | **US$0.20** | **走らせずに破棄** |
+| `48911872` | 4-2 run1 | 1.72 h | US$2.4936/h | **US$4.289** | **失敗**（学習に到達せず） |
+
+- 累計は`US$102.697`（M3終了時）→ 4-1で`US$0.115` → `US$102.812` → 4-2で`US$4.489` → **`US$107.301`**
+- run1開始前のpreflightは通っていた。`--spent 102.812 --hourly-rate 2.0896 --planned-hours 2.876`で
+  予測`US$108.822`、`allow-with-warning`、**exit 0**（`m0/spend-ledger.json`の`preflight_decisions`）。
+  **予測の算術は正しかったが、実際に借りた箱の実請求は`US$2.4936/h`だった。**
+  preflightは与えられた率を検査しない。率が正しいかを見るのは[`tools/offer_check.py`](../../tools/offer_check.py)の役目である
+- `48911444`を走らせなかった理由: 検索が示した`US$2.0896/h`に対し実請求が`US$3.3327/h`だった。
+  差はstorage_cost `US$1.00/GB/月` × 900 GB = **+US$1.23/h**である。この率ではbudget_lineが**2.91時間**となり
+  work_line **3.376時間**を下回る —— 学習2.674時間の後、変換に0.24時間しか残らず、M3の変換実績0.5時間に足りない。
+  **変換の途中で打ち切ることになるので、走らせる前に破棄した。**
+  `dph_total`はdisk代を含まない（`rate = dph_total + storage_cost × disk_gb / 730`）という教訓は
+  [`vast-run`スキル](../../.claude/skills/vast-run/SKILL.md)と[`tools/offer_check.py`](../../tools/offer_check.py)に反映済み
+- **run1の再挑戦は preflightが reject する。**
+
+  ```
+  uv run --no-sync python -m tools.experiment_budget --spent 107.301 --hourly-rate 2.4936 --planned-hours 3.376
+  {"predicted_spend": 115.719394, "reason": "predicted cumulative spend exceeds the US$112.5 new-run limit", "status": "reject-new-run", "warning": true}
+  exit 1
+  ```
+
+  安い方の率でも変わらない。`--hourly-rate 2.0896 --planned-hours 2.876`（案Bのrun1の見積もり）でも
+  予測`US$113.311`で**exit 1**である
+- 残余`US$5.199`で買えるのは、実請求`US$2.4936/h`なら**2.085時間**、`US$2.0896/h`なら**2.488時間**。
+  どちらもwork_line **3.376時間**に届かない。**現行の上限のままでは4-2を完走できない**
+- **「案Bなら追加承認は不要」は、run1が1回失敗した今は成立しない。** 案Bの必要上限`US$124.42`は
+  `111.981 ÷ 0.90`で、accrued `US$102.812`を前提にしていた。同じrun内訳（`111.981 − 102.812 = US$9.169`）を
+  `US$107.301`に積むと予測は`US$116.470`、必要上限は`116.470 ÷ 0.90 =` **`US$129.41`**となり、
+  **現行の`US$125`を超える**。案A（単箱7.041時間、必要上限`US$138.02`）はもとより通らない。
+  案Cはexportするepochを減らす案だが、M3が最良のepoch 2を失ったことへの対策そのものを削ることになるので採らない
+- **上限を上げるかどうかはユーザーの判断であり、この文書は判断を代行しない。** 上げない場合に
+  残余`US$5.199`の内側で取れる手は、NCCL仮説だけを潰すsmoke test
+  （`NCCL_P2P_DISABLE=1 NCCL_DEBUG=INFO`で`--max_train_steps 2`）に限られる。
+  それは次の1回を無駄にしないための投資であって、control checkpointは作れない
 - 拘束するのはcapではなく`new_run_limit`である。分割しても`spent`はrunをまたいで積み上がるので、
   高い箱で買えるのは最初の数時間だけであり、そこにexportを入れてはならない
 - 承認記録は[`m0/spend-ledger.json`](../../experiments/tsukuyomi_ojousama/m0/spend-ledger.json)の
   `cap_raise`、内訳と選択肢は[`m3r-stop-line.json`](../../experiments/tsukuyomi_ojousama/reports/m3r-stop-line.json)
+  （この報告書の`accrued_estimate: 102.697`は4-1より前の値である）
 
 ## M4: Voice overfit
 
@@ -878,7 +984,8 @@ V2またはV3でheld-out声質をM3 controlより改善し、明瞭度・内容�
 
 - 状態: **Blocked**
 - 理由: **比較対象になるcontrol checkpointが存在しない。** M3は採用checkpointを出せず、
-  M3-Rの再走（第4段4-2〜4-4）は未実行である。比較対象が無ければM4は「改善した」と言えない
+  M3-Rの再走は**4-2 run1が学習に到達せずに失敗**した（2026-08-27、`US$4.289`、export 0本。
+  上の「M3-R」節の4-2の記録）。比較対象が無ければM4は「改善した」と言えない
 - **計器3件（基準線control、崩壊検出器、条件4の一貫性基準）は修復済みである**（M3-R 第1段、2026-08-25）。
   崩壊検出器は音響指標を持ちcontrolのgeneral30を17/30退化と自動判定する
   （[`m3-collapse-acoustic.json`](../../experiments/tsukuyomi_ojousama/reports/m3-collapse-acoustic.json)）。

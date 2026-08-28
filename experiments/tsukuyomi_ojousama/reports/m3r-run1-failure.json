@@ -5,10 +5,13 @@
   "captured_at": "2026-08-27",
   "outcome": "学習に到達せず。起動 assertion にも届いていない。US$4.289 を使い成果ゼロ。",
   "where_it_hung": {
-    "log_position": "`Generating train split: 70 examples` の直後。次に出るはずの `Loading eval dataset from ...` が出ない",
-    "code": "finetune.py:820-827 の `with accelerator.main_process_first():` を抜ける地点",
-    "symptom": "両ランクが CPU 100%、utime は増加し続ける（10 秒で 10 秒分）。デッドロックではなく collective の spin-wait",
-    "no_io": "45 秒間、HF datasets キャッシュにも /workspace にも書き込みなし"
+    "attempt_1_observed_live": "ログの `Generating train split: 70 examples` の直後で停止。56 分待って進まなかった。**このログは再起動時に tee が上書きしたため残っていない。**セッション中に目視した記録である。",
+    "attempt_2_in_the_retained_log": "回収した `run1-diag/train.log`（511 行）と `run1.nohup`（512 行）の最終行は `17:05:53 Loading train dataset from [...]`。**`Generating` は両ファイルに 0 件**である —— 1 回目が書いたキャッシュを読んだので生成行が出ない。**それでも同じ地点で 19 分停止した。**",
+    "why_this_matters": "キャッシュ済みなら `load_dataset` は即座に返るはずである。それでも同じ場所で止まったので、**遅いのはデータセットの読み込みではない。**`accelerator.main_process_first()`（finetune.py:820-827）を抜ける地点、すなわちランク間の同期で止まっていると読むのが自然で、**NCCL の collective 仮説を強める観察である。**",
+    "code": "finetune.py:820-827 の `with accelerator.main_process_first():` を抜ける地点。830 行の `Loading eval dataset` に到達していない",
+    "not_preprocess_map": "台帳の charges には当初『train_dataset.map(preprocess_function, ...) で停止』と書いたが、その map は finetune.py:855 にあり、830 行の `Loading eval dataset` が出ていない以上そこへは到達していない。**誤り。**",
+    "symptom": "両ランクが CPU 100%、utime は増加し続ける（10 秒で 10 秒分）。45 秒間、HF datasets キャッシュにも /workspace にも書き込みなし",
+    "evidence_limit": "1 回目のログは失われている。`Generating train split: 70 examples` を根拠に使う記述は **目視の記録であって回収した証拠ではない**。2 回目については上記のとおりファイルで裏が取れる。"
   },
   "ruled_out": [
     {

@@ -19,6 +19,10 @@ V-real 1腕で壊れていないcontrolを取り直す工程である。実行�
 [M3-R実行計画](../../docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-plan.md)を正とする。
 M4は渡せるcontrol checkpointがないためBlockedのまま。
 
+**M3-Rは第4段 4-2 の run1 で止まっている。**学習に到達しないまま US$4.289 を使って終わり、
+現行の上限では再挑戦の preflight が通らない。何が終わっていて何を決める必要があるかは
+[M3-R現在地](../../docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-status.md)にまとめてある。
+
 | 段 | 内容 | 状態 | 証拠 |
 | --- | --- | --- | --- |
 | 第0段 | 撤回された原因診断を記録から除去する | 完了 | [M3検証記録](../../docs/experiments/j-moshi-tsukuyomi-ojousama-m3-verification.md) |
@@ -26,11 +30,13 @@ M4は渡せるcontrol checkpointがないためBlockedのまま。
 | 第2段 | datasetを作り直す（読点分割・相槌・重なり・ルームトーン。**連結は撤回**） | 完了 | `reports/m3r-tokenize.json`、`reports/m3r-timeline.json`、`reports/m3r-roomtone.json` |
 | 第3段 | ローカルで測り切る（投入tokenのround-trip、明瞭度、一致検査、打ち切り線） | 完了 | `reports/m3r-roundtrip.json`、`reports/m3r-intelligibility.json`、`reports/m3r-dataset-agreement.json`、[`m3r/STOP_LINE.md`](m3r/STOP_LINE.md) |
 | 第4段 4-1 | base lossの内訳をforward 1回で実測（US$0.115、instance破棄済み） | 完了 | `reports/m3r-forward-breakdown.json` |
-| 第4段 4-2以降 | V-real学習 → 全epoch変換・export → 生成 → インスタンス破棄 | 未着手 | — |
+| 第4段 4-2 run1 | V-real学習（A100 80GB **PCIe** ×2、US$4.289、instance破棄済み） | **失敗**（学習に到達せず） | [`reports/m3r-run1-failure.json`](reports/m3r-run1-failure.json) |
+| 第4段 4-2以降 | 学習のやり直し → 全epoch変換・export → 生成 → インスタンス破棄 | 停止中（上限の判断待ち） | [M3-R現在地](../../docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-status.md) |
 
 **GPU予算の上限はUS$125**（2026-08-24承認。M3セッションがUS$102.697で旧上限US$100を
-突破したあとの引き上げ）。累計は **US$102.812**。拘束力を持つのは上限そのものではなく
-new_run_limit `US$112.50` の方である。台帳は `m0/spend-ledger.json`。
+突破したあとの引き上げ）。累計は **US$107.301**。拘束力を持つのは上限そのものではなく
+new_run_limit `US$112.50` の方で、run1の再挑戦（3.376時間 × US$2.4936/h）は予測 US$115.719 と
+なり **`tools/experiment_budget.py` が reject-new-run を返す**。台帳は `m0/spend-ledger.json`。
 
 ### 出荷したdataset（`v-real-v2`）
 
@@ -53,6 +59,16 @@ base audio lossの **80.1% は、`models/utils.py` がuser stream用にdeepcopy�
 占めていた。話者A側は17.0%（semantic 2.57 = chanceの33.7%、accuracy 37.6%）にすぎない。
 **M3のbase audio loss 6.82〜7.19を「j-moshi-extが対象話者を予測できない証拠」として
 読むことはできない。** 内訳は `reports/m3r-forward-breakdown.json`。
+
+### run1で止まった場所
+
+`Generating train split: 70 examples` の直後、`finetune.py:820-827` の
+`with accelerator.main_process_first():` を抜ける地点で両ランクが CPU 100% のまま進まなくなり、
+**起動assertion（`Num examples 70` / batch 8 / steps 45）に一度も届かなかった。**
+並列度（`--dataset_processing_workers 1` で再現）も `preprocess_function`（手元で0.01秒）も
+否定済みで、残る仮説は **NCCLのP2PがA100 PCIeで成立していない**（M3の成功はSXM4）。**未検証。**
+検証は次に借りたとき `NCCL_P2P_DISABLE=1 NCCL_DEBUG=INFO` 付きの2 step smoke testで数分。
+詳細は [`reports/m3r-run1-failure.json`](reports/m3r-run1-failure.json)。
 
 ## ディレクトリ
 
@@ -89,10 +105,13 @@ base audio lossの **80.1% は、`models/utils.py` がuser stream用にdeepcopy�
   仕様は [`m3/DATASET_SPEC.md`](m3/DATASET_SPEC.md)
 - **第4段の打ち切り線と起動assertion**: [`m3r/STOP_LINE.md`](m3r/STOP_LINE.md)。
   起動時に印字されるべき値は `Num examples 70` / `Total train batch size 8` / `Total optimization steps 45`
+- **4-2 run1 の失敗**: [`reports/m3r-run1-failure.json`](reports/m3r-run1-failure.json)（停止位置、否定した仮説3件、
+  未検証の NCCL P2P 仮説）。現在地と選択肢は
+  [M3-R現在地](../../docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-status.md)
 - **baselineの実行条件**: `m0/baseline-protocol.md`。prompt長やuser stream教師強制の理由も含む
 - **実行環境の再現**: `m0/bootstrap_instance.sh` → `m0/run_baseline.sh`、TTSは `m2/bootstrap_tts_instance.sh`、
   学習インスタンスは `m3/bootstrap_m3_instance.sh`（2x A100 80GBと空きRAM 80GiBに満たなければ起動時に止まる）
-- **費用**: `m0/spend-ledger.json`。上限 US$125
+- **費用**: `m0/spend-ledger.json`。上限 US$125、累計 US$107.301、preflightの限度 US$112.50
 - **データの由来と権利**: `registry/` と `DATA_CREDITS.md`
 
 `reports/m0-baseline-run-2026-08-18.json` と `-2026-08-20.json` は失敗記録として残してある。

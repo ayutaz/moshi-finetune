@@ -159,7 +159,7 @@
       "usd": 4.289,
       "gpu": "A100 80GB PCIe x2, RAM 1898 GiB, disk 500GB",
       "stop_line": "2026-08-27T19:13:00Z（3.376 h）。1.72 h で自主中断",
-      "outcome": "**学習に到達しなかった。** train dataset の読み込み直後、`train_dataset.map(preprocess_function, ...)` で停止した。起動 assertion（Num examples / batch / steps）に一度も届いていない。",
+      "outcome": "**学習に到達しなかった。** `accelerator.main_process_first()`（finetune.py:820-827）を抜ける地点で停止し、830 行の `Loading eval dataset` に到達していない。起動 assertion にも届いていない。",
       "what_was_tried": [
         "num_proc=16（既定）で 56 分停止 → --dataset_processing_workers 1 で再起動 → 同じ地点で 19 分停止。並列度は原因ではない",
         "wchan は親が futex_wait_queue だが、実処理の 2 ランクは CPU 時間が increasing（10 秒で 10 秒分）。デッドロックではなく計算はしている",
@@ -176,7 +176,8 @@
         "disk_gb": 500,
         "formula": "2.3560 + 0.20 x 500/730 = 2.4930（残差 0.0006 は丸め）",
         "correction": "scratchpad の STOP-LINE メモは dph_total を 2.0014 と書いていたが、それは同じ検索の別 offer（32303766）の値だった。tests/test_offer_check.py の reconciliation テストが捕まえた。"
-      }
+      },
+      "outcome_correction": "当初『train_dataset.map(preprocess_function, ...) で停止』と記録したが、その map は finetune.py:855 にあり到達していない。**誤りだった。**訂正の根拠は reports/m3r-run1-failure.json の where_it_hung。"
     }
   ],
   "status": "CAP EXCEEDED",
@@ -493,7 +494,8 @@
           "vram_gb": 48.0,
           "usd_per_hour": 0.2801
         }
-      ]
+      ],
+      "effect_on_option_b_superseded_2026_08_28": "この算定は accrued US$102.812 の時点のもの。run1 の US$4.489 を積んだ US$107.301 では 必要上限が US$129.41 になり、**現行 US$125 では成立しない**。導出は milestones の M3-R 予算節にある。"
     },
     {
       "surveyed_at": "2026-08-27（第2回）",
@@ -521,7 +523,8 @@
         }
       ],
       "resolves": "未決3の選択肢(b)（20 GiB 級 1 本で生成と転送を兼ねる）が成立する。所要 4.76 h（生成 1.597 + 転送 2.718 + bootstrap 0.45）で、Tesla P40 なら US$0.508。run1 後の preflight 残余 US$0.897 に収まる（残 US$0.389）。",
-      "caveat": "生成 1.597 h と転送 2.718 h はどちらも M3 計画由来の見積もりで、単独の実測はない。run1 の実測で置き換えること。offer は時々刻々変わるので借りる直前に取り直すこと。"
+      "caveat": "生成 1.597 h と転送 2.718 h はどちらも M3 計画由来の見積もりで、単独の実測はない。run1 の実測で置き換えること。offer は時々刻々変わるので借りる直前に取り直すこと。",
+      "resolves_superseded_2026_08_28": "『run1 後の preflight 残余 US$0.897 に収まる』は run1 が成功した場合の話だった。run1 は失敗し、残余は US$5.199 である。箱の選定（選択肢 b）自体は有効。"
     },
     {
       "surveyed_at": "2026-08-27（run1 の選定）",

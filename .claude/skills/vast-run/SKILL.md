@@ -12,7 +12,7 @@ exists because skipping it cost time or money at least once.
 
 Run the budget preflight and record the decision. **The cap is US$125, approved
 2026-08-24.** It replaced the US$100 cap of 2026-08-18, which the M3 session breached at
-US$102.697; 4-1 has since taken it to US$102.812. Headroom was US$22.30 when the cap moved,
+US$102.697; 4-1 and the two 4-2 rentals have since taken it to US$107.301. Headroom was US$22.30 when the cap moved,
 and `m0/spend-ledger.json` records under `cap_raise` exactly what that headroom is for - one
 V-real re-run and one forward-only measurement. Spending it elsewhere needs the user, not you.
 
@@ -24,8 +24,9 @@ hardcoded US$100 after the cap moved, refused every possible plan, and a preflig
 always says no is one nobody reads. The ledger's thresholds (US$93.75 / 112.50 / 118.75)
 are the same fractions.
 
-So a non-zero exit now means something. Against accrued US$102.812 the new-run limit of
-US$112.50 leaves US$9.688 - under four hours at A100x2 rates, less than one full V-real run.
+So a non-zero exit now means something. Against accrued US$107.301 the new-run limit of
+US$112.50 leaves US$5.199 - about two hours at A100x2 rates, and not one full V-real run:
+re-running 4-2 predicts US$115.72 and the preflight rejects it.
 Read `accrued_estimate` from the ledger rather than this line; it moves with every run.
 **Do not widen a fraction, raise the default, or skip the check to admit a
 plan.** Split the plan, or ask the user for a cap. `tests/test_experiment_budget.py` pins

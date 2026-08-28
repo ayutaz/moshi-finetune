@@ -32,12 +32,13 @@ M0, M1 and M2 are complete. M3 (Voice control) is **complete and failed**: the v
 right, the diagnosis was not, and the diagnosis has been retracted - see
 [the M3 verification record](docs/experiments/j-moshi-tsukuyomi-ojousama-m3-verification.md).
 The work now runs under **M3-R**, which repairs the record, the instruments and the data
-before re-taking the control:
-[the M3-R plan](docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-plan.md). Phases 0 to 3 are
-done and cost nothing; phase 4 is the only part that bills, and its first step - 4-1, the
-base-loss forward - is done. The unpaid steps come first on purpose, because a run whose
-result cannot be judged is a run that has to be repeated. M4 stays blocked until M3-R hands
-it a control checkpoint.
+before re-taking the control
+([the plan](docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-plan.md)). Where it stands -
+what is done, what stopped it, what the user has to decide - is
+[the M3-R status](docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-status.md): phases 0 to 3
+and 4-1 are done, 4-2's run1 hung before training started and bought nothing, and the
+preflight rejects a retry under the current cap. M4 stays blocked until M3-R hands it a
+control checkpoint.
 
 Two skills cover the recurring work: `vast-run` for GPU jobs on Vast.ai, `experiment-log`
 for writing a result into the record.
@@ -85,7 +86,10 @@ measurement would have settled, so measure first and record the number. Reports 
   human occupy - which would have made one channel of every training dialogue a crowd.
   Nothing in a loss curve shows this. `m3-speaker-b-probe.json`.
 - Mimi was assumed to need a GPU because the tools hardcoded CUDA. It tokenises 160
-  dialogues in 1.2 minutes on this Mac. `m3-local-compute-probe.json`.
+  dialogues in 1.2 minutes on this Mac. `m3-local-compute-probe.json`. M3-R 4-2 repeated the
+  mistake on a rented box: an hour of paid suspicion fell on `preprocess_function`, which
+  runs the shipped 70 rows in 0.01 s here. The CPU-only stage runs before renting, not after,
+  and a two-step smoke test comes before the real launch. `m3r-run1-failure.json`.
 - An intelligibility gate scored Whisper's choice of orthography rather than the model's
   pronunciation, and failed a working checkpoint 26/30 until readings were compared instead.
 - A 60-second sequence length was a premise I set without checking it. Both citations were
