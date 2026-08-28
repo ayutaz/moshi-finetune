@@ -168,7 +168,15 @@
       "why_stopped": "残り 1.78 h に対し、学習 1.07 h + 変換 0.5 h = 1.57 h。猶予 0.21 h では 単一 GPU への切り替えを試して失敗した場合、変換まで到達できない。打ち切り線を守り、原因を持ち帰る方を選んだ。",
       "key_difference_from_m3": "M3 のログには train の前処理行が無く validation だけがある。M3 は train 側をキャッシュから読んでおり、**この経路を実際には通っていない**。M3-R は dataset が新しいので初回実行になり、そこで初めて露呈した。",
       "diagnostics": "data/experiments/tsukuyomi_ojousama/m3r/run1-diag/（train.log, run1.nohup, procinfo.txt, nvidia-smi.txt）",
-      "destroyed": "2026-08-27"
+      "destroyed": "2026-08-27",
+      "rate_reconciliation": {
+        "billed": 2.4936,
+        "dph_total": 2.356,
+        "storage_cost_per_gb_month": 0.2,
+        "disk_gb": 500,
+        "formula": "2.3560 + 0.20 x 500/730 = 2.4930（残差 0.0006 は丸め）",
+        "correction": "scratchpad の STOP-LINE メモは dph_total を 2.0014 と書いていたが、それは同じ検索の別 offer（32303766）の値だった。tests/test_offer_check.py の reconciliation テストが捕まえた。"
+      }
     }
   ],
   "status": "CAP EXCEEDED",
@@ -514,6 +522,12 @@
       ],
       "resolves": "未決3の選択肢(b)（20 GiB 級 1 本で生成と転送を兼ねる）が成立する。所要 4.76 h（生成 1.597 + 転送 2.718 + bootstrap 0.45）で、Tesla P40 なら US$0.508。run1 後の preflight 残余 US$0.897 に収まる（残 US$0.389）。",
       "caveat": "生成 1.597 h と転送 2.718 h はどちらも M3 計画由来の見積もりで、単独の実測はない。run1 の実測で置き換えること。offer は時々刻々変わるので借りる直前に取り直すこと。"
+    },
+    {
+      "surveyed_at": "2026-08-27（run1 の選定）",
+      "why": "run1 用の 2x A100 80GB を選ぶため",
+      "outcome": "2 件借りた。47239987 は実請求 US$3.3327/h（advertised 2.0896 + disk 900GB x US$1.00/GB/mo）で budget_line が work_line を下回るため**走らせずに破棄**（US$0.20）。44937484 は US$2.4936/h で予算は足りたが **A100 PCIe** で、M3 が使った A100-SXM4-80GB と interconnect が違い、collective でハングした（US$4.289）。",
+      "tool_added": "tools/offer_check.py。この 2 件を借りる前に判定できる。47239987 は『3.38 h の計画に 2.92 h しか買えない』で拒否、44937484 は『PCIE は多 GPU で動いた実績がない』で警告になる。"
     }
   ]
 }

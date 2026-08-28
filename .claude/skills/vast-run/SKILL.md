@@ -73,9 +73,20 @@ run that dies partway through and has to be paid for twice.
 disk bills separately at `storage_cost` US$/GB/month. Multiply it out before you believe a
 price:
 
+```bash
+# tools/offer_check.py does this arithmetic and the interconnect check together
+uv run --no-sync python -c "
+import json, sys; sys.path.insert(0,'.')
+from tools.offer_check import check_offer
+offer = json.loads(sys.argv[1] if len(sys.argv)>1 else '{}')
+v = check_offer(offer, spent=<accrued>, limit=<new_run_limit>, planned_hours=<h>, num_gpus_needed=2)
+print(v)"
 ```
-rate = dph_total + storage_cost * disk_gb / 730
-```
+
+The rate it computes is `dph_total + storage_cost * disk_gb / 730`. Run it on the offer JSON
+before `vastai create`: it refuses an offer the budget cannot finish on, and warns when a
+multi-GPU offer is not on an interconnect that has worked here. Both of this session's
+losses - US$0.20 and US$4.29 - are pinned as tests in `tests/test_offer_check.py`.
 
 M3-R 4-2 rented at an advertised US$2.0896/h and was billed US$3.3327/h - the offer charged
 US$1.00/GB/month and 900 GB added US$1.23/h. At that rate the budget line fell to 2.91 h
