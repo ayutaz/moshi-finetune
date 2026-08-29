@@ -45,6 +45,18 @@ ones was observed) and `vastai show invoices` returns only the current bucket.
 
 ## Starting the instance
 
+Two hooks run without being asked, and neither replaces reading this file:
+
+- **`check-vastai-offer.sh`** fires on `vastai create instance`, looks the offer up, and
+  prints its real billed rate, how many hours the remaining headroom buys, and a warning if
+  the interconnect is one no multi-GPU run has worked on here. It warns, never blocks - a
+  hook that stops work when its own lookup fails is one people route around.
+- **`warn-running-gpu.sh`** fires when the session stops and reports every running instance
+  with elapsed time, spend so far, and how it stands against its stop line. **Record the
+  line** in `m0/spend-ledger.json` under `active_stop_lines` as
+  `{"<instance id>": "<UTC ISO-8601>"}` right after renting, or the hook can only report
+  elapsed time and say the line is missing.
+
 ```bash
 vastai start instance <id>
 ```

@@ -773,6 +773,22 @@ mean **0.8166 → 0.6607** に落ちる（−0.156）。生成 checkpoint は必
 
 ---
 
+### 自動で効くもの（2026-08-29 追加）
+
+計画に書いただけでは守られなかったので、2 件を hook にした。**hook は読むことの代わりにならない。**
+
+| hook | いつ | 何をする |
+| --- | --- | --- |
+| `.claude/hooks/check-vastai-offer.sh` | `vastai create instance` の直前 | offer を引き、**実請求率**・残余が買える時間・interconnect の警告を出す。`tools/offer_check.py` を使う。**警告のみで、止めはしない** |
+| `.claude/hooks/warn-running-gpu.sh` | セッション終了時 | 稼働中インスタンスの**経過時間・概算費用・打ち切り線との差**を出す。線を過ぎていれば `PAST ITS STOP LINE` と言う |
+
+**借りた直後に打ち切り線を台帳へ記録すること。** `m0/spend-ledger.json` の
+`active_stop_lines` に `{"<instance id>": "<UTC ISO-8601>"}` の形で書く。
+書かないと、後者の hook は経過時間しか言えない。
+
+**smoke test を飛ばしたことは hook では止められない。** それは `vastai create` でも
+セッション終了でもなく、学習コマンドを打つ瞬間に起きる。段 c を手順として守るしかない。
+
 ## この計画が答えられないこと
 
 正直に書いておく。

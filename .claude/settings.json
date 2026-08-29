@@ -24,6 +24,12 @@
             "if": "Bash(git commit *)",
             "timeout": 180,
             "statusMessage": "Running the experiment data gates"
+          },
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/check-vastai-offer.sh\"",
+            "timeout": 90,
+            "statusMessage": "Checking the Vast.ai offer"
           }
         ]
       }
