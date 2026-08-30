@@ -587,5 +587,24 @@
     "0.5 時間の予備は小さい。大きくしなかったのは安心のためではなく、3.21 時間で preflight が落ちるからである。予備を積む余地は予算の側にない。",
     "安いインスタンスの率と能力は仮定である。vastai を実行していない。",
     "16.74 GB は base model dq16 の重みで、fine-tune 後の export サイズは M3 では計測されていない（M3 が checksum まで確認したのは dq8 control の 15,375,500,136 バイト）。"
-  ]
+  ],
+  "superseded_2026_08_31": {
+    "what": "この JSON の予算数値は accrued US$102.812 の時点のもの。run1（4-2）が US$4.489 を使って失敗した。",
+    "now": {
+      "accrued": 107.301,
+      "preflight_headroom_usd": 5.199,
+      "hours_at_3_0567": 1.7,
+      "source": "m0/spend-ledger.json の accrued_estimate.total"
+    },
+    "stale_fields": [
+      "verdict の『残余は US$9.803 = 3.207 時間』",
+      "budget.headroom_usd",
+      "budget.headroom_hours_at_rate",
+      "budget.new_run_limit_is_what_binds",
+      "budget.breakpoint_measured",
+      "preflights の各予測"
+    ],
+    "still_valid": "打ち切り線の定義（STOP = min(work_line, budget_line)）、start_date を読むこと、走行中も preflight を呼ぶこと、export を見積もりに含めること。**方法は変わっていない。金額だけが変わった。**",
+    "regenerate": "uv run --no-sync python experiments/tsukuyomi_ojousama/m3r/build_stop_line.py --out <path> を現在の accrued で回し直す"
+  }
 }

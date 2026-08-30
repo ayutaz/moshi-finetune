@@ -5,6 +5,22 @@
 組み立て: `uv run --no-sync python experiments/tsukuyomi_ojousama/m3r/build_stop_line.py --out experiments/tsukuyomi_ojousama/reports/m3r-stop-line.json`
 （この文書の表はすべてそこから来る。食い違ったら JSON が正）
 
+> **⚠ 2026-08-31: 予算の数値は run1 の前のものである。**
+> この文書は accrued **US$102.812** の時点で書かれた。run1（4-2）が
+> **US$4.489** を使って失敗した結果、現在は次のとおりである。
+>
+> | | この文書 | **現在** |
+> | --- | ---: | ---: |
+> | accrued | 102.812 | **107.301** |
+> | preflight が許す残余 | US$9.803 | **US$5.199** |
+> | 買える時間（US$3.0567/h） | 3.207 h | **1.70 h** |
+>
+> **打ち切り線の引き方（`STOP = min(work_line, budget_line)`、`start_date` を読む、
+> 走行中も preflight を呼ぶ）は変わっていない。金額だけが変わった。**
+> 正は [`m0/spend-ledger.json`](../m0/spend-ledger.json) の `accrued_estimate.total`。
+> 借りる前に `build_stop_line.py` を現在の accrued で回し直すこと。
+> 経緯は [M3-R 現在地](../../../docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-status.md)。
+
 ---
 
 ## 0. 結論を先に

@@ -821,7 +821,7 @@ mean **0.8166 → 0.6607** に落ちる（−0.156）。生成 checkpoint は必
 | `m3r/STOP_LINE.md` §6 B と `reports/m3r-stop-line.json` | 安い箱の率 **US$0.45/h**（仮定）、必要上限 US$126.70 | 実在するのは **US$0.0525/h**（RTX 3060 12GB。ただし `dph_total`）。必要上限は run1 の失敗後 **US$127.76〜131.25** に上がった（上の必要額の表） |
 | ~~`m0/spend-ledger.json`~~ | ~~案 B の offer 探索結果が未記録~~ | **解消済み。** 台帳の `offer_surveys` に 2026-08-27 の 2 回分（RTX 3060 12GB US$0.0525/h、GTX 1070 US$0.0481/h、Tesla P40 24GB US$0.1067/h ほか）が記録されている |
 | `m0/spend-ledger.json` の `accrued_estimate.method_appendix` | 追記が 48838452 の「102.697 → 102.812」で止まっている | `total` は **107.301** に更新済みで、`instance_48911444` 0.2 と `instance_48911872` 4.289 も入っている。**合計は正しく、追記だけが欠けている** |
-| `m3r/STOP_LINE.md` §0 と `reports/m3r-stop-line.json` | accrued **102.812** を前提にした preflight 残余 US$9.803、run2 行「111.867 / 4.0 h @ US$0.45/h」 | accrued は **107.301**、preflight 残余は **US$5.199**。打ち切り線の**引き方**は有効だが、**数値は全部引き直しが要る** |
+| ~~`m3r/STOP_LINE.md` §0 と `reports/m3r-stop-line.json`~~ | ~~accrued 102.812 前提の残余 US$9.803~~ | **2026-08-31 に印を立てた。** 両文書の冒頭に「予算の数値は run1 の前のもの」と現在値（accrued 107.301 / 残余 US$5.199 / 1.70 h）を並べた。**引き方は有効で金額だけが変わった**ので本文は残し、借りる前に `build_stop_line.py` を回し直す運用にした |
 | `reports/m3r-stop-line.json` の `verdict` | 「見積もり 7.041 時間 US$21.52 に対し preflight が許す残余は US$9.803 = 3.207 時間」 | 残余は **US$5.199**。run1 の失敗（US$4.289）と 48911444（US$0.20）を含んでいない |
 | ~~`.claude/skills/vast-run/SKILL.md`~~ | ~~accrued US$102.812 / 残余 US$9.688~~ | **解消済み。** accrued **107.301** / 残余 **US$5.199** に更新し、再挑戦が preflight で拒否されることも書いた。SXM4 と smoke test の教訓は commit `ae14898`、offer 判定ツールは `tools/offer_check.py` |
 | [M3-R データセット監査](./j-moshi-tsukuyomi-ojousama-m3r-dataset-audit.md) §8 の手順 6 | 「4-1 の結果を見て決める」 | その時点は来たが、**決めるのに要る control が run1 の失敗で得られていない**（未決 1） |

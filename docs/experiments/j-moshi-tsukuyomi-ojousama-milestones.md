@@ -610,6 +610,10 @@ M3は「データ構造・学習率・更新範囲」の3つを同時に振り�
 - **作成済み**: 作り直したV-real dataset（`v-real-v2`）、manifest、registry
 - **作成済み**: 学習投入tokenのround-trip検証、明瞭度のcontrol値、UTC打ち切り線、base lossの内訳
 - **作成済み**: 4-2 run1の失敗記録と診断ログ（学習成果ではない。次の1回を無駄にしないための材料）
+- **作成済み**: run1の失敗を再発させないためのoffer判定コードとhook 2件
+  （[`tools/offer_check.py`](../../tools/offer_check.py)、
+  [`.claude/hooks/check-vastai-offer.sh`](../../.claude/hooks/check-vastai-offer.sh)、
+  [`.claude/hooks/warn-running-gpu.sh`](../../.claude/hooks/warn-running-gpu.sh)）
 - **未作成**: V-real再走の全epoch checkpointと固定生成音声。**4-2 run1では1本も作られていない**
 
 ### 完了条件
@@ -641,7 +645,11 @@ M3は「データ構造・学習率・更新範囲」の3つを同時に振り�
 不合格ですらない「判定できない」結果に終わった。借りた直後に`--max_train_steps 2`のsmoke testを通し、
 起動assertion（`Num examples` / batch / steps）が出ることを確認してから本番へ移る。
 借りる箱は**A100-SXM4-80GB**を名指しで指定し、offerは[`tools/offer_check.py`](../../tools/offer_check.py)に
-かけてから借りる。
+かけてから借りる。**このofferの判定と、走行中の打ち切り線の報告は、hook 2件が自動で行う**
+（[`.claude/settings.json`](../../.claude/settings.json)。下の「仕込んだ再発防止」）。借りた直後に打ち切り線を
+[`m0/spend-ledger.json`](../../experiments/tsukuyomi_ojousama/m0/spend-ledger.json)の`active_stop_lines`へ書くこと。
+**ただしsmoke testを飛ばさないことだけは自動では守れない。** それが起きるのは`vastai create`でも
+セッション終了時でもなく学習コマンドを打つ瞬間なので、手順として守るしかない。
 
 ### 完了記録
 
@@ -651,7 +659,7 @@ M3は「データ構造・学習率・更新範囲」の3つを同時に振り�
 - 依存先: M3（完了・不合格）
 - 承認済みの決定（2026-08-24）: **V-realのみ再走する**（V-ttsの教師音声が較正帯の外にあり、
   この腕の天井は対象話者に届かない）。**寄せ集めコーパスは申請しない**（「データ量が主因」は撤回済み）
-- テスト: **974 passed / 8 skipped / 22 subtests**（commit `5351d11`、2026-08-28に実測。
+- テスト: **974 passed / 8 skipped / 22 subtests**（commit `918249a`、2026-08-31に実測。
   `uv run --python 3.12 --with pytest --no-sync python -m pytest tests -q`）。
   4-2の失敗を受けて追加した`tests/test_offer_check.py`の16件を含む（commit `50af5d7`時点は958件）
 
@@ -866,6 +874,18 @@ instance `48911872`（**A100 80GB PCIe ×2**、RAM 1898 GiB、disk 500 GB、実�
 3. **CPUだけで済む診断を、借りてから1時間かけて行った。** `preprocess_function`の検証は
    出荷parquetと手元のCPUで足り、実測**0.01秒**だった。`CLAUDE.md`の「前提を先に測れ」は、
    GPUを借りた後ではなく借りる前に適用する
+
+**仕込んだ再発防止**（commit `5351d11`・`918249a`）。**文書に書くだけでは守られなかったので、コードとhookにした。**
+今セッションでGPUに失った`US$4.489`は、2件とも借りる前に検索結果へ出ていた数字である。
+
+| 仕掛け | 何を捕まえるか | 証拠 |
+| --- | --- | --- |
+| [`tools/offer_check.py`](../../tools/offer_check.py) | 借りる前に**価格とinterconnectの両方**を判定する。実請求率は`dph_total + storage_cost × disk_gb / 730`で、`dph_total`は計算機の料金だけである。**2条件は独立**である —— `48911444`はSXM4だがdisk代で落ち、`48911872`は価格は足りたがPCIeだった。片方だけ見ても防げない | [`tests/test_offer_check.py`](../../tests/test_offer_check.py) 16件。**実際に失った2件の数字でテストを固定**している。未知のinterconnectは拒否ではなく警告で（1回の失敗を規則にする根拠がない）、広げるにはテストの変更が要る |
+| [`.claude/hooks/check-vastai-offer.sh`](../../.claude/hooks/check-vastai-offer.sh) | `vastai create instance`の直前（PreToolUse）にofferを引いて上にかける。**警告のみで止めない** —— offer照会はofferと無関係な理由でも失敗するので、自分の根拠が欠けたときに作業を止めるhookは迂回されるようになる | [`.claude/settings.json`](../../.claude/settings.json)の`PreToolUse`。sentinelを仕込んで**実際に発火することを確認**し、黙るべき場面（無関係なBash・他のvastaiサブコマンド・存在しないoffer id）で黙ることも確認した |
+| [`.claude/hooks/warn-running-gpu.sh`](../../.claude/hooks/warn-running-gpu.sh) | セッション終了時（Stop）にinstanceの`start_date`を**直接読み**、経過時間・概算費用・**打ち切り線との差**を出す。過ぎていれば`PAST ITS STOP LINE`と言う。M3が14.0hの承認に対し25.21h走った原因が、まさに見積もりからの再計算だった | [`.claude/settings.json`](../../.claude/settings.json)の`Stop`。超過の分岐は台帳に過去時刻を仕込んで再現した。線は借りた直後に[`m0/spend-ledger.json`](../../experiments/tsukuyomi_ojousama/m0/spend-ledger.json)の`active_stop_lines`へ`{"<instance id>": "<UTC ISO-8601>"}`で書く（**現在は空**で、無いとhookは経過時間しか言えない） |
+
+**hookで守れないのは教訓1（smoke test）である。** それは`vastai create`でもセッション終了時でもなく
+**学習コマンドを打つ瞬間**に起きるので、[`vast-run`スキル](../../.claude/skills/vast-run/SKILL.md)の手順として守るしかない。
 
 - 証拠: [`m3r-run1-failure.json`](../../experiments/tsukuyomi_ojousama/reports/m3r-run1-failure.json)、
   [`m0/spend-ledger.json`](../../experiments/tsukuyomi_ojousama/m0/spend-ledger.json)の`charges`の

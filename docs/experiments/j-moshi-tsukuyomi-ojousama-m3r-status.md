@@ -118,6 +118,9 @@ NCCL_P2P_DISABLE=1 NCCL_DEBUG=INFO accelerate launch --use_deepspeed ... --max_t
 
 **上限の判断は利用者のものである。以下は選択肢と必要額であって、推奨ではない。**
 
+**そして、止めているのはこれだけである。** §4 の NCCL 仮説は選択肢 (1) の範囲で潰せるが、潰しても
+4-2 の完走は上限の内側に入らない。§6 に残る未決2件はいずれも 4-2 の結果待ちで、先には決められない。
+
 | 選択肢 | 必要な上限 | できること | できないこと |
 | --- | ---: | --- | --- |
 | (1) 据え置き | US$125 | 診断のみ（bootstrap + 2 step smoke test、US$2.75 前後）。第0〜3段と 4-1 の成果は残る | run1 の完走（予測 115.719 > 112.50、exit 1）。M4 は Blocked のまま |
@@ -147,3 +150,12 @@ commit `ae14898` で [`vast-run` skill](../../.claude/skills/vast-run/SKILL.md) 
 - **CPU だけで完結する段は借りる前に手元で通す。** `preprocess_function` は 0.01 秒だった
 - **率は `dph_total + storage_cost × disk_gb / 730` で計算する。** これを怠った 48911444 は
   走らせずに破棄して US$0.20 の授業料になった
+
+**文書に書くだけでは守られなかったので hook にした**（commit `918249a`）。
+配線と運用は [M3-R 実行計画](./j-moshi-tsukuyomi-ojousama-m3r-plan.md) の「自動で効くもの」が正本である。
+
+- `vastai create instance` の直前に**実請求率と interconnect** が出る（警告のみ、止めない）
+- セッション終了時に**経過時間と打ち切り線との差**が出る。線は借りた直後に
+  [`m0/spend-ledger.json`](../../experiments/tsukuyomi_ojousama/m0/spend-ledger.json) の
+  `active_stop_lines` へ書く（現在は空）
+- **smoke test を飛ばすことだけは hook で守れない。** 発火点が学習コマンドを打つ瞬間だからである

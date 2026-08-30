@@ -532,5 +532,7 @@
       "outcome": "2 件借りた。47239987 は実請求 US$3.3327/h（advertised 2.0896 + disk 900GB x US$1.00/GB/mo）で budget_line が work_line を下回るため**走らせずに破棄**（US$0.20）。44937484 は US$2.4936/h で予算は足りたが **A100 PCIe** で、M3 が使った A100-SXM4-80GB と interconnect が違い、collective でハングした（US$4.289）。",
       "tool_added": "tools/offer_check.py。この 2 件を借りる前に判定できる。47239987 は『3.38 h の計画に 2.92 h しか買えない』で拒否、44937484 は『PCIE は多 GPU で動いた実績がない』で警告になる。"
     }
-  ]
+  ],
+  "active_stop_lines": {},
+  "active_stop_lines_note": "稼働中インスタンスの打ち切り線。`{\"<instance id>\": \"<UTC ISO-8601>\"}` の形で、**借りた直後に書く**。`.claude/hooks/warn-running-gpu.sh` がここを読み、セッション終了時に経過時間と線との差を出す。書かないと経過時間しか言えない。線は `start_date + min(work_line, budget_line)` で一度だけ計算し、以後再計算しない —— M3 は毎回見積もりから予測を作り直し、14.0 h の承認に対し 25.21 h 走った。破棄したら消すこと。"
 }

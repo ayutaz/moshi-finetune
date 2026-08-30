@@ -18,13 +18,33 @@ it. This skill is how that rule gets followed.
 | `docs/.../plan.md` | Technical conditions and the overall run matrix. Change this *first* when a run condition changes, then sync the milestone |
 | `docs/.../<milestone>-plan.md` | A milestone with its own step plan (M3, M3-R) keeps its gates, costs and revised run conditions there, and that plan is what binds. M3-R's `2e-6` / `4e-6`, its single V-real arm and the retracted concatenation are in `-m3r-plan.md` and reached `plan.md` nowhere - check which document the milestone names as authority before editing either |
 | `experiments/tsukuyomi_ojousama/reports/*.json` | The measured numbers, per run, with the commit that produced them |
-| `experiments/tsukuyomi_ojousama/m0/spend-ledger.json` | Invoice lines, accrued estimate, preflight decisions, instance state |
+| `experiments/tsukuyomi_ojousama/m0/spend-ledger.json` | Invoice lines, accrued estimate, preflight decisions, offer surveys, the stop line of a running instance, instance state |
 | `experiments/tsukuyomi_ojousama/registry/*.json` | Any dataset touched: source, version, terms, and whether it is used |
 
 ## Rules that are easy to get wrong
 
 **Report the outcome, not the intent.** If a gate failed, say so with the number and the
 threshold. A run that produced no artifact is `blocked` or `partial`, never `pass`.
+
+**A run that bought nothing still gets a report.** `m3r-run1-failure.json` covers a run that
+never reached training: where it stopped, the hypotheses it ruled out, what its 1.72 h cost,
+and what to do differently. Two of its fields have no counterpart in a successful run's
+report - the retraction of a diagnosis already written into the ledger (`outcome_correction`
+names the wrong line of `finetune.py` that the charge entry had blamed), and the evidence
+nobody collected: run1's bootstrap log was never exported, so the dependency versions that
+would settle its leading hypothesis are gone. Say so. An unmentioned gap reads as a complete
+record.
+
+**Two ledger entries are written before there is a result, and both are easy to get wrong.**
+A preflight decision has to record the rate that will be *billed*: the 4-2 entry recorded
+`--hourly-rate 2.0896` straight from the search result, but the disk took the real rate to
+US$3.3327/h, which cuts a 4.64 h budget line to 2.91 h - under the 3.376 h that plan needed.
+`tools.offer_check` computes it as `dph_total + storage_cost * disk_gb / 730`. And the stop
+line goes into `active_stop_lines` as `{"<instance id>": "<UTC ISO-8601>"}` **right after
+renting**, removed when the instance is destroyed: `.claude/hooks/warn-running-gpu.sh` reads
+that key at the end of every session, and with nothing there it can report elapsed hours but
+not whether the line has passed. Fix the line once from the instance's own `start_date`;
+recomputing it from stage estimates is how M3 ran 25.21 h against a 14.0 h authorisation.
 
 **Write the report before enforcing a gate.** A rejected run's numbers are the evidence you
 need to diagnose it. `tools/persona_perplexity.py` writes its report and then fails.

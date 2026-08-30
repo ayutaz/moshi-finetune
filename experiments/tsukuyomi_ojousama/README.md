@@ -38,6 +38,12 @@ M4は渡せるcontrol checkpointがないためBlockedのまま。
 new_run_limit `US$112.50` の方で、run1の再挑戦（3.376時間 × US$2.4936/h）は予測 US$115.719 と
 なり **`tools/experiment_budget.py` が reject-new-run を返す**。台帳は `m0/spend-ledger.json`。
 
+preflightが検査するのは計画であって、offerではない。借りる前にofferを
+[`tools/offer_check.py`](../../tools/offer_check.py)に通すこと。`dph_total` はdisk代を含まず
+（実請求は `dph_total + storage_cost × disk_gb / 730`）、検索結果の「A100」はSXM4とPCIeを
+区別しないので **SXM4を名指しで借りる**。この2件でUS$4.489を失っている。判定は
+`vastai create` 時にhookが自動で出すが、警告のみで止めない。
+
 ### 出荷したdataset（`v-real-v2`）
 
 | | M3-R | M3 |

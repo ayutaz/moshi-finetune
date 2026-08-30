@@ -274,10 +274,16 @@ Moshi 系は公式 model card が "trained to produce only one voice to avoid im
 teacher forcing された自己回帰 LM の無音化とは機序が違う。
 **M4 以降は degenerate / silence collapse または oversmoothing と呼ぶ。**
 
-【確定】Kyutai 公式 README は「`duration_sec` を下げるとモデルがより早く無音になりうる」と警告し、
-推奨系列長を 100〜300 秒としている。〔実測〕M3 の平均は **21.0 秒**
+~~【確定】Kyutai 公式 README は「`duration_sec` を下げるとモデルがより早く無音になりうる」と警告し、
+推奨系列長を 100〜300 秒としている。~~ 〔実測〕M3 の平均は **21.0 秒**
 （v-real train 18,841 frames / 72 対話 / 12.5Hz）。
-**最重要症状が、公式が名指しで警告する副作用と一致する。**
+~~**最重要症状が、公式が名指しで警告する副作用と一致する。**~~
+
+> **撤回（2026-08-25）**: 「推奨 100〜300 秒」は README の誤読である。全文検索して `300` は
+> 一度も現れず、`duration_sec` は上限の指定であって長さを作る指定ではない。このプロジェクトで
+> 唯一動いた過去の成功 run は **19.02 秒**（100 対話 / 31.7 分 / 1 対話 = 1 学習例）であり、
+> M3 の 21.0 秒はそこから外れていない。**系列長は M3 の失敗の証拠にならない。**
+> [M3-R データセット監査 §2](./j-moshi-tsukuyomi-ojousama-m3r-dataset-audit.md)。
 
 ### 4.4 対策には文献上の順位がある
 
@@ -439,13 +445,19 @@ audio codebook の distinct が 81 → 5 へ落ちる軌跡は text 欠陥では
 6. 観測された正の delta が本物の声質転移か、ECAPA が平坦な出力を減点しないことによる見かけか
 7. control 17/30 の退化が general30 の prompt 形状の産物か J-Moshi-ext の性質か
 
-### 記録間の不一致（1 件・未解消）
+### 記録間の不一致（1 件・~~未解消~~ → 解消済み）
 
 `m3-speaker-likeness.json` は v-tts/epoch3 を `scorable: 9, higher_on: 5` と記録する。
 本調査の一部の再測定は同じ腕を「10 件すべて採点可能、paired mean +0.0738」としており、
 採点可能数と delta の両方で食い違う。
 **出荷済み JSON の値を正とし、再測定値は参考として扱う。**
-差の原因（有声区間の抽出条件か floor 判定か）は未特定であり、条件 4 を再設計する際に必ず解消すること。
+~~差の原因（有声区間の抽出条件か floor 判定か）は未特定であり、条件 4 を再設計する際に必ず解消すること。~~
+
+> **解消（2026-08-25）**: 原因は**そのどちらでもなかった**。`likeness_guard.apply_degeneracy_guard` が
+> clip 4 を `exact_repeat_collapse` として候補側から除いており、再測定はその guard を通らない経路だった。
+> 同じ出荷ファイルの census が 10/10 採点可能・`below_floor: 0` と記録しているので、floor 由来ではありえない。
+> 記録は [`m3-likeness-calibration.json`](../../experiments/tsukuyomi_ojousama/reports/m3-likeness-calibration.json)
+> の `record_reconciliation`、経緯は [M3-R 実行計画](./j-moshi-tsukuyomi-ojousama-m3r-plan.md) 1-5。
 
 ---
 
@@ -478,7 +490,7 @@ GPU を使わないものを先に置く。**1〜3 は blocking** で、これ�
 | 4 | `dialogue_collapse.py` に音響指標を追加し、閾値を calibration に固定して全 11 腕 × 3 set を再判定 | US$0 / 45 分 | control が基準線として使えるかが自動判定される |
 | 5 | tokenize の全フラグを manifest に記録し、parquet の text 統計を `tests/test_experiment_assets.py` のゲートにする | US$0 / 30 分 | 既知要件が再び黙って落ちるのを防ぐ |
 | 6 | `finetune.py:916-923` を修正: gathered 平均を印字、loss 内訳 4 項目を `--with_tracking` なしで stdout へ、eval loss を smoke test で確認 | US$0 / 30 分 | M3 で 10 回破棄された内訳が二度と失われない |
-| 7 | M4 のデータ設計を作り直す: ターン数を過去 run 相当へ、重なりを入れる、非発話チャンネルにルームトーンを入れて pad ⟺ 無音 の同値を切る、系列長を 100 秒以上に連結 | US$0 / 数時間〜1 日 | 「loss を下げる最短経路が無音」という近道が消える |
+| 7 | M4 のデータ設計を作り直す: ターン数を過去 run 相当へ、重なりを入れる、非発話チャンネルにルームトーンを入れて pad ⟺ 無音 の同値を切る、~~系列長を 100 秒以上に連結~~（**撤回。**§4.3 の誤読に立っていた） | US$0 / 数時間〜1 日 | 「loss を下げる最短経路が無音」という近道が消える |
 | 8 | 明瞭度を測る。held-out と seen の 110 件を Whisper にかけ、転写の LM perplexity を取る。反復検出と併記 | US$0 / CPU 数時間 | 条件 5 が初めて数値化される |
 | 9 | 学習投入 token を Mimi で decode して WAV に戻し、統計と耳の両方で確認 | US$0 / MPS 20 分 | パイプラインが端から端まで検証される |
 | 10 | **（提案のみ）** forward 1 回で base loss の内訳を測る。bf16 16.74GB で単一 24GB カードに収まる | **US$0.20〜0.40** / 新上限の承認が前提 | base audio 7.03 の帰属が確定する |
@@ -500,6 +512,11 @@ GPU を使わないものを先に置く。**1〜3 は blocking** で、これ�
    直さずに M4 を走らせても、**M4 の結果も同じ理由で判定できない。**
 4. **予算が超過している。** 承認を求める前に「その GPU で何を決着させるのか」を
    言えなければならない。現時点では言えない。
+
+> **注記（2026-08-31）**: 3 の計器 3 件は M3-R 第 1 段で修復済みであり
+> （[M3-R 実行計画](./j-moshi-tsukuyomi-ojousama-m3r-plan.md) 1-1〜1-5）、
+> 4 の上限は 2026-08-24 に US$125 へ改定された（台帳の `cap_raise`。現在値は台帳を正とする）。
+> **1 と 2 は解消していない。この節の結論は変わらない。**
 
 ---
 

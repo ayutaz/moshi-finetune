@@ -23,22 +23,19 @@ whose numbers have to be reproducible.
 ## The experiment
 
 Read [`experiments/tsukuyomi_ojousama/README.md`](experiments/tsukuyomi_ojousama/README.md)
-first. Progress and completion are judged in
-[the milestone document](docs/experiments/j-moshi-tsukuyomi-ojousama-milestones.md); the run
-matrix lives in [the plan](docs/experiments/j-moshi-tsukuyomi-ojousama-plan.md). A milestone
-is complete only when each condition points at a file that proves it.
+first; it points at the rest. Progress and completion are judged in
+[the milestone document](docs/experiments/j-moshi-tsukuyomi-ojousama-milestones.md), and a
+milestone is complete only when each condition points at a file that proves it.
 
 M0, M1 and M2 are complete. M3 (Voice control) is **complete and failed**: the verdict was
-right, the diagnosis was not, and the diagnosis has been retracted - see
+right, the diagnosis was not, and it has been retracted - see
 [the M3 verification record](docs/experiments/j-moshi-tsukuyomi-ojousama-m3-verification.md).
 The work now runs under **M3-R**, which repairs the record, the instruments and the data
 before re-taking the control
-([the plan](docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-plan.md)). Where it stands -
-what is done, what stopped it, what the user has to decide - is
-[the M3-R status](docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-status.md): phases 0 to 3
-and 4-1 are done, 4-2's run1 hung before training started and bought nothing, and the
-preflight rejects a retry under the current cap. M4 stays blocked until M3-R hands it a
-control checkpoint.
+([the plan](docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-plan.md), and where it stands is
+[the status](docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-status.md)): phases 0 to 3 and
+4-1 are done, 4-2's run1 hung before training started and bought nothing, and the preflight
+rejects a retry under the current cap. M4 is blocked until M3-R produces a control checkpoint.
 
 Two skills cover the recurring work: `vast-run` for GPU jobs on Vast.ai, `experiment-log`
 for writing a result into the record.
@@ -46,12 +43,18 @@ for writing a result into the record.
 ## Rules that cost money or rights if broken
 
 **GPU spend is capped at US$125**, raised from US$100 on 2026-08-24 after the M3 session
-breached the old cap at US$102.697. Run `tools/experiment_budget.py` before starting an
-instance **and again at every progress check while it runs** - M3 was authorised 14.0 hours,
-ran 25.21, and called the preflight exactly once - then record the decision in
-`experiments/tsukuyomi_ojousama/m0/spend-ledger.json`. **Stop the instance when the run ends**
-- a stopped instance still bills for its disk, and Vast.ai's invoice lags real runtime badly,
-so budget against `accrued_estimate`, not `invoiced_to_date`.
+breached the old cap at US$102.697. Raising it again is the user's call. Run
+`tools/experiment_budget.py` before starting an instance **and again at every progress check
+while it runs** - M3 was authorised 14.0 hours, ran 25.21, and called the preflight exactly
+once - then record the decision in `experiments/tsukuyomi_ojousama/m0/spend-ledger.json`.
+**Stop the instance when the run ends** - a stopped instance still bills for its disk, and
+Vast.ai's invoice lags real runtime badly, so budget against `accrued_estimate`, not
+`invoiced_to_date`.
+
+**The preflight tests the plan, not the offer.** Run `tools/offer_check.py` before renting:
+`dph_total` excludes the disk (`+ storage_cost * disk_gb / 730`), and "A100" names two
+machines, only one of which a multi-GPU run has worked on here. Two rentals went unread on
+those fields, cost US$4.489, and why the second hung is still untested.
 
 **Never commit** raw tsukuyomi audio, generated audio, checkpoints that have not passed a
 publication review, API keys, or instance tokens. They belong in `data/`, which is
