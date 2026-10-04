@@ -9,6 +9,10 @@ J-Moshi-ext に、つくよみちゃんコーパス由来の声質と自然な�
 
 ## 状態
 
+**2026-10-04: 利用者の判断でプロジェクトを終了。** M3-R は未完了のまま中止し、M4〜M6には進まない。
+成果物の保存先、検証結果、欠損は[終了記録](../../docs/experiments/j-moshi-tsukuyomi-ojousama-closeout.md)を参照。
+以下は終了時点までの実験記録であり、再開の指示ではない。
+
 M0（過去baseline固定・Vast.ai基盤）、M1（権利・データ確定）、M2（Tsukuyomi TTS）は完了。
 **M3（Voice control）は完了（不合格）。不合格の判定は正しかったが、原因の読みは撤回済みである**
 （[M3実施報告](../../docs/experiments/j-moshi-tsukuyomi-ojousama-m3-report.md) と、

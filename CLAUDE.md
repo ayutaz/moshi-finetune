@@ -22,6 +22,11 @@ whose numbers have to be reproducible.
 
 ## The experiment
 
+The owner closed this experiment on 2026-10-04. Do not resume GPU work without a
+new instruction. Read [the closeout record](docs/experiments/j-moshi-tsukuyomi-ojousama-closeout.md)
+for the final state, private artifact archive and preservation gaps. The plans
+below remain historical records; M3-R stopped incomplete and M4–M6 were not run.
+
 Read [`experiments/tsukuyomi_ojousama/README.md`](experiments/tsukuyomi_ojousama/README.md)
 first; it points at the rest. Progress and completion are judged in
 [the milestone document](docs/experiments/j-moshi-tsukuyomi-ojousama-milestones.md), and a
@@ -30,8 +35,8 @@ milestone is complete only when each condition points at a file that proves it.
 M0, M1 and M2 are complete. M3 (Voice control) is **complete and failed**: the verdict was
 right, the diagnosis was not, and it has been retracted - see
 [the M3 verification record](docs/experiments/j-moshi-tsukuyomi-ojousama-m3-verification.md).
-The work now runs under **M3-R**, which repairs the record, the instruments and the data
-before re-taking the control
+The last work ran under **M3-R**, which repaired the record, the instruments and the data
+before the planned control retry
 ([the plan](docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-plan.md), and where it stands is
 [the status](docs/experiments/j-moshi-tsukuyomi-ojousama-m3r-status.md)): phases 0 to 3 and
 4-1 are done, 4-2's run1 hung before training started and bought nothing, and the preflight

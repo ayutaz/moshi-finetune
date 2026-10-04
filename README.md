@@ -2,6 +2,10 @@
 
 [**English README**](README.md) | [**日本語 README**](README-ja.md)
 
+The Tsukuyomi / Ojousama experiment on this branch was closed on 2026-10-04.
+See the [closeout record](docs/experiments/j-moshi-tsukuyomi-ojousama-closeout.md)
+for the final outcome and preserved artifacts.
+
 This is an unofficial repository for finetuning Moshi, a full-duplex spoken dialogue model proposed by Kyutai. You can train the RQ-Transformer on your desired spoken dialogue data. It also supports finetuning J-Moshi, a Japanese model based on Moshi (see [Finetuned Model](#finetuned-model) for details). The training scripts in this repository were reimplemented based on the official [technical report](https://arxiv.org/abs/2410.00037) and [PyTorch model](https://github.com/kyutai-labs/moshi).
 
 Compared to the [official finetuning code](https://github.com/kyutai-labs/moshi-finetune), this repository has the following features:

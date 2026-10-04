@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "closed_at": "2026-10-04",
+  "status": "closed-artifact-upload-in-progress",
+  "reason": "Owner requested project closure and preservation on GitHub and Hugging Face.",
+  "source_commit": "ec21d430dd37ba24ea6911542a3f7770a4e7d9b8",
+  "github": {
+    "repo": "ayutaz/moshi-finetune",
+    "branch": "experiment-j-moshi-character-voice-overfit",
+    "research_branch": "research/j-moshi-tool-token-finetuning",
+    "research_branch_commit": "dfb05e4e6ac0a08732bb808fa5fa9fbe4cded939",
+    "research_branch_push": "complete"
+  },
+  "hugging_face": {
+    "repo_id": "ayousanz/moshi-tsukuyomi-ojousama-archive-2026-10-04",
+    "private": true,
+    "upload_status": "in-progress",
+    "payload_files": 1758,
+    "payload_bytes": 62327499832,
+    "manifest": "archive-manifest.json",
+    "checksums": "SHA256SUMS",
+    "verification": null
+  },
+  "outcomes": {
+    "M0": "complete",
+    "M1": "complete",
+    "M2": "complete",
+    "M3": "complete-failed",
+    "M3-R": "stopped-incomplete",
+    "M4": "not-run",
+    "M5": "not-run",
+    "M6": "not-run",
+    "release_candidate": false
+  },
+  "model_files": [
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m2/speaker_inversion/checkpoint_0000250.speaker.safetensors",
+      "size": 49264,
+      "sha256": "7ebe8acfb8f1064856a673184981a230e3b4ec9cb088fb3f4c69ea70c623f085"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m2/speaker_inversion/checkpoint_0000500.speaker.safetensors",
+      "size": 49264,
+      "sha256": "d373f1a501cd58166ea69e04a80400a9695fa15f9ba24cee65d80862b29b1280"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m2/speaker_inversion/checkpoint_0000750.speaker.safetensors",
+      "size": 49264,
+      "sha256": "c75b93752432161596709fb4164c3037c460a27de170f5aee3a6f9bfa1ec9abe"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m2/speaker_inversion/checkpoint_0001000.speaker.safetensors",
+      "size": 49264,
+      "sha256": "1196e09707458aadb037e0adf53a4ff574704cec8260e7f170c3fe9b78d0d179"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m2/speaker_inversion/checkpoint_0001250.speaker.safetensors",
+      "size": 49264,
+      "sha256": "352bf67094825a323f60f8a4dd12ed4c64d36f350b41a5c8c5b64872aad77c7a"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m2/speaker_inversion/checkpoint_0001500.speaker.safetensors",
+      "size": 49264,
+      "sha256": "48257ceb4baafa487db4c1e820275840c9c20524c6d01e6b50589b6f6d8da924"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m2/speaker_inversion/checkpoint_0001750.speaker.safetensors",
+      "size": 49264,
+      "sha256": "e9d78f9b606a5205302159e7a5de9f0b468644737be77df63f965147ad1b549f"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m2/speaker_inversion/checkpoint_0002000.speaker.safetensors",
+      "size": 49264,
+      "sha256": "546d9a585d94dfff48ab97418cdde5e598a2c79855031935a0cab61087fc55bb"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m2/speaker_inversion/checkpoint_0002250.speaker.safetensors",
+      "size": 49264,
+      "sha256": "2ebe2319a7288bd60fa939d8e12205de8abf6e6b87fa448b18df582fea4d1025"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m2/speaker_inversion/checkpoint_0002500.speaker.safetensors",
+      "size": 49264,
+      "sha256": "4cc7c930c1122b3d06e9a91548955299fd47c28088a960d870a18e6742cf00a9"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m2/speaker_inversion/checkpoint_0002750.speaker.safetensors",
+      "size": 49264,
+      "sha256": "4c5c98b8171c4cba16d628df2c773cd66fd863ff66fdf88db3abc534038fd20e"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m2/speaker_inversion/checkpoint_0003000.speaker.safetensors",
+      "size": 49264,
+      "sha256": "b9e10f13c450f2630b7560a93f52d207b4f666deb9cce9824d253d9844e6cf2b"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m2/speaker_inversion/checkpoint_final.speaker.safetensors",
+      "size": 49264,
+      "sha256": "b9e10f13c450f2630b7560a93f52d207b4f666deb9cce9824d253d9844e6cf2b"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m3/checkpoints/v-real/epoch3-dq8/model.safetensors",
+      "size": 15375500136,
+      "sha256": "d0887f5bcfc584e564573869a5f8a28c9cb0d82aa3c28e53b15d992170bb0dde"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m3/checkpoints/v-real/epoch5-dq8/model.safetensors",
+      "size": 15375500136,
+      "sha256": "920d55614fabf29f7b9427bfc3de25878e202fba3cc91c17a75cdcff8b949b33"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m3/checkpoints/v-tts/epoch3-dq8/model.safetensors",
+      "size": 15375500136,
+      "sha256": "9e739760ce3d0d76f6431aa4b09be9dc056e644b07ec870b35e0c13ae2dd5436"
+    },
+    {
+      "path": "data/experiments/tsukuyomi_ojousama/m3/checkpoints/v-tts/epoch5-dq8/model.safetensors",
+      "size": 15375500136,
+      "sha256": "ecb6333b04a2cd389408ad14dfd9c68621351880e05402b34685f420a61a65b2"
+    }
+  ],
+  "excluded": [
+    "Raw corpus ZIP/WAV and local raw/downloads directories",
+    "Raw-derived V-real audio, tokenizer arrays and parquet (all versions)",
+    "Raw held-out/seen prompt recordings and natural-speaker references",
+    "M2 corpus latents",
+    "Room-tone corpus slices",
+    "Credentials, caches, virtual environments",
+    "Upstream base weights, re-downloadable at pinned revisions"
+  ],
+  "preservation_gaps": [
+    "M3 epochs 1/2/4 were never exported, including V-tts epoch 2; old instances destroyed.",
+    "No M3-R training checkpoint exists.",
+    "M3-R run1 bootstrap dependency versions were not captured.",
+    "No optimizer state; archived weights cannot resume the original training."
+  ],
+  "gpu": {
+    "new_instances_created": 0,
+    "ledger_accrued_estimate_usd": 107.301,
+    "ledger_experiment_instances": "all destroyed",
+    "live_verification": "unavailable",
+    "live_verification_reason": "Vast.ai HTTP 401: Invalid user key",
+    "unrelated_instances_modified": false
+  },
+  "validation": {
+    "pytest": {
+      "passed": 974,
+      "skipped": 8,
+      "subtests_passed": 22
+    },
+    "selected_text_files_secret_scan": "passed",
+    "ruff_check": "passed",
+    "ruff_format": "passed; two parameter-list comprehensions in finetune.py reformatted, no behavior change.",
+    "prohibited_payload_path_check": "passed: 0 excluded-path matches",
+    "m2_adopted_checkpoint_historical_sha256": "matches reports/m2-tts-gate.json"
+  },
+  "local_files_deleted": false
+}

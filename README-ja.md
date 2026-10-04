@@ -2,6 +2,9 @@
 
 [**English README**](README.md) | [**日本語 README**](README-ja.md)
 
+このブランチのつくよみちゃん／お嬢様実験は、2026-10-04 に利用者の判断で終了しました。
+最終結果と成果物の保存先は[終了記録](docs/experiments/j-moshi-tsukuyomi-ojousama-closeout.md)を参照してください。
+
 Kyutai が提案した Full-duplex 音声対話モデル Moshi をファインチューニングするための非公式リポジトリです。RQ-Transformer を所望の音声対話データで学習することができます．また，Moshi をベースに日本語データで学習された J-Moshi（詳しくは，[Finetuned Model](#finetuned-model)を参照）のファインチューニングも可能です．本リポジトリの学習スクリプトは，以下で公開されている，Moshiの公式の[テクニカルレポート](https://arxiv.org/abs/2410.00037)および [Pytorch モデル](https://github.com/kyutai-labs/moshi)をベースに再現実装されました：
 
 なお，[公式のファインチューニングコード](https://github.com/kyutai-labs/moshi-finetune) と比較した際の，本リポジトリの特徴は以下の通りです：

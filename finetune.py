@@ -909,17 +909,13 @@ def main():
     candidate_param_groups = [
         {
             "name": "tempformer",
-            "params": [
-                p for p in get_parameters(moshi_lm, "tempformer") if p.requires_grad
-            ],
+            "params": [p for p in get_parameters(moshi_lm, "tempformer") if p.requires_grad],
             "lr": args.tempformer_learning_rate,
             "weight_decay": args.weight_decay,
         },
         {
             "name": "depformer",
-            "params": [
-                p for p in get_parameters(moshi_lm, "depformer") if p.requires_grad
-            ],
+            "params": [p for p in get_parameters(moshi_lm, "depformer") if p.requires_grad],
             "lr": args.depformer_learning_rate,
             "weight_decay": args.weight_decay,
         },
