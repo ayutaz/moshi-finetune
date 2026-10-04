@@ -24,7 +24,7 @@ whose numbers have to be reproducible.
 
 The owner closed this experiment on 2026-10-04. Do not resume GPU work without a
 new instruction. Read [the closeout record](docs/experiments/j-moshi-tsukuyomi-ojousama-closeout.md)
-for the final state, private artifact archive and preservation gaps. The plans
+for the final state, manual-gated artifact archive and preservation gaps. The plans
 below remain historical records; M3-R stopped incomplete and M4–M6 were not run.
 
 Read [`experiments/tsukuyomi_ojousama/README.md`](experiments/tsukuyomi_ojousama/README.md)

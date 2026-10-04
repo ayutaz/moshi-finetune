@@ -22,7 +22,11 @@
 
 > 本ソフトウェアの音声合成には、フリー素材キャラクター「つくよみちゃん」が無料公開している音声データを使用しています。
 
-M3 は checkpoint を公開しないため、この条件が発火するのは M6 の公開審査時である。
+M3 実施時は checkpoint を公開せず、当初は M6 の公開審査でこの条件を確認する予定だった。
+2026-10-04 の終了処理では、利用者が研究アーカイブの public / manual gate 保存を明示したため、
+M6 の品質合格とは別に公開条件を再確認し、必要なクレジット・4禁止用途・規約継承を model card に記載した。
+結果は `reports/project-closeout-2026-10-04.json` の `publication_review` を参照。
+原音と原音を含む派生学習入力は引き続き再配布せず、生成音声・tokenは聴取・評価のみの研究記録として保存する。
 規約上 **公開そのものは許諾されている**ので、M6 の論点はクレジットと規約継承の記載方法に限られる。
 
 ### 追加候補: 夢前黎の音声データの寄せ集め（未取得）
@@ -49,6 +53,8 @@ Irodori-TTS で生成する。2026-08-21にmodel card を確認した結果は�
 | [`Aratako/Irodori-TTS-600M-v3-VoiceDesign`](https://huggingface.co/Aratako/Irodori-TTS-600M-v3-VoiceDesign) | 話者B（caption から1本生成し凍結） | MIT |
 | [`Aratako/Semantic-DACVAE-Japanese-32dim`](https://huggingface.co/Aratako/Semantic-DACVAE-Japanese-32dim) | 両者のcodec | MIT |
 | [`Aratako/Irodori-TTS`](https://github.com/Aratako/Irodori-TTS) | 学習・推論コード | MIT |
+
+Irodori-TTS の MIT 通知本文は [`reference/LICENSE.Irodori-TTS`](./reference/LICENSE.Irodori-TTS) に同梱する（Copyright (c) 2026 Aratako）。
 
 **生成音声の利用について、model card は制限を置いていない。** 生成物のライセンス、
 機械学習データとしての利用、商用利用、帰属のいずれも記載がなく、MITは出力物に条件を及ぼさない。

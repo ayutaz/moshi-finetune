@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "closed_at": "2026-10-04",
-  "status": "closed-artifact-upload-in-progress",
+  "status": "closed-artifacts-preserved",
   "reason": "Owner requested project closure and preservation on GitHub and Hugging Face.",
   "source_commit": "ec21d430dd37ba24ea6911542a3f7770a4e7d9b8",
   "github": {
@@ -9,17 +9,43 @@
     "branch": "experiment-j-moshi-character-voice-overfit",
     "research_branch": "research/j-moshi-tool-token-finetuning",
     "research_branch_commit": "dfb05e4e6ac0a08732bb808fa5fa9fbe4cded939",
-    "research_branch_push": "complete"
+    "research_branch_push": "complete",
+    "lfs_used": false,
+    "new_upload_scope": "Code, documentation and JSON experiment reports only; model weights and audio payloads are stored on Hugging Face.",
+    "archive_tag": "project-closeout-2026-10-04"
   },
   "hugging_face": {
     "repo_id": "ayousanz/moshi-tsukuyomi-ojousama-archive-2026-10-04",
-    "private": true,
-    "upload_status": "in-progress",
-    "payload_files": 1758,
-    "payload_bytes": 62327499832,
+    "private": false,
+    "upload_status": "complete",
+    "payload_files": 1762,
+    "payload_bytes": 62327508773,
     "manifest": "archive-manifest.json",
     "checksums": "SHA256SUMS",
-    "verification": null
+    "verification": {
+      "repo_id": "ayousanz/moshi-tsukuyomi-ojousama-archive-2026-10-04",
+      "private": false,
+      "gated": "manual",
+      "revision": "f1949c7f2a728f76669d216dd3071ad6b0fe6b22",
+      "verified_at_utc": "2026-10-04T09:16:11.914809+00:00",
+      "expected_files": 1770,
+      "verified_files": 1770,
+      "payload_files": 1762,
+      "payload_bytes": 62327508773,
+      "verification_methods": {
+        "remote_lfs_sha256": 1583,
+        "remote_git_blob_sha1": 187
+      },
+      "missing": [],
+      "mismatch": [],
+      "unexpected_files": [],
+      "verified": true
+    },
+    "gated": "manual",
+    "publication_authorization": "Owner explicitly changed the repository to public with manual gate and instructed upload continuation on 2026-10-04.",
+    "initial_private_upload_failure": "Private repository storage limit reached at the commit endpoint after data transfer. Uploaded data must not be treated as durably preserved until referenced in a verified repository commit.",
+    "archive_tag": "project-closeout-2026-10-04",
+    "supplemental_record_directory": "closeout"
   },
   "outcomes": {
     "M0": "complete",
@@ -152,7 +178,29 @@
     "ruff_check": "passed",
     "ruff_format": "passed; two parameter-list comprehensions in finetune.py reformatted, no behavior change.",
     "prohibited_payload_path_check": "passed: 0 excluded-path matches",
-    "m2_adopted_checkpoint_historical_sha256": "matches reports/m2-tts-gate.json"
+    "m2_adopted_checkpoint_historical_sha256": "matches reports/m2-tts-gate.json",
+    "github_actions": "No workflow runs were listed for this branch after the closeout push; local pytest, lint and format checks passed."
   },
-  "local_files_deleted": false
+  "local_files_deleted": false,
+  "publication_review": {
+    "reviewed_at": "2026-10-04",
+    "quality_release_approved": false,
+    "scope": "Research archive; manual-gated access. Corpus itself and raw-derived training inputs remain excluded.",
+    "terms_sources": [
+      "https://tyc.rei-yumesaki.net/material/corpus/",
+      "https://huggingface.co/nu-dialogue/j-moshi-ext",
+      "https://huggingface.co/Aratako/Irodori-TTS-500M-v3"
+    ],
+    "tsukuyomi_required_credit": "included in model card with copyright, corpus name and URL",
+    "tsukuyomi_four_prohibited_uses": "included in model card",
+    "terms_inheritance": "required for modifications and redistributions of Tsukuyomi-derived parts",
+    "mixed_voice_disclosure": "base multi-speaker voice and synthetic neutral speaker disclosed",
+    "generated_audio_and_tokens": "listening/assessment of the reported experiments only; no permission to distribute as reusable materials or use as training data",
+    "j_moshi_weights": "CC BY-NC 4.0 retained; authors, upstream and modifications identified",
+    "irodori": "MIT and upstream no-impersonation/deepfake ethical restrictions identified",
+    "included_notices": [
+      "closeout/licenses/LICENSE.Irodori-TTS",
+      "closeout/licenses/NOTICE.J-Moshi.txt"
+    ]
+  }
 }
